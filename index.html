@@ -1,13 +1,16 @@
 <!doctype html>
+
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digit Roll — Prototype</title>
+    <title>Digit Roll — Global</title>
+
     <style>
       * {
         box-sizing: border-box;
       }
+
       body {
         margin: 0;
         min-height: 100vh;
@@ -27,11 +30,13 @@
         justify-content: center;
         padding: 28px;
       }
+
       .app {
         width: min(1050px, 100%);
         display: grid;
         gap: 18px;
       }
+
       .card {
         background: rgba(20, 26, 40, 0.78);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -40,19 +45,27 @@
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
         backdrop-filter: blur(14px);
       }
+
       h1 {
         margin: 0;
         font-size: 34px;
         letter-spacing: -1px;
       }
+
+      h2 {
+        margin-top: 0;
+      }
+
       .sub {
         color: #9ba7c0;
         margin: 5px 0 0;
       }
+
       .rollbox {
         text-align: center;
         padding: 34px 20px;
       }
+
       .number {
         min-height: 94px;
         display: flex;
@@ -65,6 +78,7 @@
         margin: 15px 0 20px;
         text-shadow: 0 0 25px rgba(120, 170, 255, 0.3);
       }
+
       button {
         border: 0;
         border-radius: 14px;
@@ -79,53 +93,79 @@
           0.15s transform,
           0.15s filter;
       }
+
       button:hover {
         transform: translateY(-2px);
         filter: brightness(1.1);
       }
+
       button:active {
         transform: translateY(1px);
       }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
+
       .statrow {
         display: flex;
         justify-content: space-between;
         padding: 10px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
+
       .statrow:last-child {
         border: 0;
       }
+
       .label {
         color: #9ba7c0;
       }
+
       .value {
         font-weight: 750;
       }
+
       .badges {
         display: flex;
         flex-wrap: wrap;
         gap: 9px;
         margin-top: 13px;
       }
+
       .badge {
         padding: 8px 11px;
         border-radius: 999px;
         background: rgba(101, 124, 255, 0.14);
         border: 1px solid rgba(125, 145, 255, 0.28);
         font-size: 14px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
       }
+
+      .badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(100, 120, 255, 0.18);
+      }
+
       .empty {
         color: #68748d;
       }
+
       .history {
         max-height: 260px;
         overflow: auto;
       }
+
       .historyrow {
         display: grid;
         grid-template-columns: 1fr auto auto;
@@ -134,68 +174,65 @@
         padding: 11px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
+
       .historynum {
         font-family: monospace;
         font-weight: 700;
         letter-spacing: 2px;
       }
+
       .rarity {
         font-weight: 800;
       }
+
       .xp {
         color: #8ee6ad;
         font-weight: 700;
       }
+
       .leader {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
+
       .lb h3 {
         margin: 0 0 12px;
       }
+
       .big {
         font-size: 25px;
         font-weight: 850;
         font-family: monospace;
         letter-spacing: 2px;
+        word-break: break-all;
       }
+
       .small {
         color: #8e9ab2;
         font-size: 13px;
       }
-      @media (max-width: 700px) {
-        .grid,
-        .leader {
-          grid-template-columns: 1fr;
-        }
-        .number {
-          letter-spacing: 3px;
-        }
+
+      .connection {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: #8e9ab2;
       }
 
-      .badge {
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
+      .connectionDot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #55e88b;
+        box-shadow: 0 0 12px rgba(85, 232, 139, 0.7);
       }
-      .badges > div {
-        animation: badgeFocus 0.45s ease-out;
-      }
-      @keyframes badgeFocus {
-        from {
-          opacity: 0;
-          transform: scale(0.92);
-          filter: blur(3px);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-          filter: blur(0);
-        }
-      }
-      #number {
-        font-variant-numeric: tabular-nums;
+
+      .connectionDot.off {
+        background: #ff5f6d;
+        box-shadow: 0 0 12px rgba(255, 95, 109, 0.7);
       }
 
       .badgeFocus {
@@ -210,9 +247,11 @@
         font: inherit;
         cursor: pointer;
       }
+
       .badgeFocus:hover {
         background: rgba(101, 124, 255, 0.2);
       }
+
       .badgeButton {
         box-shadow: none;
         padding: 8px 11px;
@@ -220,6 +259,7 @@
         background: rgba(101, 124, 255, 0.14);
         border: 1px solid rgba(125, 145, 255, 0.28);
       }
+
       .modal {
         position: fixed;
         inset: 0;
@@ -231,9 +271,11 @@
         z-index: 20;
         backdrop-filter: blur(7px);
       }
+
       .modal.open {
         display: flex;
       }
+
       .modalCard {
         width: min(500px, 100%);
         background: #151c2b;
@@ -243,6 +285,7 @@
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
         position: relative;
       }
+
       .closeModal {
         position: absolute;
         right: 14px;
@@ -253,18 +296,56 @@
         font-size: 30px;
         color: #9ba7c0;
       }
+
+      @keyframes badgeFocus {
+        from {
+          opacity: 0;
+          transform: scale(0.92);
+          filter: blur(3px);
+        }
+
+        to {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0);
+        }
+      }
+
+      @media (max-width: 700px) {
+        .grid,
+        .leader {
+          grid-template-columns: 1fr;
+        }
+
+        .number {
+          letter-spacing: 3px;
+        }
+      }
     </style>
   </head>
+
   <body>
     <div class="app">
       <div class="card">
         <h1>🎲 DIGIT ROLL</h1>
+
+        ```
         <p class="sub">Find the strangest 10-digit number possible.</p>
+
+        <div class="connection">
+          <span class="connectionDot" id="connectionDot"></span>
+
+          <span id="connectionText"> CONNECTING TO GLOBAL DATABASE... </span>
+        </div>
+        ```
       </div>
 
       <div class="card rollbox">
+        ```
         <div class="small" id="rollLabel">READY TO ROLL</div>
+
         <div class="number" id="number">??????????</div>
+
         <div
           id="liveRarity"
           style="
@@ -277,212 +358,359 @@
         >
           RARITY: —
         </div>
+
         <button id="rollBtn">ROLL 🎲</button>
+        ```
       </div>
 
       <div class="grid">
+        ```
         <div class="card">
           <h2>✨ Roll Analysis</h2>
+
           <div class="statrow">
-            <span class="label">Rarity</span
-            ><span class="value" id="rarity">—</span>
+            <span class="label">Rarity</span>
+            <span class="value" id="rarity">—</span>
           </div>
+
           <div class="statrow">
-            <span class="label">Total chance</span
-            ><span class="value" id="chance">—</span>
+            <span class="label">Total chance</span>
+            <span class="value" id="chance">—</span>
           </div>
+
           <div class="statrow">
-            <span class="label">Digits showing</span
-            ><span class="value" id="shown">—</span>
+            <span class="label">Digits showing</span>
+            <span class="value" id="shown">—</span>
           </div>
+
           <div class="statrow">
-            <span class="label">Blank digit bonus</span
-            ><span class="value" id="blankBonus">—</span>
+            <span class="label">Blank digit bonus</span>
+            <span class="value" id="blankBonus">—</span>
           </div>
+
           <div class="statrow">
-            <span class="label">XP earned</span
-            ><span class="value xp" id="xp">—</span>
+            <span class="label">XP earned</span>
+            <span class="value xp" id="xp">—</span>
           </div>
+
           <h3>Badges</h3>
+
           <div class="badges" id="badges">
-            <span class="empty">Roll something!</span>
+            <span class="empty"> Roll something! </span>
           </div>
         </div>
 
         <div class="card">
           <h2>📜 Roll History</h2>
+
           <div class="history" id="history">
-            <span class="empty">No rolls yet.</span>
+            <span class="empty"> No rolls yet. </span>
           </div>
         </div>
+        ```
       </div>
 
       <div class="card">
-        <h2>🏆 Leaderboards</h2>
+        ```
+        <h2>🏆 Global Leaderboards</h2>
+
         <div class="leader">
           <div class="lb">
             <h3>🌎 Best Roll Today</h3>
+
             <div class="big" id="todayBest">—</div>
+
             <div class="small" id="todayBestMeta">No rolls yet</div>
           </div>
+
           <div class="lb">
             <h3>👤 Your Best Today</h3>
+
             <div class="big" id="personalToday">—</div>
+
             <div class="small" id="personalTodayMeta">No rolls yet</div>
           </div>
+
           <div class="lb">
             <h3>🌎 Best Roll All Time</h3>
+
             <div class="big" id="allBest">—</div>
+
             <div class="small" id="allBestMeta">No rolls yet</div>
           </div>
+
           <div class="lb">
             <h3>👤 Your Best All Time</h3>
+
             <div class="big" id="personalAll">—</div>
+
             <div class="small" id="personalAllMeta">No rolls yet</div>
           </div>
         </div>
+        ```
       </div>
     </div>
 
-    <script>
+    <!-- BADGE MODAL -->
+
+    <div
+      id="badgeModal"
+      class="modal"
+      onclick="if (event.target === this) closeBadgeInfo();"
+    >
+      <div class="modalCard">
+        ```
+        <button class="closeModal" type="button" onclick="closeBadgeInfo()">
+          ×
+        </button>
+
+        <div
+          id="badgeModalName"
+          style="font-size: 30px; font-weight: 900; margin-bottom: 12px"
+        ></div>
+
+        <div
+          id="badgeModalExplanation"
+          style="font-size: 17px; line-height: 1.55; color: #b7c1d5"
+        ></div>
+
+        <div
+          id="badgeModalChance"
+          style="margin-top: 16px; color: #8ee6ad; font-weight: 800"
+        ></div>
+        ```
+      </div>
+    </div>
+
+    <script type="module">
+      /* =========================================================
+   SUPABASE CONNECTION
+   ========================================================= */
+
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+      const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
+
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      /* =========================================================
+   PLAYER ID
+   ========================================================= */
+
+      let playerId = localStorage.getItem("digitRollPlayerId");
+
+      if (!playerId) {
+        playerId = crypto.randomUUID();
+
+        localStorage.setItem("digitRollPlayerId", playerId);
+      }
+
+      /* =========================================================
+   BADGE REFERENCES
+   ========================================================= */
+
       const references = {
         911: [
           "🚨 Emergency 911",
           "The famous emergency telephone number.",
           100000,
         ],
+
         "007": ["🕵️ Agent 007", "The iconic code name of James Bond.", 100000],
+
         420: ["🌿 420", "A famous number from popular culture.", 80000],
+
         404: ["🌐 404 Not Found", "The familiar web error code.", 90000],
+
         1337: ["💻 LEET", "Classic internet/gaming slang for 'leet'.", 120000],
+
         666: [
           "😈 The Number",
           "A famously recognizable number with cultural significance.",
           150000,
         ],
+
         777: [
           "🎰 Lucky 7s",
           "Three 7s are a classic lucky-slot-machine pattern.",
           180000,
         ],
+
         42: [
           "🌌 The Answer",
           "The famously celebrated answer to life, the universe, and everything.",
           70000,
         ],
+
         101: [
           "📚 101",
           "A common shorthand for an introductory course or beginner's guide.",
           35000,
         ],
+
         123: [
           "🔢 Counting Up",
           "The first three digits of the familiar counting sequence.",
           45000,
         ],
+
         321: ["🚀 Countdown", "A classic countdown fragment.", 45000],
+
         314: ["🥧 Pi", "The first three digits of pi.", 55000],
+
         1984: [
           "📖 1984",
           "A recognizable reference to George Orwell's novel.",
           90000,
         ],
+
         2001: ["🚀 2001", "A recognizable science-fiction reference.", 90000],
+
         69: [
           "😎 Nice",
           "A widely recognized internet-number joke/reference.",
           40000,
         ],
+
         67: ["🔢 67", "A special 67 reference hidden inside the roll.", 25000],
+
         55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
       };
 
+      /* =========================================================
+   DOM
+   ========================================================= */
+
       const $ = (id) => document.getElementById(id);
+
+      /* =========================================================
+   LOCAL DATA
+   ========================================================= */
+
       let history = [];
+
       let personalBest = null;
-      let allTimeBest = null;
+
+      let globalRolls = [];
+
+      /* =========================================================
+   RANDOM ROLL
+   ========================================================= */
 
       function randomRoll() {
-        let chars = [];
+        const chars = [];
+
         let blanks = 0;
-        // Blank probability is deliberately small in this prototype.
+
         for (let i = 0; i < 10; i++) {
           if (Math.random() < 0.055) {
             chars.push("_");
+
             blanks++;
-          } else chars.push(String(Math.floor(Math.random() * 10)));
+          } else {
+            chars.push(String(Math.floor(Math.random() * 10)));
+          }
         }
-        if (blanks === 10)
-          chars[Math.floor(Math.random() * 10)] = String(
-            Math.floor(Math.random() * 10),
-          );
+
+        if (blanks === 10) {
+          const index = Math.floor(Math.random() * 10);
+
+          chars[index] = String(Math.floor(Math.random() * 10));
+        }
+
         return chars;
       }
 
+      /* =========================================================
+   ANALYSIS
+   ========================================================= */
+
       function analyze(chars) {
         const digits = chars.filter((x) => x !== "_");
+
         const compact = digits.join("");
+
         const badges = [];
 
-        // Badge chances are the foundation of rarity.
         for (const [key, [name, explanation, oneIn]] of Object.entries(
           references,
         )) {
           if (compact.includes(key)) {
-            badges.push({ name, explanation, oneIn });
+            badges.push({
+              name,
+              explanation,
+              oneIn,
+            });
           }
         }
 
         const counts = {};
-        digits.forEach((d) => (counts[d] = (counts[d] || 0) + 1));
+
+        digits.forEach((d) => {
+          counts[d] = (counts[d] || 0) + 1;
+        });
+
         const maxCount = Math.max(0, ...Object.values(counts));
 
-        if (maxCount >= 2)
+        if (maxCount >= 2) {
           badges.push({
             name: "🔁 Repeater",
             explanation: "At least one visible digit appears more than once.",
             oneIn: 5,
           });
-        if (maxCount >= 3)
+        }
+
+        if (maxCount >= 3) {
           badges.push({
             name: "🔥 Triple Digit",
             explanation: "A visible digit appears three or more times.",
             oneIn: 100,
           });
-        if (maxCount >= 4)
+        }
+
+        if (maxCount >= 4) {
           badges.push({
             name: "💥 Quad Digit",
             explanation: "A visible digit appears four or more times.",
             oneIn: 1000,
           });
-        if (digits.length > 1 && new Set(digits).size === 1)
+        }
+
+        if (digits.length > 1 && new Set(digits).size === 1) {
           badges.push({
             name: "👑 Monochrome",
             explanation: "Every visible digit is identical.",
             oneIn: 1000000,
           });
-        if (digits.length === 10 && new Set(digits).size === 10)
+        }
+
+        if (digits.length === 10 && new Set(digits).size === 10) {
           badges.push({
             name: "🌈 All Ten Digits",
             explanation: "Every digit from 0 through 9 appears exactly once.",
             oneIn: 3628800,
           });
+        }
 
-        if (/012|123|234|345|456|567|678|789/.test(compact))
+        if (/012|123|234|345|456|567|678|789/.test(compact)) {
           badges.push({
             name: "📈 Rising Sequence",
             explanation: "Three consecutive digits appear in ascending order.",
             oneIn: 100,
           });
+        }
 
-        if (/987|876|765|654|543|432|321|210/.test(compact))
+        if (/987|876|765|654|543|432|321|210/.test(compact)) {
           badges.push({
             name: "📉 Falling Sequence",
             explanation: "Three consecutive digits appear in descending order.",
             oneIn: 100,
           });
+        }
 
-        // Mountain: numbers climb to a peak, then descend.
         const mountainPatterns = [
           "01210",
           "12321",
@@ -492,6 +720,7 @@
           "56765",
           "67876",
           "78987",
+
           "0123210",
           "1234321",
           "2345432",
@@ -499,15 +728,16 @@
           "4567654",
           "5678765",
         ];
-        if (mountainPatterns.some((x) => compact.includes(x)))
+
+        if (mountainPatterns.some((x) => compact.includes(x))) {
           badges.push({
             name: "⛰️ Mountain",
             explanation:
               "Numbers rise to a peak in order, then fall back down.",
             oneIn: 10000,
           });
+        }
 
-        // Valley: the opposite of a mountain.
         const valleyPatterns = [
           "21012",
           "32123",
@@ -517,6 +747,7 @@
           "76567",
           "87678",
           "98789",
+
           "2101234",
           "3212345",
           "4323456",
@@ -524,273 +755,704 @@
           "6545678",
           "7656789",
         ];
-        if (valleyPatterns.some((x) => compact.includes(x)))
+
+        if (valleyPatterns.some((x) => compact.includes(x))) {
           badges.push({
             name: "🏞️ Valley",
             explanation:
               "Numbers fall to a low point in order, then rise again.",
             oneIn: 10000,
           });
+        }
 
-        // Staircases and alternating sequences.
-        if (/0123|1234|2345|3456|4567|5678|6789/.test(compact))
+        if (/0123|1234|2345|3456|4567|5678|6789/.test(compact)) {
           badges.push({
             name: "🪜 Staircase",
             explanation: "Four consecutive digits climb steadily upward.",
             oneIn: 1000,
           });
+        }
 
-        if (/9876|8765|7654|6543|5432|4321|3210/.test(compact))
+        if (/9876|8765|7654|6543|5432|4321|3210/.test(compact)) {
           badges.push({
             name: "🪜 Reverse Staircase",
             explanation: "Four consecutive digits descend steadily.",
             oneIn: 1000,
           });
+        }
 
-        if (/0101|1212|2323|3434|4545|5656|6767|7878|8989/.test(compact))
+        if (/0101|1212|2323|3434|4545|5656|6767|7878|8989/.test(compact)) {
           badges.push({
             name: "⚡ Alternator",
             explanation: "Two digits repeatedly alternate back and forth.",
             oneIn: 5000,
           });
+        }
 
-        // Show common badges first, rare badges last.
         badges.sort((a, b) => a.oneIn - b.oneIn);
 
-        // Combine badge rarity multiplicatively.
         let badgeChance = 1;
-        for (const b of badges) badgeChance *= b.oneIn;
 
-        // Fewer visible digits STILL make the final roll rarer.
-        // This is a separate blank-digit multiplier, so blanks can dramatically
-        // improve the roll without pretending the blank itself is a badge.
+        for (const b of badges) {
+          badgeChance *= b.oneIn;
+        }
+
         const blanks = chars.filter((x) => x === "_").length;
+
         const blankMultiplier = Math.pow(10, blanks);
+
         const totalChance = badgeChance * blankMultiplier;
 
         let rarity = "COMMON";
+
         if (badges.length || blanks >= 1) rarity = "UNCOMMON";
+
         if (totalChance >= 100) rarity = "RARE";
+
         if (totalChance >= 1000) rarity = "EPIC";
+
         if (totalChance >= 10000) rarity = "LEGENDARY";
+
         if (totalChance >= 1000000) rarity = "MYTHIC";
+
         if (totalChance >= 100000000) rarity = "DIVINE";
+
         if (totalChance >= 10000000000) rarity = "TRANSCENDENT";
+
         if (totalChance >= 1000000000000) rarity = "???";
 
-        // XP rewards both discovered badges and the extra rarity from blanks.
         const badgeXP = badges.reduce(
           (sum, b) =>
             sum + Math.max(1, Math.round(Math.log10(b.oneIn + 1) * 20)),
           0,
         );
+
         const blankXP = blanks * 100;
+
         const xp = Math.max(5, badgeXP + blankXP);
 
         return {
           badges,
+
           badgeChance,
+
           blankMultiplier,
+
           oneIn: totalChance,
+
           rarity,
+
           shown: digits.length,
+
           blanks,
+
           xp,
         };
       }
+
+      /* =========================================================
+   COMPARISON
+   ========================================================= */
+
       function better(a, b) {
         return !b || a.oneIn > b.oneIn;
       }
 
-      function save() {
+      /* =========================================================
+   LOCAL SAVE
+   ========================================================= */
+
+      function saveLocal() {
         localStorage.setItem("digitRollHistory", JSON.stringify(history));
+
         localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
-        localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
       }
 
-      function load() {
+      /* =========================================================
+   LOCAL LOAD
+   ========================================================= */
+
+      function loadLocal() {
         try {
           history = JSON.parse(localStorage.getItem("digitRollHistory")) || [];
+
           personalBest =
             JSON.parse(localStorage.getItem("digitRollPersonal")) || null;
-          allTimeBest =
-            JSON.parse(localStorage.getItem("digitRollAll")) || null;
-        } catch (e) {}
+        } catch (e) {
+          history = [];
+
+          personalBest = null;
+        }
+
         renderHistory();
+
         renderBoards();
       }
+
+      /* =========================================================
+   FORMATTING
+   ========================================================= */
+
       function fmt(n) {
-        return "1 in " + n.toLocaleString();
+        return "1 in " + Number(n).toLocaleString();
       }
+
       function meta(x) {
-        return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
+        return `${x.rarity} • ` + `${fmt(x.oneIn)} • ` + `${x.shown}/10 digits`;
       }
+
+      /* =========================================================
+   TODAY
+   ========================================================= */
+
+      function isToday(timestamp) {
+        const d = new Date(timestamp);
+
+        const now = new Date();
+
+        return (
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate()
+        );
+      }
+
+      /* =========================================================
+   HISTORY
+   ========================================================= */
 
       function renderHistory() {
         if (!history.length) {
           $("history").innerHTML = '<span class="empty">No rolls yet.</span>';
+
           return;
         }
+
         $("history").innerHTML = history
           .slice(0, 30)
           .map(
             (x) => `
-    <div class="historyrow">
-      <span class="historynum">${x.roll}</span>
-      <span class="rarity">${x.rarity}</span>
-      <span class="xp">+${x.xp} XP</span>
-    </div>`,
+
+          <div class="historyrow">
+
+            <span class="historynum">
+              ${escapeHTML(x.roll)}
+            </span>
+
+            <span class="rarity">
+              ${escapeHTML(x.rarity)}
+            </span>
+
+            <span class="xp">
+              +${x.xp} XP
+            </span>
+
+          </div>
+
+        `,
           )
           .join("");
       }
+
+      /* =========================================================
+   LEADERBOARD
+   ========================================================= */
+
       function renderBoards() {
-        const entries = [
-          ["todayBest", personalBest, "todayBestMeta"],
-          ["personalToday", personalBest, "personalTodayMeta"],
-          ["allBest", allTimeBest, "allBestMeta"],
-          ["personalAll", personalBest, "personalAllMeta"],
-        ];
-        entries.forEach(([id, x, mid]) => {
-          $(id).textContent = x ? x.roll : "—";
-          $(mid).textContent = x ? meta(x) : "No rolls yet";
-        });
+        const todayRolls = globalRolls.filter((x) => isToday(x.time));
+
+        const globalToday = todayRolls.reduce(
+          (best, x) => (better(x, best) ? x : best),
+          null,
+        );
+
+        const globalBest = globalRolls.reduce(
+          (best, x) => (better(x, best) ? x : best),
+          null,
+        );
+
+        const personalToday = todayRolls.reduce(
+          (best, x) => (x.playerId === playerId && better(x, best) ? x : best),
+          null,
+        );
+
+        const personalAll = globalRolls.reduce(
+          (best, x) => (x.playerId === playerId && better(x, best) ? x : best),
+          null,
+        );
+
+        $("todayBest").textContent = globalToday ? globalToday.roll : "—";
+
+        $("todayBestMeta").textContent = globalToday
+          ? `${globalToday.playerName} • ${meta(globalToday)}`
+          : "No rolls yet";
+
+        $("personalToday").textContent = personalToday
+          ? personalToday.roll
+          : "—";
+
+        $("personalTodayMeta").textContent = personalToday
+          ? meta(personalToday)
+          : "No rolls yet";
+
+        $("allBest").textContent = globalBest ? globalBest.roll : "—";
+
+        $("allBestMeta").textContent = globalBest
+          ? `${globalBest.playerName} • ${meta(globalBest)}`
+          : "No rolls yet";
+
+        $("personalAll").textContent = personalAll ? personalAll.roll : "—";
+
+        $("personalAllMeta").textContent = personalAll
+          ? meta(personalAll)
+          : "No rolls yet";
       }
 
-      $("rollBtn").onclick = () => {
+      /* =========================================================
+   LOAD GLOBAL ROLLS
+   ========================================================= */
+
+      async function loadGlobalRolls() {
+        const { data, error } = await supabase
+          .from("rolls")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          })
+          .limit(500);
+
+        if (error) {
+          console.error("Supabase load error:", error);
+
+          setConnectionStatus(false);
+
+          return;
+        }
+
+        globalRolls = (data || []).map(convertDatabaseRoll);
+
+        renderBoards();
+
+        setConnectionStatus(true);
+      }
+
+      /* =========================================================
+   DATABASE CONVERSION
+   ========================================================= */
+
+      function convertDatabaseRoll(x) {
+        return {
+          id: x.id,
+
+          roll: x.roll,
+
+          rarity: x.rarity,
+
+          oneIn: Number(x.one_in),
+
+          shown: x.shown,
+
+          blanks: x.blanks,
+
+          xp: x.xp,
+
+          playerId: x.player_id,
+
+          playerName: x.player_name || "Anonymous",
+
+          time: new Date(x.created_at).getTime(),
+        };
+      }
+
+      /* =========================================================
+   REALTIME GLOBAL UPDATES
+   ========================================================= */
+
+      function setupRealtime() {
+        supabase
+
+          .channel("digit-roll-global")
+
+          .on(
+            "postgres_changes",
+
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "rolls",
+            },
+
+            (payload) => {
+              console.log("🌎 NEW GLOBAL ROLL", payload.new);
+
+              const newRoll = convertDatabaseRoll(payload.new);
+
+              if (!globalRolls.some((x) => x.id === newRoll.id)) {
+                globalRolls.unshift(newRoll);
+              }
+
+              globalRolls = globalRolls.slice(0, 500);
+
+              renderBoards();
+
+              setConnectionStatus(true);
+            },
+          )
+
+          .subscribe((status) => {
+            console.log("Realtime status:", status);
+
+            if (status === "SUBSCRIBED") {
+              setConnectionStatus(true);
+            }
+          });
+      }
+
+      /* =========================================================
+   CONNECTION STATUS
+   ========================================================= */
+
+      function setConnectionStatus(connected) {
+        const dot = $("connectionDot");
+
+        const text = $("connectionText");
+
+        if (connected) {
+          dot.classList.remove("off");
+
+          text.textContent = "LIVE • GLOBAL DATABASE CONNECTED";
+        } else {
+          dot.classList.add("off");
+
+          text.textContent = "DATABASE DISCONNECTED";
+        }
+      }
+
+      /* =========================================================
+   UPLOAD ROLL
+   ========================================================= */
+
+      async function uploadRoll(result) {
+        const { data, error } = await supabase
+          .from("rolls")
+          .insert({
+            roll: result.roll,
+
+            rarity: result.rarity,
+
+            one_in: result.oneIn,
+
+            shown: result.shown,
+
+            blanks: result.blanks,
+
+            xp: result.xp,
+
+            player_id: playerId,
+
+            player_name: "Player " + playerId.slice(0, 5),
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Upload failed:", error);
+
+          setConnectionStatus(false);
+
+          return null;
+        }
+
+        return data;
+      }
+
+      /* =========================================================
+   ROLL BUTTON
+   ========================================================= */
+
+      $("rollBtn").onclick = async () => {
         $("rollBtn").disabled = true;
+
         $("rollLabel").textContent = "ROLLING...";
+
         $("rarity").textContent = "—";
+
         $("chance").textContent = "—";
+
         $("liveRarity").textContent = "RARITY: ???";
+
         $("shown").textContent = "—";
+
         $("xp").textContent = "—";
+
         $("blankBonus").textContent = "—";
+
         $("badges").innerHTML =
-          '<span class="empty">The number is being generated...</span>';
+          '<span class="empty">' +
+          "The number is being generated..." +
+          "</span>";
 
         const finalChars = randomRoll();
-        let visible = [];
-        for (let i = 0; i < 10; i++) visible.push("?");
 
-        // Exactly 9 seconds total: one digit is revealed each 900ms.
+        const visible = [];
+
+        for (let i = 0; i < 10; i++) {
+          visible.push("?");
+        }
+
         let i = 0;
+
         const digitTimer = setInterval(() => {
           visible[i] = finalChars[i];
+
           $("number").textContent = visible.join("");
+
           i++;
 
           if (i >= 10) {
             clearInterval(digitTimer);
 
-            const a = analyze(finalChars);
-            const roll = finalChars.join("");
-            const result = { roll, ...a, time: Date.now() };
-
-            // Suspense phase: badges are revealed one at a time.
-            // More badges = less focus time each, with a 1–10 second total presentation.
-            const badges = a.badges;
-            const focusMs = badges.length
-              ? Math.max(
-                  1000,
-                  Math.min(10000, Math.round(10000 / badges.length)),
-                )
-              : 3000;
-
-            $("rollLabel").textContent = badges.length
-              ? "ANALYZING BADGES..."
-              : "NO BADGES FOUND...";
-            $("liveRarity").textContent = "RARITY: ???";
-
-            let bIndex = 0;
-
-            const revealBadge = () => {
-              if (bIndex < badges.length) {
-                const b = badges[bIndex];
-                $("badges").innerHTML = `
-            <button class="badgeFocus" type="button" onclick='showBadgeInfo(${JSON.stringify(b.name)},${JSON.stringify(b.explanation)},${b.oneIn})'>
-              <div style="font-size:27px;font-weight:850;margin-bottom:7px">${b.name}</div>
-              <div style="color:#aab5ca;line-height:1.45">${b.explanation}</div>
-              <div style="margin-top:9px;color:#8ee6ad;font-weight:750">Badge chance: 1 in ${b.oneIn.toLocaleString()}</div>
-              <div class="small" style="margin-top:7px">Click to view this badge again</div>
-              <div class="small" style="margin-top:4px">Badge ${bIndex + 1} of ${badges.length} • Less digits bonus: ×${a.blankMultiplier.toLocaleString()}</div>
-            </button>`;
-                bIndex++;
-                setTimeout(revealBadge, focusMs);
-              } else {
-                // Only reveal final rarity AFTER all badge reveals.
-                $("rollLabel").textContent = "FINAL RESULT";
-                $("liveRarity").textContent = "RARITY: " + a.rarity;
-                $("rarity").textContent = a.rarity;
-                $("chance").textContent = fmt(a.oneIn);
-                $("shown").textContent = a.shown + "/10";
-                $("blankBonus").textContent =
-                  "×" + a.blankMultiplier.toLocaleString();
-                $("xp").textContent = "+" + a.xp;
-
-                if (!badges.length) {
-                  $("badges").innerHTML =
-                    '<span class="empty">No badges. A completely ordinary roll.</span>';
-                } else {
-                  $("badges").innerHTML = badges
-                    .map(
-                      (b) =>
-                        `<button class="badge badgeButton" type="button" onclick='showBadgeInfo(${JSON.stringify(b.name)},${JSON.stringify(b.explanation)},${b.oneIn})'>${b.name}</button>`,
-                    )
-                    .join("");
-                }
-
-                history.unshift(result);
-                history = history.slice(0, 30);
-                if (better(result, personalBest)) personalBest = result;
-                if (better(result, allTimeBest)) allTimeBest = result;
-                save();
-                renderHistory();
-                renderBoards();
-                $("rollBtn").disabled = false;
-              }
-            };
-
-            // Tiny pause before the first badge to make the reveal feel deliberate.
-            setTimeout(revealBadge, 450);
+            finishRoll(finalChars);
           }
         }, 900);
       };
+
+      /* =========================================================
+   FINISH ROLL
+   ========================================================= */
+
+      function finishRoll(finalChars) {
+        const a = analyze(finalChars);
+
+        const result = {
+          roll: finalChars.join(""),
+
+          ...a,
+
+          time: Date.now(),
+
+          playerId,
+        };
+
+        const badges = a.badges;
+
+        const focusMs = badges.length
+          ? Math.max(1000, Math.min(10000, Math.round(10000 / badges.length)))
+          : 3000;
+
+        $("rollLabel").textContent = badges.length
+          ? "ANALYZING BADGES..."
+          : "NO BADGES FOUND...";
+
+        $("liveRarity").textContent = "RARITY: ???";
+
+        let bIndex = 0;
+
+        const revealBadge = () => {
+          if (bIndex < badges.length) {
+            const b = badges[bIndex];
+
+            $("badges").innerHTML = `
+
+        <button
+          class="badgeFocus"
+          type="button"
+          id="focusBadge"
+        >
+
+          <div
+            style="
+              font-size:27px;
+              font-weight:850;
+              margin-bottom:7px
+            "
+          >
+            ${escapeHTML(b.name)}
+          </div>
+
+          <div
+            style="
+              color:#aab5ca;
+              line-height:1.45
+            "
+          >
+            ${escapeHTML(b.explanation)}
+          </div>
+
+          <div
+            style="
+              margin-top:9px;
+              color:#8ee6ad;
+              font-weight:750
+            "
+          >
+            Badge chance:
+            1 in
+            ${b.oneIn.toLocaleString()}
+          </div>
+
+          <div
+            class="small"
+            style="margin-top:7px"
+          >
+            Click to view this badge again
+          </div>
+
+          <div
+            class="small"
+            style="margin-top:4px"
+          >
+            Badge
+            ${bIndex + 1}
+            of
+            ${badges.length}
+            • Less digits bonus:
+            ×${a.blankMultiplier.toLocaleString()}
+          </div>
+
+        </button>
+      `;
+
+            $("focusBadge").onclick = () =>
+              showBadgeInfo(b.name, b.explanation, b.oneIn);
+
+            bIndex++;
+
+            setTimeout(revealBadge, focusMs);
+          } else {
+            showFinalResult(result);
+          }
+        };
+
+        setTimeout(revealBadge, 450);
+      }
+
+      /* =========================================================
+   FINAL RESULT
+   ========================================================= */
+
+      async function showFinalResult(result) {
+        const badges = result.badges;
+
+        $("rollLabel").textContent = "FINAL RESULT";
+
+        $("liveRarity").textContent = "RARITY: " + result.rarity;
+
+        $("rarity").textContent = result.rarity;
+
+        $("chance").textContent = fmt(result.oneIn);
+
+        $("shown").textContent = result.shown + "/10";
+
+        $("blankBonus").textContent =
+          "×" + result.blankMultiplier.toLocaleString();
+
+        $("xp").textContent = "+" + result.xp;
+
+        if (!badges.length) {
+          $("badges").innerHTML =
+            '<span class="empty">' +
+            "No badges. A completely ordinary roll." +
+            "</span>";
+        } else {
+          $("badges").innerHTML = badges
+            .map(
+              (b) => `
+
+            <button
+              class="badge badgeButton"
+              type="button"
+            >
+              ${escapeHTML(b.name)}
+            </button>
+
+          `,
+            )
+            .join("");
+
+          const buttons = $("badges").querySelectorAll(".badgeButton");
+
+          buttons.forEach((button, index) => {
+            button.onclick = () => {
+              const b = badges[index];
+
+              showBadgeInfo(b.name, b.explanation, b.oneIn);
+            };
+          });
+        }
+
+        history.unshift(result);
+
+        history = history.slice(0, 30);
+
+        if (better(result, personalBest)) {
+          personalBest = result;
+        }
+
+        saveLocal();
+
+        renderHistory();
+
+        /*
+     Send the roll to Supabase.
+  */
+
+        const uploaded = await uploadRoll(result);
+
+        if (uploaded) {
+          const converted = convertDatabaseRoll(uploaded);
+
+          if (!globalRolls.some((x) => x.id === converted.id)) {
+            globalRolls.unshift(converted);
+          }
+
+          renderBoards();
+        }
+
+        $("rollBtn").disabled = false;
+      }
+
+      /* =========================================================
+   BADGE MODAL
+   ========================================================= */
+
       function showBadgeInfo(name, explanation, oneIn) {
         $("badgeModalName").textContent = name;
+
         $("badgeModalExplanation").textContent = explanation;
+
         $("badgeModalChance").textContent =
           "Badge chance: 1 in " + Number(oneIn).toLocaleString();
+
         $("badgeModal").classList.add("open");
       }
+
       function closeBadgeInfo() {
         $("badgeModal").classList.remove("open");
       }
 
-      load();
-    </script>
+      /* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
-    <div
-      id="badgeModal"
-      class="modal"
-      onclick="if (event.target === this) closeBadgeInfo();"
-    >
-      <div class="modalCard">
-        <button class="closeModal" type="button" onclick="closeBadgeInfo()">
-          ×
-        </button>
-        <div
-          id="badgeModalName"
-          style="font-size: 30px; font-weight: 900; margin-bottom: 12px"
-        ></div>
-        <div
-          id="badgeModalExplanation"
-          style="font-size: 17px; line-height: 1.55; color: #b7c1d5"
-        ></div>
-        <div
-          id="badgeModalChance"
-          style="margin-top: 16px; color: #8ee6ad; font-weight: 800"
-        ></div>
-      </div>
-    </div>
+      function escapeHTML(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      /* =========================================================
+   START
+   ========================================================= */
+
+      loadLocal();
+
+      loadGlobalRolls();
+
+      setupRealtime();
+    </script>
   </body>
 </html>
