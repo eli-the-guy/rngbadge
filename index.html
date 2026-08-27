@@ -451,8 +451,6 @@
       </div>
     </div>
 
-    <!-- BADGE MODAL -->
-
     <div
       id="badgeModal"
       class="modal"
@@ -482,23 +480,30 @@
       </div>
     </div>
 
-    <script type="module">
-      /* =========================================================
-   SUPABASE CONNECTION
-   ========================================================= */
+    <!-- =====================================================
+     SUPABASE BROWSER BUILD
+     ===================================================== -->
 
-      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+      /* =====================================================
+   SUPABASE CONFIG
+   ===================================================== */
 
       const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
       const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzIiwicmVmIjoieHVvZmJuZ2hxY2t0bHNtamdmYmpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
 
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+      );
 
-      /* =========================================================
+      /* =====================================================
    PLAYER ID
-   ========================================================= */
+   ===================================================== */
 
       let playerId = localStorage.getItem("digitRollPlayerId");
 
@@ -508,9 +513,15 @@
         localStorage.setItem("digitRollPlayerId", playerId);
       }
 
-      /* =========================================================
+      /* =====================================================
+   DOM HELPER
+   ===================================================== */
+
+      const $ = (id) => document.getElementById(id);
+
+      /* =====================================================
    BADGE REFERENCES
-   ========================================================= */
+   ===================================================== */
 
       const references = {
         911: [
@@ -580,15 +591,9 @@
         55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
       };
 
-      /* =========================================================
-   DOM
-   ========================================================= */
-
-      const $ = (id) => document.getElementById(id);
-
-      /* =========================================================
+      /* =====================================================
    LOCAL DATA
-   ========================================================= */
+   ===================================================== */
 
       let history = [];
 
@@ -596,9 +601,9 @@
 
       let globalRolls = [];
 
-      /* =========================================================
-   RANDOM ROLL
-   ========================================================= */
+      /* =====================================================
+   RANDOM NUMBER
+   ===================================================== */
 
       function randomRoll() {
         const chars = [];
@@ -624,9 +629,9 @@
         return chars;
       }
 
-      /* =========================================================
+      /* =====================================================
    ANALYSIS
-   ========================================================= */
+   ===================================================== */
 
       function analyze(chars) {
         const digits = chars.filter((x) => x !== "_");
@@ -850,17 +855,34 @@
         };
       }
 
-      /* =========================================================
+      /* =====================================================
    COMPARISON
-   ========================================================= */
+   ===================================================== */
 
       function better(a, b) {
         return !b || a.oneIn > b.oneIn;
       }
 
-      /* =========================================================
+      /* =====================================================
+   ESCAPE HTML
+   ===================================================== */
+
+      function escapeHTML(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+
+          .replaceAll("<", "&lt;")
+
+          .replaceAll(">", "&gt;")
+
+          .replaceAll('"', "&quot;")
+
+          .replaceAll("'", "&#039;");
+      }
+
+      /* =====================================================
    LOCAL SAVE
-   ========================================================= */
+   ===================================================== */
 
       function saveLocal() {
         localStorage.setItem("digitRollHistory", JSON.stringify(history));
@@ -868,9 +890,9 @@
         localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
       }
 
-      /* =========================================================
+      /* =====================================================
    LOCAL LOAD
-   ========================================================= */
+   ===================================================== */
 
       function loadLocal() {
         try {
@@ -885,13 +907,11 @@
         }
 
         renderHistory();
-
-        renderBoards();
       }
 
-      /* =========================================================
-   FORMATTING
-   ========================================================= */
+      /* =====================================================
+   FORMAT
+   ===================================================== */
 
       function fmt(n) {
         return "1 in " + Number(n).toLocaleString();
@@ -901,9 +921,9 @@
         return `${x.rarity} • ` + `${fmt(x.oneIn)} • ` + `${x.shown}/10 digits`;
       }
 
-      /* =========================================================
-   TODAY
-   ========================================================= */
+      /* =====================================================
+   DATE CHECK
+   ===================================================== */
 
       function isToday(timestamp) {
         const d = new Date(timestamp);
@@ -917,13 +937,14 @@
         );
       }
 
-      /* =========================================================
+      /* =====================================================
    HISTORY
-   ========================================================= */
+   ===================================================== */
 
       function renderHistory() {
         if (!history.length) {
-          $("history").innerHTML = '<span class="empty">No rolls yet.</span>';
+          $("history").innerHTML =
+            '<span class="empty">' + "No rolls yet." + "</span>";
 
           return;
         }
@@ -954,9 +975,9 @@
           .join("");
       }
 
-      /* =========================================================
+      /* =====================================================
    LEADERBOARD
-   ========================================================= */
+   ===================================================== */
 
       function renderBoards() {
         const todayRolls = globalRolls.filter((x) => isToday(x.time));
@@ -1008,37 +1029,9 @@
           : "No rolls yet";
       }
 
-      /* =========================================================
-   LOAD GLOBAL ROLLS
-   ========================================================= */
-
-      async function loadGlobalRolls() {
-        const { data, error } = await supabase
-          .from("rolls")
-          .select("*")
-          .order("created_at", {
-            ascending: false,
-          })
-          .limit(500);
-
-        if (error) {
-          console.error("Supabase load error:", error);
-
-          setConnectionStatus(false);
-
-          return;
-        }
-
-        globalRolls = (data || []).map(convertDatabaseRoll);
-
-        renderBoards();
-
-        setConnectionStatus(true);
-      }
-
-      /* =========================================================
+      /* =====================================================
    DATABASE CONVERSION
-   ========================================================= */
+   ===================================================== */
 
       function convertDatabaseRoll(x) {
         return {
@@ -1064,9 +1057,41 @@
         };
       }
 
-      /* =========================================================
-   REALTIME GLOBAL UPDATES
-   ========================================================= */
+      /* =====================================================
+   GLOBAL DATABASE LOAD
+   ===================================================== */
+
+      async function loadGlobalRolls() {
+        const { data, error } = await supabase
+
+          .from("rolls")
+
+          .select("*")
+
+          .order("created_at", {
+            ascending: false,
+          })
+
+          .limit(500);
+
+        if (error) {
+          console.error("Supabase load error:", error);
+
+          setConnectionStatus(false);
+
+          return;
+        }
+
+        globalRolls = (data || []).map(convertDatabaseRoll);
+
+        renderBoards();
+
+        setConnectionStatus(true);
+      }
+
+      /* =====================================================
+   REALTIME
+   ===================================================== */
 
       function setupRealtime() {
         supabase
@@ -1108,9 +1133,9 @@
           });
       }
 
-      /* =========================================================
-   CONNECTION STATUS
-   ========================================================= */
+      /* =====================================================
+   CONNECTION
+   ===================================================== */
 
       function setConnectionStatus(connected) {
         const dot = $("connectionDot");
@@ -1128,13 +1153,15 @@
         }
       }
 
-      /* =========================================================
-   UPLOAD ROLL
-   ========================================================= */
+      /* =====================================================
+   UPLOAD
+   ===================================================== */
 
       async function uploadRoll(result) {
         const { data, error } = await supabase
+
           .from("rolls")
+
           .insert({
             roll: result.roll,
 
@@ -1152,7 +1179,9 @@
 
             player_name: "Player " + playerId.slice(0, 5),
           })
+
           .select()
+
           .single();
 
         if (error) {
@@ -1166,11 +1195,11 @@
         return data;
       }
 
-      /* =========================================================
+      /* =====================================================
    ROLL BUTTON
-   ========================================================= */
+   ===================================================== */
 
-      $("rollBtn").onclick = async () => {
+      $("rollBtn").onclick = () => {
         $("rollBtn").disabled = true;
 
         $("rollLabel").textContent = "ROLLING...";
@@ -1217,9 +1246,9 @@
         }, 900);
       };
 
-      /* =========================================================
+      /* =====================================================
    FINISH ROLL
-   ========================================================= */
+   ===================================================== */
 
       function finishRoll(finalChars) {
         const a = analyze(finalChars);
@@ -1327,9 +1356,9 @@
         setTimeout(revealBadge, 450);
       }
 
-      /* =========================================================
+      /* =====================================================
    FINAL RESULT
-   ========================================================= */
+   ===================================================== */
 
       async function showFinalResult(result) {
         const badges = result.badges;
@@ -1393,10 +1422,6 @@
 
         renderHistory();
 
-        /*
-     Send the roll to Supabase.
-  */
-
         const uploaded = await uploadRoll(result);
 
         if (uploaded) {
@@ -1412,9 +1437,9 @@
         $("rollBtn").disabled = false;
       }
 
-      /* =========================================================
-   BADGE MODAL
-   ========================================================= */
+      /* =====================================================
+   MODAL
+   ===================================================== */
 
       function showBadgeInfo(name, explanation, oneIn) {
         $("badgeModalName").textContent = name;
@@ -1431,22 +1456,9 @@
         $("badgeModal").classList.remove("open");
       }
 
-      /* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
-      function escapeHTML(value) {
-        return String(value)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
-      /* =========================================================
+      /* =====================================================
    START
-   ========================================================= */
+   ===================================================== */
 
       loadLocal();
 
