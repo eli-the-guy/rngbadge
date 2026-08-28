@@ -1,4 +1,3 @@
-```html
 <!doctype html>
 <html lang="en">
   <head>
@@ -12,11 +11,9 @@
       * {
         box-sizing: border-box;
       }
-
       html {
         scroll-behavior: smooth;
       }
-
       body {
         margin: 0;
         min-height: 100vh;
@@ -36,7 +33,6 @@
         color: #f4f7ff;
         padding: 28px;
       }
-
       body::before {
         content: "";
         position: fixed;
@@ -55,14 +51,12 @@
           );
         z-index: -1;
       }
-
       .app {
         width: min(1100px, 100%);
         margin: auto;
         display: grid;
         gap: 18px;
       }
-
       .card {
         background: rgba(20, 26, 40, 0.78);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -73,38 +67,31 @@
           inset 0 1px rgba(255, 255, 255, 0.025);
         backdrop-filter: blur(16px);
       }
-
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 18px;
       }
-
       h1 {
         margin: 0;
         font-size: 34px;
         letter-spacing: -1px;
       }
-
       h2 {
         margin-top: 0;
       }
-
       h3 {
         margin-bottom: 10px;
       }
-
       .sub {
         color: #9ba7c0;
         margin: 5px 0 0;
       }
-
       .small {
         color: #8e9ab2;
         font-size: 13px;
       }
-
       .account {
         display: flex;
         align-items: center;
@@ -112,7 +99,6 @@
         flex-wrap: wrap;
         justify-content: flex-end;
       }
-
       .userPill {
         padding: 9px 13px;
         border-radius: 999px;
@@ -120,7 +106,6 @@
         border: 1px solid rgba(125, 145, 255, 0.28);
         font-weight: 750;
       }
-
       button {
         border: 0;
         border-radius: 14px;
@@ -136,41 +121,34 @@
           0.15s filter,
           0.15s opacity;
       }
-
       button:hover {
         transform: translateY(-2px);
         filter: brightness(1.1);
       }
-
       button:active {
         transform: translateY(1px);
       }
-
       button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         transform: none;
       }
-
       .secondary {
         background: rgba(255, 255, 255, 0.07);
         border: 1px solid rgba(255, 255, 255, 0.11);
         box-shadow: none;
       }
-
       .danger {
         background: rgba(255, 80, 100, 0.12);
         border: 1px solid rgba(255, 100, 120, 0.2);
         box-shadow: none;
       }
-
       .rollbox {
         text-align: center;
         padding: 34px 20px;
         position: relative;
         overflow: hidden;
       }
-
       .rollbox::after {
         content: "";
         position: absolute;
@@ -184,12 +162,10 @@
         transform: translate(-50%, -50%);
         pointer-events: none;
       }
-
       .rollbox > * {
         position: relative;
         z-index: 1;
       }
-
       .number {
         min-height: 100px;
         display: flex;
@@ -208,123 +184,95 @@
           text-shadow 0.25s ease,
           transform 0.15s ease;
       }
-
       .number.rolling {
         animation: numberPulse 0.22s infinite alternate;
       }
-
       .number.finalReveal {
         animation: finalNumberReveal 0.55s ease-out;
       }
-
       @keyframes numberPulse {
         from {
           transform: scale(1);
           filter: brightness(1);
         }
-
         to {
           transform: scale(1.035);
           filter: brightness(1.35);
         }
       }
-
       @keyframes finalNumberReveal {
         0% {
           transform: scale(1.08);
           filter: brightness(2.2);
         }
-
         60% {
           transform: scale(0.985);
           filter: brightness(1.15);
         }
-
         100% {
           transform: scale(1);
           filter: brightness(1);
         }
       }
-
       #liveRarity {
         font-size: 22px;
         font-weight: 850;
         min-height: 32px;
         margin: -8px 0 18px;
-        transition:
-          color 0.25s ease,
-          text-shadow 0.25s ease;
       }
-
-      /* ============================================================
-         RARITY COLORS
-         ============================================================ */
-
       .rarity-common {
         color: #b7c1d5 !important;
       }
-
       .rarity-uncommon {
         color: #68e08d !important;
         text-shadow: 0 0 12px rgba(104, 224, 141, 0.22);
       }
-
       .rarity-rare {
         color: #58a6ff !important;
         text-shadow: 0 0 14px rgba(88, 166, 255, 0.3);
       }
-
       .rarity-epic {
         color: #b56cff !important;
         text-shadow: 0 0 16px rgba(181, 108, 255, 0.32);
       }
-
       .rarity-legendary {
         color: #ffb84d !important;
         text-shadow: 0 0 18px rgba(255, 184, 77, 0.38);
       }
-
       .rarity-mythic {
         color: #ff5d8f !important;
         text-shadow: 0 0 20px rgba(255, 93, 143, 0.4);
       }
-
       .rarity-divine {
         color: #ffe66d !important;
         text-shadow: 0 0 22px rgba(255, 230, 109, 0.48);
       }
-
       .rarity-transcendent {
         color: #63f5ff !important;
         text-shadow:
           0 0 16px rgba(99, 245, 255, 0.5),
           0 0 35px rgba(99, 245, 255, 0.25);
       }
-
       .rarity-unknown {
-        color: #ffffff !important;
+        color: #fff !important;
         text-shadow:
           0 0 12px rgba(255, 255, 255, 0.8),
           0 0 30px rgba(180, 120, 255, 0.8);
         animation: unknownRarity 0.7s infinite alternate;
       }
-
       @keyframes unknownRarity {
         from {
           filter: brightness(1);
         }
-
         to {
           filter: brightness(1.6);
         }
       }
-
       .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
-
       .statrow {
         display: flex;
         justify-content: space-between;
@@ -332,32 +280,26 @@
         padding: 10px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
-
       .statrow:last-child {
         border: 0;
       }
-
       .label {
         color: #9ba7c0;
       }
-
       .value {
         font-weight: 750;
         text-align: right;
       }
-
       .xp {
         color: #8ee6ad;
         font-weight: 700;
       }
-
       .badges {
         display: flex;
         flex-wrap: wrap;
         gap: 9px;
         margin-top: 13px;
       }
-
       .badge {
         padding: 8px 11px;
         border-radius: 999px;
@@ -366,59 +308,36 @@
         font-size: 14px;
         color: white;
       }
-
       .badgeButton {
         box-shadow: none;
         padding: 8px 11px;
         font-size: 14px;
       }
-
       .badgeButton:hover {
         background: rgba(125, 145, 255, 0.25);
       }
-
       .badges > button {
         animation: badgeFocus 0.4s ease-out;
       }
-
       @keyframes badgeFocus {
         from {
           opacity: 0;
           transform: scale(0.92);
           filter: blur(3px);
         }
-
         to {
           opacity: 1;
           transform: scale(1);
           filter: blur(0);
         }
       }
-
-      .badgeFocus {
-        width: 100%;
-        background: rgba(101, 124, 255, 0.12);
-        border: 1px solid rgba(125, 145, 255, 0.35);
-        box-shadow: none;
-        padding: 18px;
-        border-radius: 16px;
-        color: inherit;
-        text-align: left;
-      }
-
-      .badgeFocus:hover {
-        background: rgba(101, 124, 255, 0.2);
-      }
-
       .empty {
         color: #68748d;
       }
-
       .history {
         max-height: 300px;
         overflow: auto;
       }
-
       .historyrow {
         display: grid;
         grid-template-columns: 1fr auto auto;
@@ -427,37 +346,28 @@
         padding: 11px 0;
         border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       }
-
       .historynum {
         font-family: monospace;
         font-weight: 700;
         letter-spacing: 2px;
       }
-
       .rarity {
         font-weight: 800;
-        transition:
-          color 0.2s ease,
-          text-shadow 0.2s ease;
       }
-
       .leader {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
-
       .lb {
         padding: 15px;
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.025);
         border: 1px solid rgba(255, 255, 255, 0.06);
       }
-
       .lb h3 {
         margin: 0 0 12px;
       }
-
       .big {
         font-size: 25px;
         font-weight: 850;
@@ -465,12 +375,10 @@
         letter-spacing: 2px;
         word-break: break-all;
       }
-
       .globalRows {
         display: grid;
         gap: 8px;
       }
-
       .globalRow {
         display: grid;
         grid-template-columns: 40px 1fr auto auto;
@@ -481,48 +389,39 @@
         background: rgba(255, 255, 255, 0.035);
         border: 1px solid rgba(255, 255, 255, 0.05);
       }
-
       .rank {
         font-weight: 900;
         color: #aab5ca;
       }
-
       .globalPlayer {
         font-weight: 800;
       }
-
       .globalRoll {
         font-family: monospace;
         letter-spacing: 2px;
       }
-
       .profileGrid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
-
       .profileStat {
         padding: 15px;
         border-radius: 15px;
         background: rgba(255, 255, 255, 0.035);
       }
-
       .profileStat .num {
         font-size: 26px;
         font-weight: 900;
       }
-
       .profileStat .desc {
         color: #8e9ab2;
         font-size: 13px;
       }
-
       .form {
         display: grid;
         gap: 12px;
       }
-
       input {
         width: 100%;
         padding: 13px 15px;
@@ -533,36 +432,29 @@
         color: white;
         font-size: 15px;
       }
-
       input:focus {
         border-color: rgba(125, 145, 255, 0.6);
         box-shadow: 0 0 0 3px rgba(100, 120, 255, 0.1);
       }
-
       .authPanel {
         display: none;
       }
-
       .authPanel.open {
         display: block;
       }
-
       .authTabs {
         display: flex;
         gap: 8px;
         margin-bottom: 16px;
       }
-
       .authTab {
         flex: 1;
         background: rgba(255, 255, 255, 0.05);
         box-shadow: none;
       }
-
       .authTab.active {
         background: linear-gradient(135deg, #657cff, #9a63ff);
       }
-
       .modal {
         position: fixed;
         inset: 0;
@@ -574,11 +466,9 @@
         z-index: 20;
         backdrop-filter: blur(7px);
       }
-
       .modal.open {
         display: flex;
       }
-
       .modalCard {
         width: min(520px, 100%);
         background: #151c2b;
@@ -588,7 +478,6 @@
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
         position: relative;
       }
-
       .closeModal {
         position: absolute;
         right: 14px;
@@ -599,7 +488,6 @@
         font-size: 30px;
         color: #9ba7c0;
       }
-
       .toast {
         position: fixed;
         bottom: 25px;
@@ -615,78 +503,72 @@
         box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
         transition: 0.25s;
       }
-
       .toast.show {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
       }
-
       .status {
         margin-top: 10px;
         min-height: 20px;
         font-size: 14px;
         color: #9ba7c0;
       }
-
       .realtime {
         display: inline-flex;
         align-items: center;
         gap: 7px;
       }
-
       .dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         background: #68748d;
       }
-
       .dot.on {
         background: #68e08d;
         box-shadow: 0 0 12px #68e08d;
       }
-
       .dot.off {
         background: #ff657c;
       }
-
       .sectionTitle {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 15px;
       }
-
+      .chanceDetail {
+        margin-top: 12px;
+        padding: 11px 13px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+        color: #9ba7c0;
+        font-size: 12px;
+      }
       @media (max-width: 750px) {
         body {
           padding: 14px;
         }
-
         .grid,
         .leader,
         .profileGrid {
           grid-template-columns: 1fr;
         }
-
         .header {
           align-items: flex-start;
           flex-direction: column;
         }
-
         .account {
           justify-content: flex-start;
         }
-
         .globalRow {
           grid-template-columns: 30px 1fr;
         }
-
         .globalRoll,
         .globalRow .rarity,
         .globalRow .xp {
           grid-column: 2;
         }
-
         .number {
           letter-spacing: 3px;
         }
@@ -696,7 +578,6 @@
 
   <body>
     <div class="app">
-      <!-- HEADER -->
       <div class="card header">
         <div>
           <h1>🎲 DIGIT ROLL</h1>
@@ -723,7 +604,6 @@
         </div>
       </div>
 
-      <!-- ROLL -->
       <div class="card rollbox">
         <div class="small" id="rollLabel">READY TO ROLL</div>
 
@@ -738,7 +618,6 @@
         </div>
       </div>
 
-      <!-- ANALYSIS + HISTORY -->
       <div class="grid">
         <div class="card">
           <h2>✨ Roll Analysis</h2>
@@ -773,6 +652,11 @@
           <div class="badges" id="badges">
             <span class="empty">Roll something!</span>
           </div>
+
+          <div class="chanceDetail">
+            Every badge's chance below is calculated from the actual
+            <b>5.5% blank / 94.5% visible</b> roll distribution.
+          </div>
         </div>
 
         <div class="card">
@@ -787,7 +671,6 @@
         </div>
       </div>
 
-      <!-- PROFILE -->
       <div class="card" id="profileSection" style="display: none">
         <div class="sectionTitle">
           <div>
@@ -840,7 +723,6 @@
         </div>
       </div>
 
-      <!-- GLOBAL LEADERBOARD -->
       <div class="card">
         <div class="sectionTitle">
           <div>
@@ -875,7 +757,6 @@
       </div>
     </div>
 
-    <!-- AUTH MODAL -->
     <div
       class="modal"
       id="authModal"
@@ -922,7 +803,6 @@
       </div>
     </div>
 
-    <!-- BADGE MODAL -->
     <div
       class="modal"
       id="badgeModal"
@@ -952,8 +832,8 @@
 
     <script>
       /* ============================================================
-         SUPABASE
-         ============================================================ */
+   SUPABASE
+   ============================================================ */
 
       const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
@@ -966,80 +846,147 @@
       );
 
       /* ============================================================
-         REFERENCES
-         ============================================================ */
+   ACTUAL ROLL MECHANICS
+   ============================================================ */
+
+      /*
+   EXACT MODEL:
+
+   Every roll has exactly 10 slots.
+
+   Each slot:
+     blank = 0.055
+     digit 0 = 0.0945
+     digit 1 = 0.0945
+     ...
+     digit 9 = 0.0945
+
+   10 * 0.0945 + 0.055 = 1
+
+   This is the probability model used by ALL badge chances.
+*/
+
+      const ROLL_SLOTS = 10;
+
+      const BLANK_PROB = 0.055;
+
+      const DIGIT_PROB = 0.945 / 10;
+
+      /* ============================================================
+   REFERENCES
+   ============================================================ */
 
       const references = {
-        911: [
-          "🚨 Emergency 911",
-          "The famous emergency telephone number.",
-          100000,
-        ],
+        911: {
+          name: "🚨 Emergency 911",
+          explanation: "The famous emergency telephone number.",
+          patterns: ["911"],
+        },
 
-        "007": ["🕵️ Agent 007", "The iconic code name of James Bond.", 100000],
+        "007": {
+          name: "🕵️ Agent 007",
+          explanation: "The iconic code name of James Bond.",
+          patterns: ["007"],
+        },
 
-        420: ["🌿 420", "A famous number from popular culture.", 80000],
+        420: {
+          name: "🌿 420",
+          explanation: "A famous number from popular culture.",
+          patterns: ["420"],
+        },
 
-        404: ["🌐 404 Not Found", "The familiar web error code.", 90000],
+        404: {
+          name: "🌐 404 Not Found",
+          explanation: "The familiar web error code.",
+          patterns: ["404"],
+        },
 
-        1337: ["💻 LEET", "Classic internet/gaming slang for 'leet'.", 120000],
+        1337: {
+          name: "💻 LEET",
+          explanation: "Classic internet/gaming slang for 'leet'.",
+          patterns: ["1337"],
+        },
 
-        666: [
-          "😈 The Number",
-          "A famously recognizable number with cultural significance.",
-          150000,
-        ],
+        666: {
+          name: "😈 The Number",
+          explanation:
+            "A famously recognizable number with cultural significance.",
+          patterns: ["666"],
+        },
 
-        777: [
-          "🎰 Lucky 7s",
-          "Three 7s are a classic lucky-slot-machine pattern.",
-          180000,
-        ],
+        777: {
+          name: "🎰 Lucky 7s",
+          explanation: "Three 7s are a classic lucky-slot-machine pattern.",
+          patterns: ["777"],
+        },
 
-        42: [
-          "🌌 The Answer",
-          "The famously celebrated answer to life, the universe, and everything.",
-          70000,
-        ],
+        42: {
+          name: "🌌 The Answer",
+          explanation:
+            "The famously celebrated answer to life, the universe, and everything.",
+          patterns: ["42"],
+        },
 
-        101: [
-          "📚 101",
-          "A common shorthand for an introductory course or beginner's guide.",
-          35000,
-        ],
+        101: {
+          name: "📚 101",
+          explanation:
+            "A common shorthand for an introductory course or beginner's guide.",
+          patterns: ["101"],
+        },
 
-        123: [
-          "🔢 Counting Up",
-          "The first three digits of the familiar counting sequence.",
-          45000,
-        ],
+        123: {
+          name: "🔢 Counting Up",
+          explanation:
+            "The first three digits of the familiar counting sequence.",
+          patterns: ["123"],
+        },
 
-        321: ["🚀 Countdown", "A classic countdown fragment.", 45000],
+        321: {
+          name: "🚀 Countdown",
+          explanation: "A classic countdown fragment.",
+          patterns: ["321"],
+        },
 
-        314: ["🥧 Pi", "The first three digits of pi.", 55000],
+        314: {
+          name: "🥧 Pi",
+          explanation: "The first three digits of pi.",
+          patterns: ["314"],
+        },
 
-        1984: [
-          "📖 1984",
-          "A recognizable reference to George Orwell's novel.",
-          90000,
-        ],
+        1984: {
+          name: "📖 1984",
+          explanation: "A recognizable reference to George Orwell's novel.",
+          patterns: ["1984"],
+        },
 
-        2001: ["🚀 2001", "A recognizable science-fiction reference.", 90000],
+        2001: {
+          name: "🚀 2001",
+          explanation: "A recognizable science-fiction reference.",
+          patterns: ["2001"],
+        },
 
-        69: [
-          "😎 Nice",
-          "A widely recognized internet-number joke/reference.",
-          40000,
-        ],
+        69: {
+          name: "😎 Nice",
+          explanation: "A widely recognized internet-number joke/reference.",
+          patterns: ["69"],
+        },
 
-        67: ["🔢 67", "A special 67 reference hidden inside the roll.", 25000],
+        67: {
+          name: "🔢 67",
+          explanation: "A special 67 reference hidden inside the roll.",
+          patterns: ["67"],
+        },
 
-        55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
+        55: {
+          name: "⚔️ 55 — Kingsammelot",
+          explanation: "A Kingsammelot reference.",
+          patterns: ["55"],
+        },
       };
 
       /* ============================================================
-         HELPERS
-         ============================================================ */
+   HELPERS
+   ============================================================ */
 
       const $ = (id) => document.getElementById(id);
 
@@ -1058,34 +1005,76 @@
 
         clearTimeout(window.toastTimer);
 
-        window.toastTimer = setTimeout(() => {
-          $("toast").classList.remove("show");
-        }, 3000);
+        window.toastTimer = setTimeout(
+          () => $("toast").classList.remove("show"),
+          3000,
+        );
       }
 
-      function fmt(n) {
-        const value = Number(n);
+      /*
+   This deliberately does NOT force oneIn to an integer.
 
-        if (!Number.isFinite(value)) {
-          return "1 in —";
-        }
+   Example:
 
-        return "1 in " + value.toLocaleString();
+   true probability =
+   0.00020610148
+
+   means:
+
+   1 in 4851.978...
+
+   Rounding that to 1 in 4852 is fine for display,
+   but internally we keep the real value.
+*/
+
+      function fmtOneIn(value) {
+        const n = Number(value);
+
+        if (!Number.isFinite(n)) return "1 in —";
+
+        if (n >= 1000000000000) return "1 in " + n.toExponential(3);
+
+        if (n >= 1000000000)
+          return (
+            "1 in " + n.toLocaleString(undefined, { maximumFractionDigits: 2 })
+          );
+
+        return (
+          "1 in " + n.toLocaleString(undefined, { maximumFractionDigits: 4 })
+        );
       }
 
-      function meta(x) {
-        if (!x) return "No rolls yet";
+      function probabilityPercent(p) {
+        if (p <= 0) return "0%";
 
-        return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
+        if (p >= 1) return "100%";
+
+        if (p < 0.000001) return (p * 100).toExponential(3) + "%";
+
+        return (
+          (p * 100).toLocaleString(undefined, { maximumFractionDigits: 6 }) +
+          "%"
+        );
       }
 
-      function better(a, b) {
-        return !b || Number(a.oneIn) > Number(b.oneIn);
+      function chanceFromProbability(prob) {
+        if (prob <= 0) return Infinity;
+
+        return 1 / prob;
+      }
+
+      function makeBadge(name, explanation, probability) {
+        return {
+          name,
+          explanation,
+          probability,
+          oneIn: chanceFromProbability(probability),
+        };
       }
 
       /* ============================================================
-         RARITY CLASS
-         ============================================================ */
+   RARITY
+   ============================================================ */
 
       function getRarityClass(rarity) {
         switch (String(rarity || "").toUpperCase()) {
@@ -1140,15 +1129,16 @@
       }
 
       /* ============================================================
-         RANDOM ROLL
-         ============================================================ */
+   RANDOM ROLL
+   ============================================================ */
 
       function randomRoll() {
         const chars = [];
+
         let blanks = 0;
 
-        for (let i = 0; i < 10; i++) {
-          if (Math.random() < 0.055) {
+        for (let i = 0; i < ROLL_SLOTS; i++) {
+          if (Math.random() < BLANK_PROB) {
             chars.push("_");
             blanks++;
           } else {
@@ -1156,18 +1146,19 @@
           }
         }
 
-        if (blanks === 10) {
-          chars[Math.floor(Math.random() * 10)] = String(
+        /*
+     Preserve the original mechanic:
+     a roll can never be completely blank.
+  */
+
+        if (blanks === ROLL_SLOTS) {
+          chars[Math.floor(Math.random() * ROLL_SLOTS)] = String(
             Math.floor(Math.random() * 10),
           );
         }
 
         return chars;
       }
-
-      /* ============================================================
-         RANDOM PREVIEW NUMBER
-         ============================================================ */
 
       function randomPreviewNumber() {
         let output = "";
@@ -1180,8 +1171,377 @@
       }
 
       /* ============================================================
-         ADVANCED ANALYSIS
-         ============================================================ */
+   EXACT PATTERN PROBABILITY
+   ============================================================ */
+
+      /*
+   Important:
+
+   The detector works on the VISIBLE sequence.
+
+   "_" does not become a character.
+
+   Example:
+
+       1 _ 2 3
+
+   becomes:
+
+       123
+
+   before sequence detection.
+
+   We use an Aho-Corasick automaton to calculate the probability
+   of seeing ANY pattern in a set.
+
+   This handles overlapping patterns correctly.
+*/
+
+      function buildPatternAutomaton(patterns) {
+        const nodes = [
+          {
+            next: {},
+            fail: 0,
+            output: false,
+          },
+        ];
+
+        for (const pattern of patterns) {
+          let node = 0;
+
+          for (const char of pattern) {
+            if (nodes[node].next[char] === undefined) {
+              nodes[node].next[char] = nodes.length;
+
+              nodes.push({
+                next: {},
+                fail: 0,
+                output: false,
+              });
+            }
+
+            node = nodes[node].next[char];
+          }
+
+          nodes[node].output = true;
+        }
+
+        const queue = [];
+
+        for (const char of "0123456789") {
+          if (nodes[0].next[char] !== undefined) {
+            const child = nodes[0].next[char];
+
+            nodes[child].fail = 0;
+
+            queue.push(child);
+          }
+        }
+
+        while (queue.length) {
+          const current = queue.shift();
+
+          for (const char of "0123456789") {
+            if (nodes[current].next[char] !== undefined) {
+              const child = nodes[current].next[char];
+
+              queue.push(child);
+
+              let fallback = nodes[current].fail;
+
+              while (
+                fallback !== 0 &&
+                nodes[fallback].next[char] === undefined
+              ) {
+                fallback = nodes[fallback].fail;
+              }
+
+              if (nodes[fallback].next[char] !== undefined) {
+                nodes[child].fail = nodes[fallback].next[char];
+              } else {
+                nodes[child].fail = 0;
+              }
+
+              if (nodes[nodes[child].fail].output) {
+                nodes[child].output = true;
+              }
+            }
+          }
+        }
+
+        /*
+     Complete missing transitions.
+
+     This makes probability DP extremely fast.
+  */
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (const char of "0123456789") {
+            if (nodes[i].next[char] === undefined) {
+              if (i === 0) {
+                nodes[i].next[char] = 0;
+              } else {
+                nodes[i].next[char] = nodes[nodes[i].fail].next[char];
+              }
+            }
+          }
+        }
+
+        return nodes;
+      }
+
+      /*
+   Exact probability that at least one pattern appears
+   in the visible digit sequence.
+*/
+
+      function exactPatternProbability(patterns) {
+        if (!patterns || !patterns.length) return 0;
+
+        const nodes = buildPatternAutomaton(patterns);
+
+        /*
+     dp[state][found]
+
+     Only probabilities are stored.
+  */
+
+        let dp = Array.from({ length: nodes.length }, () => [0, 0]);
+
+        dp[0][0] = 1;
+
+        for (let position = 0; position < ROLL_SLOTS; position++) {
+          const next = Array.from({ length: nodes.length }, () => [0, 0]);
+
+          for (let state = 0; state < nodes.length; state++) {
+            for (let found = 0; found < 2; found++) {
+              const probability = dp[state][found];
+
+              if (probability === 0) continue;
+
+              /*
+           BLANK
+
+           A blank disappears from the visible
+           sequence, so the automaton state does
+           not change.
+        */
+
+              next[state][found] += probability * BLANK_PROB;
+
+              /*
+           DIGITS
+        */
+
+              for (const digit of "0123456789") {
+                const newState = nodes[state].next[digit];
+
+                const newFound = found || nodes[newState].output;
+
+                next[newState][newFound ? 1 : 0] += probability * DIGIT_PROB;
+              }
+            }
+          }
+
+          dp = next;
+        }
+
+        let result = 0;
+
+        for (let state = 0; state < nodes.length; state++) {
+          result += dp[state][1];
+        }
+
+        return result;
+      }
+
+      /* ============================================================
+   EXACT DIGIT-COUNT PROBABILITY
+   ============================================================ */
+
+      /*
+   Probability that the most common visible digit appears
+   at least "threshold" times.
+
+   This uses a generating function.
+
+   For each of the ten digit values, the coefficient for j
+   appearances is:
+
+       x^j / j!
+
+   We combine the ten digits and account for blanks separately.
+
+   This is exact under the actual roll distribution.
+*/
+
+      function polynomialMultiply(a, b) {
+        const result = Array(a.length + b.length - 1).fill(0);
+
+        for (let i = 0; i < a.length; i++) {
+          for (let j = 0; j < b.length; j++) {
+            result[i + j] += a[i] * b[j];
+          }
+        }
+
+        return result;
+      }
+
+      function exactMaxDigitProbability(threshold) {
+        /*
+     P(max >= threshold)
+     =
+     1 - P(max <= threshold-1)
+  */
+
+        const maxAllowed = threshold - 1;
+
+        let polynomial = [1];
+
+        const base = [];
+
+        for (let j = 0; j <= maxAllowed; j++) {
+          base.push(1 / factorial(j));
+        }
+
+        for (let digit = 0; digit < 10; digit++) {
+          polynomial = polynomialMultiply(polynomial, base);
+        }
+
+        let allowedProbability = 0;
+
+        /*
+     b = number of blanks
+     n = visible digits
+  */
+
+        for (let blanks = 0; blanks <= ROLL_SLOTS; blanks++) {
+          const visible = ROLL_SLOTS - blanks;
+
+          if (visible >= polynomial.length) continue;
+
+          const coefficient = polynomial[visible] || 0;
+
+          allowedProbability +=
+            combination(ROLL_SLOTS, blanks) *
+            Math.pow(BLANK_PROB, blanks) *
+            Math.pow(DIGIT_PROB, visible) *
+            factorial(visible) *
+            coefficient;
+        }
+
+        return Math.max(0, 1 - allowedProbability);
+      }
+
+      function factorial(n) {
+        let result = 1;
+
+        for (let i = 2; i <= n; i++) result *= i;
+
+        return result;
+      }
+
+      function combination(n, k) {
+        if (k < 0 || k > n) return 0;
+
+        return factorial(n) / (factorial(k) * factorial(n - k));
+      }
+
+      /* ============================================================
+   EXACT "ALL VISIBLE DIGITS SAME"
+   ============================================================ */
+
+      function exactMonochromeProbability() {
+        let probability = 0;
+
+        /*
+     There are 10 possible digits.
+
+     At least two visible appearances are required.
+  */
+
+        for (let visible = 2; visible <= ROLL_SLOTS; visible++) {
+          probability +=
+            combination(ROLL_SLOTS, visible) *
+            Math.pow(BLANK_PROB, ROLL_SLOTS - visible) *
+            Math.pow(DIGIT_PROB, visible) *
+            10;
+        }
+
+        return probability;
+      }
+
+      /* ============================================================
+   ALL TEN DIGITS
+   ============================================================ */
+
+      function exactAllTenDigitsProbability() {
+        /*
+     Ten slots.
+     Ten different digits.
+     Therefore:
+
+       10! * p^10
+
+     where p = 0.0945.
+
+     Any blank makes the badge impossible.
+  */
+
+        return factorial(10) * Math.pow(DIGIT_PROB, 10);
+      }
+
+      /* ============================================================
+   EXACT BLANK COUNT
+   ============================================================ */
+
+      function exactBlankCountProbability(count) {
+        return (
+          combination(ROLL_SLOTS, count) *
+          Math.pow(BLANK_PROB, count) *
+          Math.pow(1 - BLANK_PROB, ROLL_SLOTS - count)
+        );
+      }
+
+      /* ============================================================
+   PATTERN SETS
+   ============================================================ */
+
+      function rangePatterns(length) {
+        const patterns = [];
+
+        for (let start = 0; start <= 9 - length + 1; start++) {
+          let text = "";
+
+          for (let i = 0; i < length; i++) {
+            text += String(start + i);
+          }
+
+          patterns.push(text);
+        }
+
+        return patterns;
+      }
+
+      function reverseRangePatterns(length) {
+        const patterns = [];
+
+        for (let start = length - 1; start <= 9; start++) {
+          let text = "";
+
+          for (let i = 0; i < length; i++) {
+            text += String(start - i);
+          }
+
+          patterns.push(text);
+        }
+
+        return patterns;
+      }
+
+      /* ============================================================
+   ADVANCED BADGE DETECTION
+   ============================================================ */
 
       function analyze(chars) {
         const digits = chars.filter((x) => x !== "_");
@@ -1190,21 +1550,27 @@
 
         const badges = [];
 
-        /* REFERENCES */
+        /*
+     ------------------------------------------------------------
+     REFERENCES
+     ------------------------------------------------------------
+  */
 
-        for (const [key, [name, explanation, oneIn]] of Object.entries(
-          references,
-        )) {
-          if (compact.includes(key)) {
-            badges.push({
-              name,
-              explanation,
-              oneIn,
-            });
+        for (const reference of Object.values(references)) {
+          const probability = exactPatternProbability(reference.patterns);
+
+          if (reference.patterns.some((p) => compact.includes(p))) {
+            badges.push(
+              makeBadge(reference.name, reference.explanation, probability),
+            );
           }
         }
 
-        /* DIGIT COUNTS */
+        /*
+     ------------------------------------------------------------
+     DIGIT COUNTS
+     ------------------------------------------------------------
+  */
 
         const counts = {};
 
@@ -1215,134 +1581,238 @@
         const maxCount = Math.max(0, ...Object.values(counts));
 
         if (maxCount >= 2) {
-          badges.push({
-            name: "🔁 Repeater",
-            explanation: "At least one visible digit appears more than once.",
-            oneIn: 5,
-          });
+          badges.push(
+            makeBadge(
+              "🔁 Repeater",
+              "At least one visible digit appears at least twice.",
+              exactMaxDigitProbability(2),
+            ),
+          );
         }
 
         if (maxCount >= 3) {
-          badges.push({
-            name: "🔥 Triple Digit",
-            explanation: "A visible digit appears three or more times.",
-            oneIn: 100,
-          });
+          badges.push(
+            makeBadge(
+              "🔥 Triple Digit",
+              "A visible digit appears three or more times.",
+              exactMaxDigitProbability(3),
+            ),
+          );
         }
 
         if (maxCount >= 4) {
-          badges.push({
-            name: "💥 Quad Digit",
-            explanation: "A visible digit appears four or more times.",
-            oneIn: 1000,
-          });
+          badges.push(
+            makeBadge(
+              "💥 Quad Digit",
+              "A visible digit appears four or more times.",
+              exactMaxDigitProbability(4),
+            ),
+          );
         }
 
         if (maxCount >= 5) {
-          badges.push({
-            name: "☢️ Quint Digit",
-            explanation: "The same visible digit appears at least five times.",
-            oneIn: 10000,
-          });
+          badges.push(
+            makeBadge(
+              "☢️ Quint Digit",
+              "The same visible digit appears at least five times.",
+              exactMaxDigitProbability(5),
+            ),
+          );
         }
 
         if (maxCount >= 6) {
-          badges.push({
-            name: "👹 Hex Digit",
-            explanation:
+          badges.push(
+            makeBadge(
+              "👹 Hex Digit",
               "One digit dominates the roll with six or more appearances.",
-            oneIn: 100000,
-          });
+              exactMaxDigitProbability(6),
+            ),
+          );
         }
+
+        /*
+     ------------------------------------------------------------
+     MONOCHROME
+     ------------------------------------------------------------
+  */
 
         if (digits.length > 1 && new Set(digits).size === 1) {
-          badges.push({
-            name: "👑 Monochrome",
-            explanation: "Every visible digit is identical.",
-            oneIn: 1000000,
-          });
+          badges.push(
+            makeBadge(
+              "👑 Monochrome",
+              "Every visible digit is identical.",
+              exactMonochromeProbability(),
+            ),
+          );
         }
+
+        /*
+     ------------------------------------------------------------
+     ALL TEN DIGITS
+     ------------------------------------------------------------
+  */
 
         if (digits.length === 10 && new Set(digits).size === 10) {
-          badges.push({
-            name: "🌈 All Ten Digits",
-            explanation: "Every digit from 0 through 9 appears exactly once.",
-            oneIn: 3628800,
-          });
+          badges.push(
+            makeBadge(
+              "🌈 All Ten Digits",
+              "Every digit from 0 through 9 appears exactly once.",
+              exactAllTenDigitsProbability(),
+            ),
+          );
         }
 
-        /* DOUBLES */
+        /*
+     ------------------------------------------------------------
+     DOUBLES
+     ------------------------------------------------------------
+  */
 
-        if (/00|11|22|33|44|55|66|77|88|99/.test(compact)) {
-          badges.push({
-            name: "👯 Double",
-            explanation:
-              "Two identical digits appear directly beside each other.",
-            oneIn: 100,
-          });
+        const doublePatterns = [
+          "00",
+          "11",
+          "22",
+          "33",
+          "44",
+          "55",
+          "66",
+          "77",
+          "88",
+          "99",
+        ];
+
+        const doubleProbability = exactPatternProbability(doublePatterns);
+
+        if (doublePatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "👯 Double",
+              "Two identical digits appear directly beside each other in the visible sequence.",
+              doubleProbability,
+            ),
+          );
         }
 
-        if (/000|111|222|333|444|555|666|777|888|999/.test(compact)) {
-          badges.push({
-            name: "🔥 Triple Stack",
-            explanation: "Three identical digits appear consecutively.",
-            oneIn: 1000,
-          });
+        /*
+     ------------------------------------------------------------
+     TRIPLE STACK
+     ------------------------------------------------------------
+  */
+
+        const triplePatterns = [
+          "000",
+          "111",
+          "222",
+          "333",
+          "444",
+          "555",
+          "666",
+          "777",
+          "888",
+          "999",
+        ];
+
+        const tripleProbability = exactPatternProbability(triplePatterns);
+
+        if (triplePatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🔥 Triple Stack",
+              "Three identical digits appear consecutively.",
+              tripleProbability,
+            ),
+          );
         }
 
-        /* RISING */
+        /*
+     ------------------------------------------------------------
+     RISING SEQUENCES
+     ------------------------------------------------------------
+  */
 
-        if (/012|123|234|345|456|567|678|789/.test(compact)) {
-          badges.push({
-            name: "📈 Rising Sequence",
-            explanation: "Three consecutive digits appear in ascending order.",
-            oneIn: 100,
-          });
+        const rising3 = rangePatterns(3);
+
+        const rising4 = rangePatterns(4);
+
+        const rising5 = rangePatterns(5);
+
+        if (rising3.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "📈 Rising Sequence",
+              "Three consecutive digits appear in ascending order.",
+              exactPatternProbability(rising3),
+            ),
+          );
         }
 
-        if (/0123|1234|2345|3456|4567|5678|6789/.test(compact)) {
-          badges.push({
-            name: "🪜 Staircase",
-            explanation: "Four consecutive digits climb steadily upward.",
-            oneIn: 1000,
-          });
+        if (rising4.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🪜 Staircase",
+              "Four consecutive digits climb steadily upward.",
+              exactPatternProbability(rising4),
+            ),
+          );
         }
 
-        if (/01234|12345|23456|34567|45678|56789/.test(compact)) {
-          badges.push({
-            name: "🚀 Mega Staircase",
-            explanation: "Five consecutive digits rise steadily upward.",
-            oneIn: 10000,
-          });
+        if (rising5.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🚀 Mega Staircase",
+              "Five consecutive digits rise steadily upward.",
+              exactPatternProbability(rising5),
+            ),
+          );
         }
 
-        /* FALLING */
+        /*
+     ------------------------------------------------------------
+     FALLING
+     ------------------------------------------------------------
+  */
 
-        if (/987|876|765|654|543|432|321|210/.test(compact)) {
-          badges.push({
-            name: "📉 Falling Sequence",
-            explanation: "Three consecutive digits appear in descending order.",
-            oneIn: 100,
-          });
+        const falling3 = reverseRangePatterns(3);
+
+        const falling4 = reverseRangePatterns(4);
+
+        const falling5 = reverseRangePatterns(5);
+
+        if (falling3.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "📉 Falling Sequence",
+              "Three consecutive digits appear in descending order.",
+              exactPatternProbability(falling3),
+            ),
+          );
         }
 
-        if (/9876|8765|7654|6543|5432|4321|3210/.test(compact)) {
-          badges.push({
-            name: "🪜 Reverse Staircase",
-            explanation: "Four consecutive digits descend steadily.",
-            oneIn: 1000,
-          });
+        if (falling4.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🪜 Reverse Staircase",
+              "Four consecutive digits descend steadily.",
+              exactPatternProbability(falling4),
+            ),
+          );
         }
 
-        if (/98765|87654|76543|65432|54321|43210/.test(compact)) {
-          badges.push({
-            name: "🚀 Mega Reverse Staircase",
-            explanation: "Five consecutive digits fall steadily downward.",
-            oneIn: 10000,
-          });
+        if (falling5.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🚀 Mega Reverse Staircase",
+              "Five consecutive digits fall steadily downward.",
+              exactPatternProbability(falling5),
+            ),
+          );
         }
 
-        /* MOUNTAINS */
+        /*
+     ------------------------------------------------------------
+     MOUNTAINS
+     ------------------------------------------------------------
+  */
 
         const mountainPatterns = [
           "01210",
@@ -1353,6 +1823,7 @@
           "56765",
           "67876",
           "78987",
+
           "0123210",
           "1234321",
           "2345432",
@@ -1361,16 +1832,21 @@
           "5678765",
         ];
 
-        if (mountainPatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "⛰️ Mountain",
-            explanation:
+        if (mountainPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "⛰️ Mountain",
               "Numbers rise to a peak in order, then fall back down.",
-            oneIn: 10000,
-          });
+              exactPatternProbability(mountainPatterns),
+            ),
+          );
         }
 
-        /* VALLEYS */
+        /*
+     ------------------------------------------------------------
+     VALLEYS
+     ------------------------------------------------------------
+  */
 
         const valleyPatterns = [
           "21012",
@@ -1381,6 +1857,7 @@
           "76567",
           "87678",
           "98789",
+
           "2101234",
           "3212345",
           "4323456",
@@ -1389,16 +1866,78 @@
           "7656789",
         ];
 
-        if (valleyPatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "🏞️ Valley",
-            explanation:
+        if (valleyPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🏞️ Valley",
               "Numbers fall to a low point in order, then rise again.",
-            oneIn: 10000,
-          });
+              exactPatternProbability(valleyPatterns),
+            ),
+          );
         }
 
-        /* WAVES */
+        /*
+     ------------------------------------------------------------
+     MIRRORS
+     ------------------------------------------------------------
+  */
+
+        const mirrorPatterns = [
+          "010",
+          "121",
+          "232",
+          "343",
+          "454",
+          "565",
+          "676",
+          "787",
+          "898",
+          "909",
+
+          "0110",
+          "1221",
+          "2332",
+          "3443",
+          "4554",
+          "5665",
+          "6776",
+          "7887",
+          "8998",
+
+          "01210",
+          "12321",
+          "23432",
+          "34543",
+          "45654",
+          "56765",
+          "67876",
+          "78987",
+        ];
+
+        if (mirrorPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🪞 Mirror",
+              "A section of the visible number reads the same forward and backward.",
+              exactPatternProbability(mirrorPatterns),
+            ),
+          );
+        }
+
+        /*
+     ------------------------------------------------------------
+     WAVES
+     ------------------------------------------------------------
+
+     Examples:
+
+       121
+       232
+       343
+       12321
+       23432
+       121212
+  */
 
         const wavePatterns = [
           "121",
@@ -1409,6 +1948,25 @@
           "676",
           "787",
           "898",
+
+          "1212",
+          "2323",
+          "3434",
+          "4545",
+          "5656",
+          "6767",
+          "7878",
+          "8989",
+
+          "12121",
+          "23232",
+          "34343",
+          "45454",
+          "56565",
+          "67676",
+          "78787",
+          "89898",
+
           "12321",
           "23432",
           "34543",
@@ -1418,342 +1976,461 @@
           "78987",
         ];
 
-        if (wavePatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "🌊 Wave",
-            explanation:
-              "The digits repeatedly rise and fall, creating a wave-like pattern.",
-            oneIn: 15000,
-          });
+        if (wavePatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🌊 Wave",
+              "Digits repeatedly rise and fall in a wave-like pattern.",
+              exactPatternProbability(wavePatterns),
+            ),
+          );
         }
 
-        /* MIRRORS */
+        /*
+     ------------------------------------------------------------
+     PYRAMIDS
+     ------------------------------------------------------------
+  */
 
-        for (let len = 3; len <= 7; len++) {
-          for (let i = 0; i <= compact.length - len; i++) {
-            const part = compact.slice(i, i + len);
+        const pyramidPatterns = [
+          "1",
+          "121",
+          "12321",
+          "1234321",
 
-            if (part.length >= 3) {
-              const reversed = part.split("").reverse().join("");
+          "2",
+          "232",
+          "23432",
+          "2345432",
 
-              if (part === reversed) {
-                badges.push({
-                  name: "🪞 Mirror",
-                  explanation:
-                    "A sequence reads the same forward and backward.",
-                  oneIn: Math.pow(10, len),
-                });
+          "3",
+          "343",
+          "34543",
+          "3456543",
 
-                i = compact.length;
+          "4",
+          "454",
+          "45654",
+          "4567654",
 
+          "5",
+          "565",
+          "56765",
+          "5678765",
+
+          "6",
+          "676",
+          "67876",
+
+          "7",
+          "787",
+          "78987",
+        ];
+
+        /*
+     Only count the meaningful pyramid structures,
+     not single digits.
+  */
+
+        const meaningfulPyramids = pyramidPatterns.filter((p) => p.length >= 3);
+
+        if (meaningfulPyramids.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🔺 Pyramid",
+              "The digits expand outward toward a peak and return symmetrically.",
+              exactPatternProbability(meaningfulPyramids),
+            ),
+          );
+        }
+
+        /*
+     ------------------------------------------------------------
+     LOOPS
+     ------------------------------------------------------------
+  */
+
+        const loopPatterns = [
+          "0123456789",
+          "9876543210",
+
+          "01230123",
+          "12341234",
+          "23452345",
+          "34563456",
+          "45674567",
+          "56785678",
+          "67896789",
+
+          "010101",
+          "121212",
+          "232323",
+          "343434",
+          "454545",
+          "565656",
+          "676767",
+          "787878",
+          "898989",
+        ];
+
+        if (loopPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "♾️ Loop",
+              "A repeating cycle appears in the visible digits.",
+              exactPatternProbability(loopPatterns),
+            ),
+          );
+        }
+
+        /*
+     ------------------------------------------------------------
+     ALTERNATING
+     ------------------------------------------------------------
+  */
+
+        const alternatingPatterns = [];
+
+        for (let a = 0; a <= 9; a++) {
+          for (let b = 0; b <= 9; b++) {
+            if (a === b) continue;
+
+            alternatingPatterns.push(
+              String(a) + String(b) + String(a) + String(b) + String(a),
+            );
+          }
+        }
+
+        if (alternatingPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "🔀 Alternating",
+              "Two digits alternate repeatedly through the visible sequence.",
+              exactPatternProbability(alternatingPatterns),
+            ),
+          );
+        }
+
+        /*
+     ------------------------------------------------------------
+     SPECIAL 777
+     ------------------------------------------------------------
+  */
+
+        if (compact.includes("777")) {
+          /*
+       Already represented by the reference badge,
+       but this adds a dedicated jackpot-style badge.
+    */
+
+          badges.push(
+            makeBadge(
+              "💰 Triple Lucky 7",
+              "The roll contains the classic 777 jackpot pattern.",
+              exactPatternProbability(["777"]),
+            ),
+          );
+        }
+
+        /*
+     ------------------------------------------------------------
+     MATHEMATICAL ARITHMETIC PATTERNS
+     ------------------------------------------------------------
+
+     Four visible digits with a constant difference.
+
+     Examples:
+
+       1357
+       2468
+       8642
+       9753
+  */
+
+        const arithmeticPatterns = [];
+
+        for (let start = 0; start <= 9; start++) {
+          for (let difference = -9; difference <= 9; difference++) {
+            let text = "";
+            let valid = true;
+
+            for (let i = 0; i < 4; i++) {
+              const value = start + difference * i;
+
+              if (value < 0 || value > 9) {
+                valid = false;
                 break;
               }
+
+              text += String(value);
+            }
+
+            if (valid && text.length === 4) {
+              arithmeticPatterns.push(text);
             }
           }
         }
 
-        /* ALTERNATORS */
-
-        if (/0101|1212|2323|3434|4545|5656|6767|7878|8989/.test(compact)) {
-          badges.push({
-            name: "⚡ Alternator",
-            explanation: "Two digits repeatedly alternate back and forth.",
-            oneIn: 5000,
-          });
+        if (arithmeticPatterns.some((p) => compact.includes(p))) {
+          badges.push(
+            makeBadge(
+              "📐 Arithmetic Pattern",
+              "Four digits form an arithmetic progression with a constant difference.",
+              exactPatternProbability(arithmeticPatterns),
+            ),
+          );
         }
 
-        /* LOOPS */
-
-        const loopPatterns = [
-          "0123456789",
-          "1234567890",
-          "9876543210",
-          "0987654321",
-        ];
-
-        if (loopPatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "🔄 Digit Loop",
-            explanation: "The digits travel through a complete numeric cycle.",
-            oneIn: 100000,
-          });
-        }
-
-        /* PYRAMIDS */
-
-        const pyramidPatterns = [
-          "1234321",
-          "2345432",
-          "3456543",
-          "4567654",
-          "5678765",
-          "11211",
-          "22322",
-          "33433",
-          "44544",
-          "55655",
-          "66766",
-          "77877",
-          "88988",
-        ];
-
-        if (pyramidPatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "🔺 Pyramid",
-            explanation:
-              "Digits expand toward a center and then contract, creating a pyramid-like pattern.",
-            oneIn: 20000,
-          });
-        }
-
-        /* PALINDROME */
+        /*
+     ------------------------------------------------------------
+     DIGIT SUM MULTIPLES
+     ------------------------------------------------------------
+  */
 
         if (
-          compact.length >= 4 &&
-          compact === compact.split("").reverse().join("")
+          digits.length >= 3 &&
+          digits.reduce((sum, d) => sum + Number(d), 0) % 7 === 0
         ) {
-          badges.push({
-            name: "🪞 Perfect Mirror",
-            explanation:
-              "The entire visible number reads identically forward and backward.",
-            oneIn: 100000,
-          });
+          /*
+       This is a property of the final roll.
+
+       Exact probability is calculated below by enumerating
+       the digit-sum distribution with dynamic programming.
+    */
+
+          badges.push(
+            makeBadge(
+              "🍀 Lucky Sum 7",
+              "The sum of all visible digits is divisible by 7.",
+              exactDigitSumDivisibleProbability(7),
+            ),
+          );
         }
 
-        /* MATHEMATICAL */
+        /*
+     ------------------------------------------------------------
+     BLANK BADGES
+     ------------------------------------------------------------
+  */
 
-        if (digits.length >= 4) {
-          const diffs = [];
+        const blankCount = chars.filter((x) => x === "_").length;
 
-          for (let i = 1; i < digits.length; i++) {
-            diffs.push(Number(digits[i]) - Number(digits[i - 1]));
+        if (blankCount >= 2) {
+          badges.push(
+            makeBadge(
+              "⬜ Double Blank",
+              "The roll contains at least two blank slots.",
+              exactBlankAtLeastProbability(2),
+            ),
+          );
+        }
+
+        if (blankCount >= 3) {
+          badges.push(
+            makeBadge(
+              "⬜ Triple Blank",
+              "The roll contains at least three blank slots.",
+              exactBlankAtLeastProbability(3),
+            ),
+          );
+        }
+
+        if (blankCount >= 5) {
+          badges.push(
+            makeBadge(
+              "🌫️ Ghost Roll",
+              "At least half of the ten slots are blank.",
+              exactBlankAtLeastProbability(5),
+            ),
+          );
+        }
+
+        return badges;
+      }
+
+      /* ============================================================
+   EXACT DIGIT SUM PROBABILITY
+   ============================================================ */
+
+      function exactDigitSumDivisibleProbability(divisor) {
+        /*
+     DP over:
+
+       position
+       sum
+
+     A blank contributes zero.
+  */
+
+        let dp = Array(91).fill(0);
+
+        dp[0] = 1;
+
+        for (let position = 0; position < ROLL_SLOTS; position++) {
+          const next = Array(91).fill(0);
+
+          for (let sum = 0; sum <= 90; sum++) {
+            const probability = dp[sum];
+
+            if (!probability) continue;
+
+            /*
+         blank
+      */
+
+            next[sum] += probability * BLANK_PROB;
+
+            /*
+         visible digit
+      */
+
+            for (let digit = 0; digit <= 9; digit++) {
+              next[sum + digit] += probability * DIGIT_PROB;
+            }
           }
 
-          if (
-            diffs.length >= 3 &&
-            diffs.every((d) => d === diffs[0]) &&
-            diffs[0] !== 0
-          ) {
-            badges.push({
-              name: "📐 Arithmetic Pattern",
-              explanation:
-                "The visible digits change by the same amount each step.",
-              oneIn: 20000,
-            });
-          }
+          dp = next;
         }
 
-        /* SQUARE-LIKE */
+        let probability = 0;
 
-        const squarePatterns = [
-          "149",
-          "169",
-          "196",
-          "256",
-          "361",
-          "441",
-          "529",
-          "625",
-          "729",
-          "841",
-        ];
-
-        if (squarePatterns.some((x) => compact.includes(x))) {
-          badges.push({
-            name: "🧮 Math Pattern",
-            explanation:
-              "A recognizable mathematical square pattern appears inside the roll.",
-            oneIn: 12000,
-          });
+        for (let sum = 0; sum <= 90; sum++) {
+          if (sum % divisor === 0) probability += dp[sum];
         }
 
-        /* SAME PARITY */
+        return probability;
+      }
 
-        if (digits.length >= 5) {
-          const parity = digits.map((d) => Number(d) % 2);
+      /* ============================================================
+   BLANK AT LEAST
+   ============================================================ */
 
-          if (parity.every((x) => x === parity[0])) {
-            badges.push({
-              name: "⚫⚪ Parity Chain",
-              explanation: "Every visible digit has the same odd/even parity.",
-              oneIn: 32,
-            });
-          }
+      function exactBlankAtLeastProbability(count) {
+        let result = 0;
+
+        for (let blanks = count; blanks <= ROLL_SLOTS; blanks++) {
+          result += exactBlankCountProbability(blanks);
         }
 
-        /* SORT */
+        /*
+     The original mechanic prevents all-ten-blank rolls.
 
-        badges.sort((a, b) => a.oneIn - b.oneIn);
+     Remove that event because randomRoll() replaces one blank
+     with a visible digit if all ten were blank.
+  */
 
-        /* CHANCE */
-
-        let badgeChance = 1;
-
-        for (const b of badges) {
-          badgeChance *= b.oneIn;
-
-          if (badgeChance > 1e100) {
-            badgeChance = 1e100;
-            break;
-          }
+        if (count <= 10) {
+          result -= Math.pow(BLANK_PROB, 10);
         }
+
+        return Math.max(0, result);
+      }
+
+      /* ============================================================
+   ROLL SCORE
+   ============================================================ */
+
+      function calculateRollScore(badges, chars) {
+        /*
+     The roll's overall rarity is based on the rarest
+     mathematically detected property.
+
+     If no special badge exists, the roll is Common.
+  */
+
+        if (!badges.length) {
+          return {
+            oneIn: 1,
+            probability: 1,
+            rarity: "COMMON",
+            xp: 5,
+          };
+        }
+
+        const rarest = badges.reduce((best, badge) =>
+          badge.oneIn > best.oneIn ? badge : best,
+        );
+
+        const oneIn = rarest.oneIn;
+
+        let rarity = "COMMON";
+        let xp = 10;
+
+        if (oneIn >= 10) {
+          rarity = "UNCOMMON";
+          xp = 20;
+        }
+
+        if (oneIn >= 100) {
+          rarity = "RARE";
+          xp = 40;
+        }
+
+        if (oneIn >= 1000) {
+          rarity = "EPIC";
+          xp = 80;
+        }
+
+        if (oneIn >= 10000) {
+          rarity = "LEGENDARY";
+          xp = 150;
+        }
+
+        if (oneIn >= 100000) {
+          rarity = "MYTHIC";
+          xp = 300;
+        }
+
+        if (oneIn >= 1000000) {
+          rarity = "DIVINE";
+          xp = 600;
+        }
+
+        if (oneIn >= 10000000) {
+          rarity = "TRANSCENDENT";
+          xp = 1200;
+        }
+
+        if (oneIn >= 1000000000) {
+          rarity = "???";
+          xp = 5000;
+        }
+
+        /*
+     Extra XP for multiple independent discoveries.
+
+     This doesn't affect probability.
+  */
+
+        xp += Math.max(0, badges.length - 1) * 10;
+
+        /*
+     Blank bonus.
+  */
 
         const blanks = chars.filter((x) => x === "_").length;
 
-        const blankMultiplier = Math.pow(10, blanks);
-
-        const totalChance = badgeChance * blankMultiplier;
-
-        /* RARITY */
-
-        let rarity = "COMMON";
-
-        if (badges.length || blanks >= 1) {
-          rarity = "UNCOMMON";
-        }
-
-        if (totalChance >= 100) rarity = "RARE";
-
-        if (totalChance >= 1000) rarity = "EPIC";
-
-        if (totalChance >= 10000) rarity = "LEGENDARY";
-
-        if (totalChance >= 1000000) rarity = "MYTHIC";
-
-        if (totalChance >= 100000000) rarity = "DIVINE";
-
-        if (totalChance >= 10000000000) rarity = "TRANSCENDENT";
-
-        if (totalChance >= 1000000000000) rarity = "???";
-
-        /* XP */
-
-        const badgeXP = badges.reduce(
-          (sum, b) =>
-            sum + Math.max(1, Math.round(Math.log10(b.oneIn + 1) * 20)),
-          0,
-        );
-
-        const blankXP = blanks * 100;
-
-        const rarityXP = Math.max(
-          0,
-          Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
-        );
-
-        const xp = Math.max(5, badgeXP + blankXP + rarityXP);
+        xp += blanks * 3;
 
         return {
-          badges,
-          badgeChance,
-          blankMultiplier,
-          oneIn: totalChance,
+          oneIn,
+          probability: 1 / oneIn,
           rarity,
-          shown: digits.length,
-          blanks,
           xp,
         };
       }
 
       /* ============================================================
-         LOCAL STORAGE
-         ============================================================ */
+   BADGE MODAL
+   ============================================================ */
 
-      function saveLocal() {
-        try {
-          localStorage.setItem("digitRollHistory", JSON.stringify(history));
+      function openBadgeInfo(badge) {
+        $("badgeModalName").textContent = badge.name;
 
-          localStorage.setItem(
-            "digitRollPersonal",
-            JSON.stringify(personalBest),
-          );
-
-          localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
-        } catch (e) {
-          console.warn("Local save unavailable", e);
-        }
-      }
-
-      function loadLocal() {
-        try {
-          history = JSON.parse(localStorage.getItem("digitRollHistory")) || [];
-
-          personalBest =
-            JSON.parse(localStorage.getItem("digitRollPersonal")) || null;
-
-          allTimeBest =
-            JSON.parse(localStorage.getItem("digitRollAll")) || null;
-        } catch (e) {
-          history = [];
-          personalBest = null;
-          allTimeBest = null;
-        }
-
-        renderHistory();
-      }
-
-      /* ============================================================
-         HISTORY
-         ============================================================ */
-
-      function renderHistory() {
-        $("historyCount").textContent =
-          history.length + (history.length === 1 ? " roll" : " rolls");
-
-        if (!history.length) {
-          $("history").innerHTML = '<span class="empty">No rolls yet.</span>';
-
-          return;
-        }
-
-        $("history").innerHTML = history
-          .slice(0, 30)
-          .map((x) => {
-            const rarityClass = getRarityClass(x.rarity);
-
-            return `
-                  <div class="historyrow">
-                    <span class="historynum">
-                      ${escapeHTML(x.roll)}
-                    </span>
-
-                    <span class="rarity ${rarityClass}">
-                      ${escapeHTML(x.rarity)}
-                    </span>
-
-                    <span class="xp">
-                      +${Number(x.xp) || 0} XP
-                    </span>
-                  </div>
-                `;
-          })
-          .join("");
-      }
-
-      /* ============================================================
-         ESCAPE
-         ============================================================ */
-
-      function escapeHTML(value) {
-        return String(value ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-
-      /* ============================================================
-         BADGE INFO
-         ============================================================ */
-
-      function showBadgeInfo(name, explanation, oneIn) {
-        $("badgeModalName").textContent = name;
-
-        $("badgeModalExplanation").textContent = explanation;
+        $("badgeModalExplanation").textContent = badge.explanation;
 
         $("badgeModalChance").textContent =
-          "Badge chance: 1 in " + Number(oneIn).toLocaleString();
+          `${fmtOneIn(badge.oneIn)} chance • ${probabilityPercent(badge.probability)}`;
 
         $("badgeModal").classList.add("open");
       }
@@ -1763,8 +2440,256 @@
       }
 
       /* ============================================================
-         AUTH UI
-         ============================================================ */
+   RENDER BADGES
+   ============================================================ */
+
+      function renderBadges(badges) {
+        const container = $("badges");
+
+        container.innerHTML = "";
+
+        if (!badges.length) {
+          container.innerHTML =
+            '<span class="empty">No special patterns detected.</span>';
+
+          return;
+        }
+
+        /*
+     Rarest first.
+  */
+
+        const sorted = [...badges].sort((a, b) => b.oneIn - a.oneIn);
+
+        sorted.forEach((badge) => {
+          const button = document.createElement("button");
+
+          button.className = "badge badgeButton";
+
+          button.textContent = `${badge.name} • ${fmtOneIn(badge.oneIn)}`;
+
+          button.title = "Click for explanation";
+
+          button.onclick = () => openBadgeInfo(badge);
+
+          container.appendChild(button);
+        });
+      }
+
+      /* ============================================================
+   HISTORY
+   ============================================================ */
+
+      function renderHistory() {
+        const container = $("history");
+
+        $("historyCount").textContent =
+          `${history.length} roll${history.length === 1 ? "" : "s"}`;
+
+        if (!history.length) {
+          container.innerHTML = '<span class="empty">No rolls yet.</span>';
+
+          return;
+        }
+
+        container.innerHTML = "";
+
+        history.forEach((item) => {
+          const row = document.createElement("div");
+
+          row.className = "historyrow";
+
+          const number = document.createElement("span");
+
+          number.className = "historynum";
+
+          number.textContent = item.number;
+
+          const rarity = document.createElement("span");
+
+          rarity.className = "rarity";
+
+          rarity.textContent = item.rarity;
+
+          applyRarityClass(rarity, item.rarity);
+
+          const chance = document.createElement("span");
+
+          chance.className = "small";
+
+          chance.textContent = fmtOneIn(item.oneIn);
+
+          row.append(number, rarity, chance);
+
+          container.appendChild(row);
+        });
+      }
+
+      /* ============================================================
+   ANALYSIS UI
+   ============================================================ */
+
+      function showAnalysis(chars) {
+        const badges = analyze(chars);
+
+        const score = calculateRollScore(badges, chars);
+
+        const visible = chars.filter((x) => x !== "_").length;
+
+        const blanks = ROLL_SLOTS - visible;
+
+        $("rarity").textContent = score.rarity;
+
+        applyRarityClass($("rarity"), score.rarity);
+
+        $("chance").textContent = fmtOneIn(score.oneIn);
+
+        $("shown").textContent = `${visible}/10`;
+
+        if (blanks === 0) {
+          $("blankBonus").textContent = "None";
+        } else {
+          $("blankBonus").textContent =
+            `${blanks} blank${blanks === 1 ? "" : "s"} • ${fmtOneIn(
+              exactBlankCountProbability(blanks),
+            )}`;
+        }
+
+        $("xp").textContent = `+${score.xp} XP`;
+
+        $("liveRarity").textContent = `RARITY: ${score.rarity}`;
+
+        applyRarityClass($("liveRarity"), score.rarity);
+
+        renderBadges(badges);
+
+        return {
+          badges,
+          score,
+          visible,
+          blanks,
+        };
+      }
+
+      /* ============================================================
+   ROLL ANIMATION
+   ============================================================ */
+
+      async function performRoll() {
+        if (rolling) return;
+
+        rolling = true;
+
+        $("rollBtn").disabled = true;
+
+        $("number").classList.remove("finalReveal");
+
+        $("number").classList.add("rolling");
+
+        $("rollLabel").textContent = "ROLLING...";
+
+        const animationTime = 850;
+
+        const interval = setInterval(() => {
+          $("number").textContent = randomPreviewNumber();
+        }, 55);
+
+        await new Promise((resolve) => setTimeout(resolve, animationTime));
+
+        clearInterval(interval);
+
+        const chars = randomRoll();
+
+        const displayed = chars.join("");
+
+        $("number").textContent = displayed;
+
+        $("number").classList.remove("rolling");
+
+        $("number").classList.add("finalReveal");
+
+        $("rollLabel").textContent = "ROLL COMPLETE";
+
+        const result = showAnalysis(chars);
+
+        const historyItem = {
+          number: displayed,
+
+          rarity: result.score.rarity,
+
+          oneIn: result.score.oneIn,
+
+          xp: result.score.xp,
+
+          shown: result.visible,
+        };
+
+        history.unshift(historyItem);
+
+        if (history.length > 50) history.pop();
+
+        renderHistory();
+
+        personalBest =
+          !personalBest || historyItem.oneIn > personalBest.oneIn
+            ? historyItem
+            : personalBest;
+
+        /*
+     Save to Supabase if logged in.
+  */
+
+        await saveRoll(historyItem);
+
+        updateProfileStats();
+
+        rolling = false;
+
+        $("rollBtn").disabled = false;
+      }
+
+      /* ============================================================
+   SUPABASE SAVE
+   ============================================================ */
+
+      async function saveRoll(item) {
+        if (!currentUser) return;
+
+        try {
+          const username =
+            profile?.username || currentUser.email?.split("@")[0] || "Player";
+
+          const { error } = await supabaseClient.from("rolls").insert({
+            user_id: currentUser.id,
+
+            username,
+
+            roll: item.number,
+
+            rarity: item.rarity,
+
+            one_in: item.oneIn,
+
+            xp: item.xp,
+          });
+
+          if (error) {
+            console.warn("Could not save roll:", error.message);
+
+            return;
+          }
+
+          await loadLeaderboard();
+        } catch (error) {
+          console.warn("Roll save failed:", error);
+        }
+      }
+
+      /* ============================================================
+   AUTH
+   ============================================================ */
+
+      let authMode = "login";
 
       function openAuth() {
         $("authModal").classList.add("open");
@@ -1774,76 +2699,41 @@
         $("authModal").classList.remove("open");
       }
 
-      window.closeAuth = closeAuth;
+      function setAuthMode(mode) {
+        authMode = mode;
 
-      window.closeBadgeInfo = closeBadgeInfo;
+        const signup = mode === "signup";
 
-      window.showBadgeInfo = showBadgeInfo;
+        $("loginTab").classList.toggle("active", !signup);
 
-      let authMode = "login";
+        $("signupTab").classList.toggle("active", signup);
 
-      $("loginTab").onclick = () => {
-        authMode = "login";
+        $("authTitle").textContent = signup ? "🔐 Sign Up" : "🔐 Login";
 
-        $("loginTab").classList.add("active");
+        $("authSubmit").textContent = signup ? "Create Account" : "Login";
 
-        $("signupTab").classList.remove("active");
+        $("authUsername").style.display = signup ? "block" : "none";
 
-        $("authTitle").textContent = "🔐 Login";
-
-        $("authSubmit").textContent = "Login";
-
-        $("authUsername").style.display = "none";
+        $("authPassword").autocomplete = signup
+          ? "new-password"
+          : "current-password";
 
         $("authStatus").textContent = "";
-      };
+      }
 
-      $("signupTab").onclick = () => {
-        authMode = "signup";
-
-        $("signupTab").classList.add("active");
-
-        $("loginTab").classList.remove("active");
-
-        $("authTitle").textContent = "✨ Create Account";
-
-        $("authSubmit").textContent = "Create Account";
-
-        $("authUsername").style.display = "block";
-
-        $("authStatus").textContent = "";
-      };
-
-      $("authButton").onclick = openAuth;
-
-      /* ============================================================
-         SIGNUP / LOGIN
-         ============================================================ */
-
-      $("authSubmit").onclick = async () => {
+      async function submitAuth() {
         const email = $("authEmail").value.trim();
 
         const password = $("authPassword").value;
 
         const username = $("authUsername").value.trim();
 
-        if (!email || !password) {
-          $("authStatus").textContent = "Please enter an email and password.";
-
-          return;
-        }
-
-        $("authSubmit").disabled = true;
-
-        $("authStatus").textContent =
-          authMode === "login" ? "Logging in..." : "Creating account...";
+        $("authStatus").textContent = "Working...";
 
         try {
           if (authMode === "signup") {
             if (!username) {
               $("authStatus").textContent = "Please choose a username.";
-
-              $("authSubmit").disabled = false;
 
               return;
             }
@@ -1861,14 +2751,11 @@
 
             if (error) throw error;
 
-            if (data.user) {
-              if (data.session) {
-                await ensureProfile(data.user, username);
-              }
+            $("authStatus").textContent =
+              "Account created! Check your email if confirmation is enabled.";
 
-              $("authStatus").textContent = data.session
-                ? "Account created!"
-                : "Account created! Check your email to confirm it.";
+            if (data.user) {
+              await ensureProfile(data.user, username);
             }
           } else {
             const { data, error } =
@@ -1879,153 +2766,480 @@
 
             if (error) throw error;
 
-            if (data.user) {
-              currentUser = data.user;
+            await handleUser(data.user);
 
-              await ensureProfile(data.user);
-
-              closeAuth();
-
-              toast("Welcome back!");
-            }
+            closeAuth();
           }
         } catch (error) {
-          console.error(error);
-
-          $("authStatus").textContent = friendlyAuthError(error);
+          $("authStatus").textContent =
+            error.message || "Authentication failed.";
         }
-
-        $("authSubmit").disabled = false;
-      };
-
-      /* ============================================================
-         FRIENDLY AUTH ERRORS
-         ============================================================ */
-
-      function friendlyAuthError(error) {
-        const msg = String(error?.message || error || "");
-
-        if (msg.toLowerCase().includes("email not confirmed")) {
-          return "Your email is not confirmed yet. Check your email, then try logging in again.";
-        }
-
-        if (msg.toLowerCase().includes("invalid login credentials")) {
-          return "Incorrect email or password.";
-        }
-
-        if (msg.toLowerCase().includes("user already registered")) {
-          return "That email already has an account. Try logging in.";
-        }
-
-        return msg;
       }
 
       /* ============================================================
-         PROFILE
-         EXACT COLUMNS:
-         id
-         username
-         created_at
-         ============================================================ */
+   PROFILE
+   ============================================================ */
 
-      async function ensureProfile(user, suppliedUsername = "") {
-        /*
-          CRITICAL:
-          Never query profiles with a null user ID.
-        */
+      async function ensureProfile(user, username) {
+        if (!user) return;
 
-        if (!user || !user.id) {
-          return null;
-        }
-
-        let username =
-          suppliedUsername || user.user_metadata?.username || "Player";
-
-        const { data, error } = await supabaseClient
-          .from("profiles")
-          .select("id,username,created_at")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.warn("Profile lookup:", error);
-        }
-
-        if (data) {
-          profile = data;
-
-          return data;
-        }
-
-        /*
-          Only create the profile for the
-          authenticated user's real UUID.
-        */
-
-        const { data: created, error: createError } = await supabaseClient
-          .from("profiles")
-          .insert({
-            id: user.id,
-            username: username,
-          })
-          .select("id,username,created_at")
-          .single();
-
-        if (createError) {
-          console.warn("Profile creation:", createError);
-
-          /*
-            Another request may have created
-            the profile at the same time.
-          */
-
-          const { data: retry } = await supabaseClient
+        try {
+          const { data, error } = await supabaseClient
             .from("profiles")
-            .select("id,username,created_at")
-            .eq("id", user.id)
+            .upsert(
+              {
+                id: user.id,
+
+                username: username || user.user_metadata?.username || "Player",
+              },
+              {
+                onConflict: "id",
+              },
+            )
+            .select()
+            .single();
+
+          if (!error) profile = data;
+        } catch (error) {
+          console.warn("Profile setup failed:", error);
+        }
+      }
+
+      async function loadProfile() {
+        if (!currentUser) return;
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
             .maybeSingle();
 
-          if (retry) {
-            profile = retry;
+          if (error) throw error;
 
-            return retry;
-          }
-
-          return null;
+          profile = data || {
+            username: currentUser.user_metadata?.username || "Player",
+          };
+        } catch (error) {
+          profile = {
+            username: currentUser.user_metadata?.username || "Player",
+          };
         }
 
-        profile = created;
+        updateProfileUI();
+      }
 
-        return created;
+      async function handleUser(user) {
+        currentUser = user;
+
+        await loadProfile();
+
+        $("userPill").textContent = profile?.username || "Player";
+
+        $("authButton").style.display = "none";
+
+        $("profileButton").style.display = "inline-block";
+
+        $("logoutButton").style.display = "inline-block";
+
+        $("profileSection").style.display = "block";
+
+        await loadUserRolls();
+
+        await loadLeaderboard();
+      }
+
+      function updateProfileUI() {
+        if (!currentUser) return;
+
+        const username = profile?.username || "Player";
+
+        $("userPill").textContent = username;
+
+        $("profileEmail").textContent = currentUser.email || "";
+
+        $("profileUsername").textContent = username;
+
+        $("usernameInput").value = username;
+      }
+
+      async function loadUserRolls() {
+        if (!currentUser) return;
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("rolls")
+            .select("*")
+            .eq("user_id", currentUser.id)
+            .order("created_at", { ascending: false })
+            .limit(50);
+
+          if (error) throw error;
+
+          history = (data || []).map((row) => ({
+            number: row.roll,
+
+            rarity: row.rarity,
+
+            oneIn: Number(row.one_in),
+
+            xp: Number(row.xp || 0),
+
+            shown: row.roll
+              ? row.roll.split("").filter((x) => x !== "_").length
+              : 0,
+          }));
+
+          renderHistory();
+
+          personalBest = history.reduce(
+            (best, item) => (!best || item.oneIn > best.oneIn ? item : best),
+            null,
+          );
+
+          updateProfileStats();
+        } catch (error) {
+          console.warn("Could not load user rolls:", error);
+        }
+      }
+
+      async function updateProfileStats() {
+        $("profileRolls").textContent = history.length;
+
+        const totalXP = history.reduce(
+          (sum, item) => sum + Number(item.xp || 0),
+          0,
+        );
+
+        $("profileXP").textContent = totalXP.toLocaleString();
+
+        if (personalBest) {
+          $("profileBest").textContent = personalBest.number;
+
+          $("profileBestMeta").textContent =
+            `${personalBest.rarity} • ${fmtOneIn(personalBest.oneIn)}`;
+        } else {
+          $("profileBest").textContent = "—";
+
+          $("profileBestMeta").textContent = "No rolls yet.";
+        }
       }
 
       /* ============================================================
-         ACCOUNT UI
-         ============================================================ */
+   USERNAME
+   ============================================================ */
 
-      function updateAccountUI() {
-        if (currentUser) {
-          const name =
-            profile?.username ||
-            currentUser.user_metadata?.username ||
-            "Player";
+      async function saveUsername() {
+        if (!currentUser) {
+          $("usernameStatus").textContent = "You need to be logged in.";
 
-          $("userPill").textContent = "👤 " + name;
+          return;
+        }
 
-          $("authButton").style.display = "none";
+        const username = $("usernameInput").value.trim();
 
-          $("profileButton").style.display = "inline-block";
+        if (!username) {
+          $("usernameStatus").textContent = "Username cannot be empty.";
 
-          $("logoutButton").style.display = "inline-block";
+          return;
+        }
 
-          $("profileSection").style.display = "block";
+        $("usernameStatus").textContent = "Saving...";
 
-          $("profileEmail").textContent = currentUser.email || "";
+        try {
+          const { data, error } = await supabaseClient
+            .from("profiles")
+            .upsert(
+              {
+                id: currentUser.id,
 
-          $("profileUsername").textContent = name;
+                username,
+              },
+              {
+                onConflict: "id",
+              },
+            )
+            .select()
+            .single();
 
-          $("usernameInput").value = name;
+          if (error) throw error;
+
+          profile = data;
+
+          updateProfileUI();
+
+          $("usernameStatus").textContent = "Username saved!";
+
+          toast("Username updated.");
+
+          await loadLeaderboard();
+        } catch (error) {
+          $("usernameStatus").textContent =
+            error.message || "Could not save username.";
+        }
+      }
+
+      /* ============================================================
+   LEADERBOARD
+   ============================================================ */
+
+      function renderLeaderboard(rows) {
+        const container = $("globalRows");
+
+        container.innerHTML = "";
+
+        if (!rows || !rows.length) {
+          container.innerHTML =
+            '<span class="empty">No global rolls yet.</span>';
+
+          $("todayBest").textContent = "—";
+          $("allBest").textContent = "—";
+
+          $("todayBestMeta").textContent = "No rolls yet";
+
+          $("allBestMeta").textContent = "No rolls yet";
+
+          return;
+        }
+
+        const sorted = [...rows].sort(
+          (a, b) => Number(b.one_in || 0) - Number(a.one_in || 0),
+        );
+
+        const best = sorted[0];
+
+        $("allBest").textContent = best.roll || "—";
+
+        $("allBestMeta").textContent =
+          `${best.username || "Player"} • ${best.rarity || "COMMON"} • ${fmtOneIn(Number(best.one_in || 1))}`;
+
+        /*
+     Today's best.
+
+     We use created_at when available.
+  */
+
+        const today = new Date();
+
+        today.setHours(0, 0, 0, 0);
+
+        const todayRows = sorted.filter(
+          (row) => row.created_at && new Date(row.created_at) >= today,
+        );
+
+        const todayBest = todayRows[0];
+
+        if (todayBest) {
+          $("todayBest").textContent = todayBest.roll;
+
+          $("todayBestMeta").textContent =
+            `${todayBest.username || "Player"} • ${todayBest.rarity || "COMMON"} • ${fmtOneIn(Number(todayBest.one_in || 1))}`;
         } else {
+          $("todayBest").textContent = "—";
+
+          $("todayBestMeta").textContent = "No rolls yet";
+        }
+
+        sorted.slice(0, 25).forEach((row, index) => {
+          const div = document.createElement("div");
+
+          div.className = "globalRow";
+
+          div.innerHTML = `
+
+          <span class="rank">
+            #${index + 1}
+          </span>
+
+          <span class="globalPlayer">
+            ${escapeHtml(row.username || "Player")}
+          </span>
+
+          <span class="globalRoll">
+            ${escapeHtml(row.roll || "—")}
+          </span>
+
+          <span class="rarity ${getRarityClass(row.rarity)}">
+            ${escapeHtml(row.rarity || "COMMON")}
+          </span>
+
+        `;
+
+          container.appendChild(div);
+        });
+      }
+
+      async function loadLeaderboard() {
+        try {
+          const { data, error } = await supabaseClient
+            .from("rolls")
+            .select("username,roll,rarity,one_in,xp,created_at")
+            .order("one_in", { ascending: false })
+            .limit(100);
+
+          if (error) throw error;
+
+          renderLeaderboard(data || []);
+
+          $("realtimeDot").classList.add("on");
+
+          $("realtimeDot").classList.remove("off");
+
+          $("realtimeText").textContent = "Live";
+        } catch (error) {
+          console.warn("Leaderboard unavailable:", error);
+
+          $("realtimeDot").classList.remove("on");
+
+          $("realtimeDot").classList.add("off");
+
+          $("realtimeText").textContent = "Offline";
+
+          /*
+       The game itself still works locally.
+    */
+
+          $("globalRows").innerHTML =
+            '<span class="empty">Global leaderboard unavailable. Local rolling still works.</span>';
+        }
+      }
+
+      /* ============================================================
+   REALTIME
+   ============================================================ */
+
+      function setupRealtime() {
+        try {
+          realtimeChannel = supabaseClient
+            .channel("digit-roll-global")
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "rolls",
+              },
+              () => {
+                loadLeaderboard();
+              },
+            )
+            .subscribe((status) => {
+              if (status === "SUBSCRIBED") {
+                $("realtimeDot").classList.add("on");
+
+                $("realtimeText").textContent = "Live";
+              }
+            });
+        } catch (error) {
+          console.warn("Realtime failed:", error);
+        }
+      }
+
+      /* ============================================================
+   LOGOUT
+   ============================================================ */
+
+      async function logout() {
+        await supabaseClient.auth.signOut();
+
+        currentUser = null;
+        profile = null;
+
+        $("userPill").textContent = "Guest";
+
+        $("authButton").style.display = "inline-block";
+
+        $("profileButton").style.display = "none";
+
+        $("logoutButton").style.display = "none";
+
+        $("profileSection").style.display = "none";
+
+        history = [];
+
+        personalBest = null;
+
+        renderHistory();
+
+        updateProfileStats();
+
+        toast("Logged out.");
+      }
+
+      /* ============================================================
+   HTML ESCAPE
+   ============================================================ */
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      /* ============================================================
+   EVENTS
+   ============================================================ */
+
+      $("rollBtn").addEventListener("click", performRoll);
+
+      $("authButton").addEventListener("click", openAuth);
+
+      $("profileButton").addEventListener("click", () => {
+        $("profileSection").scrollIntoView({
+          behavior: "smooth",
+        });
+      });
+
+      $("logoutButton").addEventListener("click", logout);
+
+      $("loginTab").addEventListener("click", () => setAuthMode("login"));
+
+      $("signupTab").addEventListener("click", () => setAuthMode("signup"));
+
+      $("authSubmit").addEventListener("click", submitAuth);
+
+      $("saveUsername").addEventListener("click", saveUsername);
+
+      $("refreshLeaderboard").addEventListener("click", loadLeaderboard);
+
+      $("authPassword").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") submitAuth();
+      });
+
+      /* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+      async function initialize() {
+        try {
+          const { data } = await supabaseClient.auth.getSession();
+
+          if (data?.session?.user) {
+            await handleUser(data.session.user);
+          }
+        } catch (error) {
+          console.warn("Session check failed:", error);
+        }
+
+        await loadLeaderboard();
+
+        setupRealtime();
+      }
+
+      /*
+   Watch authentication changes.
+*/
+
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        if (session?.user) {
+          await handleUser(session.user);
+        } else {
+          currentUser = null;
+          profile = null;
+
           $("userPill").textContent = "Guest";
 
           $("authButton").style.display = "inline-block";
@@ -2036,878 +3250,11 @@
 
           $("profileSection").style.display = "none";
         }
-      }
-
-      /* ============================================================
-         PERSONAL STATS
-         EXACT ROLLS COLUMNS ONLY
-         ============================================================ */
-
-      async function loadPersonalStats() {
-        if (!currentUser || !currentUser.id) {
-          return;
-        }
-
-        /*
-          IMPORTANT:
-          "badges" does NOT exist in your rolls table,
-          so it is intentionally NOT selected here.
-        */
-
-        const { data, error } = await supabaseClient
-          .from("rolls")
-          .select(
-            "roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
-          )
-          .eq("player_id", currentUser.id)
-          .order("one_in", {
-            ascending: false,
-          });
-
-        if (error) {
-          console.warn("Personal stats unavailable:", error);
-
-          return;
-        }
-
-        const rows = data || [];
-
-        const totalXP = rows.reduce((sum, r) => sum + Number(r.xp || 0), 0);
-
-        const best = rows.length ? rows[0] : null;
-
-        $("profileRolls").textContent = rows.length.toLocaleString();
-
-        $("profileXP").textContent = totalXP.toLocaleString();
-
-        $("profileBest").textContent = best ? best.roll : "—";
-
-        $("profileBestMeta").textContent = best
-          ? `${best.rarity} • ${fmt(best.one_in)}`
-          : "No rolls yet";
-      }
-
-      /* ============================================================
-         CHANGE USERNAME
-         ============================================================ */
-
-      $("saveUsername").onclick = async () => {
-        if (!currentUser || !currentUser.id) {
-          toast("You need to be logged in.");
-
-          return;
-        }
-
-        const newUsername = $("usernameInput").value.trim();
-
-        if (!newUsername) {
-          $("usernameStatus").textContent = "Username cannot be empty.";
-
-          return;
-        }
-
-        if (newUsername.length > 24) {
-          $("usernameStatus").textContent =
-            "Username must be 24 characters or less.";
-
-          return;
-        }
-
-        $("saveUsername").disabled = true;
-
-        $("usernameStatus").textContent = "Saving...";
-
-        try {
-          const { data, error } = await supabaseClient
-            .from("profiles")
-            .update({
-              username: newUsername,
-            })
-            .eq("id", currentUser.id)
-            .select("id,username,created_at")
-            .single();
-
-          if (error) throw error;
-
-          profile = data;
-
-          /*
-              Keep the username in Supabase Auth
-              metadata too.
-            */
-
-          await supabaseClient.auth.updateUser({
-            data: {
-              username: newUsername,
-            },
-          });
-
-          updateAccountUI();
-
-          await updateExistingRollNames(newUsername);
-
-          $("usernameStatus").textContent = "Username updated!";
-
-          toast("Username changed to " + newUsername);
-        } catch (error) {
-          console.error(error);
-
-          $("usernameStatus").textContent =
-            error.message || "Unable to change username.";
-        }
-
-        $("saveUsername").disabled = false;
-      };
-
-      /* ============================================================
-         UPDATE OLD ROLL NAMES
-         ============================================================ */
-
-      async function updateExistingRollNames(newUsername) {
-        if (!currentUser || !currentUser.id) {
-          return;
-        }
-
-        try {
-          const { error } = await supabaseClient
-            .from("rolls")
-            .update({
-              player_name: newUsername,
-            })
-            .eq("player_id", currentUser.id);
-
-          if (error) {
-            console.warn("Could not update old roll names:", error);
-          }
-        } catch (e) {
-          console.warn(e);
-        }
-      }
-
-      /* ============================================================
-         SAVE CLOUD ROLL
-         EXACT ROLLS COLUMNS
-         ============================================================ */
-
-      async function saveCloudRoll(result) {
-        if (!currentUser || !currentUser.id) {
-          return;
-        }
-
-        const username =
-          profile?.username || currentUser.user_metadata?.username || "Player";
-
-        /*
-          EXACT columns used:
-
-          roll
-          rarity
-          one_in
-          shown
-          blanks
-          xp
-          player_id
-          player_name
-
-          id and created_at are generated by Supabase.
-        */
-
-        const row = {
-          roll: result.roll,
-
-          rarity: result.rarity,
-
-          one_in: result.oneIn,
-
-          shown: result.shown,
-
-          blanks: result.blanks,
-
-          xp: result.xp,
-
-          player_id: currentUser.id,
-
-          player_name: username,
-        };
-
-        try {
-          const { data, error } = await supabaseClient
-            .from("rolls")
-            .insert(row)
-            .select(
-              "id,roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
-            )
-            .single();
-
-          if (error) {
-            console.error("Cloud roll error:", error);
-
-            toast("Roll saved locally, but cloud save failed.");
-
-            return null;
-          }
-
-          return data;
-        } catch (error) {
-          console.error("Cloud roll exception:", error);
-
-          return null;
-        }
-      }
-
-      /* ============================================================
-         LEADERBOARD
-         EXACT ROLLS COLUMNS
-         ============================================================ */
-
-      async function loadLeaderboard() {
-        const { data, error } = await supabaseClient
-          .from("rolls")
-          .select(
-            "id,roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
-          )
-          .order("one_in", {
-            ascending: false,
-          })
-          .limit(10);
-
-        if (error) {
-          console.error("Leaderboard error:", error);
-
-          $("globalRows").innerHTML = `<span class="empty">
-              Leaderboard unavailable:
-              ${escapeHTML(error.message)}
-            </span>`;
-
-          return;
-        }
-
-        const rows = data || [];
-
-        if (!rows.length) {
-          $("globalRows").innerHTML =
-            '<span class="empty">No global rolls yet.</span>';
-
-          $("todayBest").textContent = "—";
-
-          $("allBest").textContent = "—";
-
-          return;
-        }
-
-        /*
-          ALL-TIME BEST
-        */
-
-        const best = rows[0];
-
-        $("allBest").textContent = best.roll;
-
-        $("allBestMeta").innerHTML = `${escapeHTML(
-          best.player_name || "Player",
-        )} • <span class="${getRarityClass(best.rarity)}">${escapeHTML(
-          best.rarity,
-        )}</span> • ${fmt(best.one_in)}`;
-
-        /*
-          TODAY
-        */
-
-        const todayStart = new Date();
-
-        todayStart.setHours(0, 0, 0, 0);
-
-        const todayRows = rows.filter(
-          (x) => new Date(x.created_at) >= todayStart,
-        );
-
-        if (todayRows.length) {
-          const todayBest = todayRows[0];
-
-          $("todayBest").textContent = todayBest.roll;
-
-          $("todayBestMeta").innerHTML = `${escapeHTML(
-            todayBest.player_name || "Player",
-          )} • <span class="${getRarityClass(todayBest.rarity)}">${escapeHTML(
-            todayBest.rarity,
-          )}</span> • ${fmt(todayBest.one_in)}`;
-        } else {
-          $("todayBest").textContent = "—";
-
-          $("todayBestMeta").textContent = "No rolls today";
-        }
-
-        /*
-          TOP LIST
-        */
-
-        $("globalRows").innerHTML = rows
-          .map(
-            (row, index) => `
-                <div class="globalRow">
-
-                  <div class="rank">
-                    #${index + 1}
-                  </div>
-
-                  <div>
-                    <div class="globalPlayer">
-                      ${escapeHTML(row.player_name || "Player")}
-                    </div>
-
-                    <div class="small">
-                      ${escapeHTML(
-                        row.created_at
-                          ? new Date(row.created_at).toLocaleString()
-                          : "",
-                      )}
-                    </div>
-                  </div>
-
-                  <div class="globalRoll">
-                    ${escapeHTML(row.roll)}
-                  </div>
-
-                  <div>
-                    <div class="rarity ${getRarityClass(row.rarity)}">
-                      ${escapeHTML(row.rarity)}
-                    </div>
-
-                    <div class="small">
-                      ${fmt(row.one_in)}
-                    </div>
-                  </div>
-
-                </div>
-              `,
-          )
-          .join("");
-      }
-
-      /* ============================================================
-         REALTIME
-         ============================================================ */
-
-      function setupRealtime() {
-        if (realtimeChannel) {
-          try {
-            supabaseClient.removeChannel(realtimeChannel);
-          } catch (e) {}
-        }
-
-        realtimeChannel = supabaseClient
-          .channel("digit-rolls-global")
-
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "rolls",
-            },
-            (payload) => {
-              console.log("Realtime new roll:", payload.new);
-
-              toast("🌎 New global roll!");
-
-              loadLeaderboard();
-
-              if (currentUser) {
-                loadPersonalStats();
-              }
-            },
-          )
-
-          .on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "profiles",
-            },
-            (payload) => {
-              if (
-                currentUser &&
-                currentUser.id &&
-                payload.new &&
-                payload.new.id === currentUser.id
-              ) {
-                profile = payload.new;
-
-                updateAccountUI();
-              }
-            },
-          )
-
-          .subscribe((status) => {
-            console.log("Realtime status:", status);
-
-            if (status === "SUBSCRIBED") {
-              $("realtimeDot").classList.add("on");
-
-              $("realtimeDot").classList.remove("off");
-
-              $("realtimeText").textContent = "Realtime Online";
-            } else {
-              $("realtimeDot").classList.remove("on");
-
-              $("realtimeDot").classList.add("off");
-
-              $("realtimeText").textContent = "Realtime Offline";
-            }
-          });
-      }
-
-      /* ============================================================
-         ROLL NUMBER ANIMATION
-         ============================================================ */
-
-      async function animateNumberRoll(finalChars) {
-        const numberElement = $("number");
-
-        numberElement.classList.add("rolling");
-
-        /*
-          Rapidly generate REAL numbers.
-
-          The number changes much faster at the
-          beginning and gradually slows down.
-        */
-
-        const duration = 2400;
-
-        const start = performance.now();
-
-        let lastFrame = 0;
-
-        await new Promise((resolve) => {
-          function frame(now) {
-            const elapsed = now - start;
-
-            const progress = Math.min(1, elapsed / duration);
-
-            /*
-                Ease-out makes the rolling feel
-                like it is slowing down before
-                the final number appears.
-              */
-
-            const eased = 1 - Math.pow(1 - progress, 3);
-
-            const interval = 38 + eased * 120;
-
-            if (now - lastFrame >= interval) {
-              lastFrame = now;
-
-              /*
-                  During the final part,
-                  occasionally show digits
-                  closer to the actual result.
-                */
-
-              let preview = randomPreviewNumber();
-
-              if (progress > 0.72) {
-                const chars = preview.split("");
-
-                const lockCount = Math.floor(((progress - 0.72) / 0.28) * 10);
-
-                for (let i = 0; i < lockCount; i++) {
-                  chars[i] =
-                    finalChars[i] === "_"
-                      ? String(Math.floor(Math.random() * 10))
-                      : finalChars[i];
-                }
-
-                preview = chars.join("");
-              }
-
-              numberElement.textContent = preview;
-            }
-
-            if (progress < 1) {
-              requestAnimationFrame(frame);
-            } else {
-              numberElement.textContent = finalChars.join("");
-
-              numberElement.classList.remove("rolling");
-
-              numberElement.classList.add("finalReveal");
-
-              setTimeout(() => {
-                numberElement.classList.remove("finalReveal");
-              }, 600);
-
-              resolve();
-            }
-          }
-
-          requestAnimationFrame(frame);
-        });
-      }
-
-      /* ============================================================
-         ROLL DISPLAY
-         ============================================================ */
-
-      async function performRoll() {
-        if (rolling) return;
-
-        rolling = true;
-
-        $("rollBtn").disabled = true;
-
-        $("rollLabel").textContent = "ROLLING...";
-
-        $("rarity").textContent = "—";
-
-        $("rarity").className = "value";
-
-        $("chance").textContent = "—";
-
-        $("liveRarity").textContent = "RARITY: ???";
-
-        applyRarityClass($("liveRarity"), "???");
-
-        $("shown").textContent = "—";
-
-        $("xp").textContent = "—";
-
-        $("blankBonus").textContent = "—";
-
-        $("badges").innerHTML =
-          '<span class="empty">The number is being generated...</span>';
-
-        const finalChars = randomRoll();
-
-        /*
-          REAL NUMBER ROLLING ANIMATION
-        */
-
-        await animateNumberRoll(finalChars);
-
-        const analysis = analyze(finalChars);
-
-        const roll = finalChars.join("");
-
-        const result = {
-          roll,
-
-          ...analysis,
-
-          time: Date.now(),
-        };
-
-        /*
-          Badge reveal phase.
-        */
-
-        const badges = analysis.badges;
-
-        const focusMs = badges.length
-          ? Math.max(1000, Math.min(10000, Math.round(10000 / badges.length)))
-          : 3000;
-
-        $("rollLabel").textContent = badges.length
-          ? "ANALYZING BADGES..."
-          : "NO BADGES FOUND...";
-
-        $("liveRarity").textContent = "RARITY: ???";
-
-        applyRarityClass($("liveRarity"), "???");
-
-        let bIndex = 0;
-
-        await new Promise((resolve) => {
-          const revealBadge = () => {
-            if (bIndex < badges.length) {
-              const b = badges[bIndex];
-
-              $("badges").innerHTML = `
-                      <button
-                        class="badgeFocus"
-                        type="button"
-                        onclick='showBadgeInfo(
-                          ${JSON.stringify(b.name)},
-                          ${JSON.stringify(b.explanation)},
-                          ${Number(b.oneIn)}
-                        )'
-                      >
-
-                        <div
-                          style="
-                            font-size:27px;
-                            font-weight:850;
-                            margin-bottom:7px;
-                          "
-                        >
-                          ${escapeHTML(b.name)}
-                        </div>
-
-                        <div
-                          style="
-                            color:#aab5ca;
-                            line-height:1.45;
-                          "
-                        >
-                          ${escapeHTML(b.explanation)}
-                        </div>
-
-                        <div
-                          style="
-                            margin-top:9px;
-                            color:#8ee6ad;
-                            font-weight:750;
-                          "
-                        >
-                          Badge chance:
-                          1 in
-                          ${Number(b.oneIn).toLocaleString()}
-                        </div>
-
-                        <div
-                          class="small"
-                          style="margin-top:7px"
-                        >
-                          Click to view this badge again
-                        </div>
-
-                        <div
-                          class="small"
-                          style="margin-top:4px"
-                        >
-                          Badge
-                          ${bIndex + 1}
-                          of
-                          ${badges.length}
-                          • Blank bonus ×
-                          ${analysis.blankMultiplier.toLocaleString()}
-                        </div>
-
-                      </button>
-                    `;
-
-              bIndex++;
-
-              setTimeout(revealBadge, focusMs);
-            } else {
-              resolve();
-            }
-          };
-
-          setTimeout(revealBadge, 450);
-        });
-
-        /*
-          FINAL RESULT
-        */
-
-        $("rollLabel").textContent = "FINAL RESULT";
-
-        $("liveRarity").textContent = "RARITY: " + analysis.rarity;
-
-        applyRarityClass($("liveRarity"), analysis.rarity);
-
-        $("rarity").textContent = analysis.rarity;
-
-        $("rarity").className = "value " + getRarityClass(analysis.rarity);
-
-        $("chance").textContent = fmt(analysis.oneIn);
-
-        $("shown").textContent = analysis.shown + "/10";
-
-        $("blankBonus").textContent =
-          "×" + analysis.blankMultiplier.toLocaleString();
-
-        $("xp").textContent = "+" + analysis.xp;
-
-        if (!badges.length) {
-          $("badges").innerHTML =
-            '<span class="empty">No badges. A completely ordinary roll.</span>';
-        } else {
-          $("badges").innerHTML = badges
-            .map(
-              (b) => `
-                  <button
-                    class="badge badgeButton"
-                    type="button"
-                    onclick='showBadgeInfo(
-                      ${JSON.stringify(b.name)},
-                      ${JSON.stringify(b.explanation)},
-                      ${Number(b.oneIn)}
-                    )'
-                  >
-                    ${escapeHTML(b.name)}
-                  </button>
-                `,
-            )
-            .join("");
-        }
-
-        /*
-          LOCAL HISTORY
-        */
-
-        history.unshift(result);
-
-        history = history.slice(0, 30);
-
-        if (better(result, personalBest)) {
-          personalBest = result;
-        }
-
-        if (better(result, allTimeBest)) {
-          allTimeBest = result;
-        }
-
-        saveLocal();
-
-        renderHistory();
-
-        /*
-          CLOUD SAVE
-        */
-
-        if (currentUser && currentUser.id) {
-          await saveCloudRoll(result);
-
-          await loadPersonalStats();
-
-          await loadLeaderboard();
-        }
-
-        $("rollBtn").disabled = false;
-
-        rolling = false;
-      }
-
-      /* ============================================================
-         ROLL BUTTON
-         ============================================================ */
-
-      $("rollBtn").onclick = performRoll;
-
-      /* ============================================================
-         PROFILE BUTTON
-         ============================================================ */
-
-      $("profileButton").onclick = () => {
-        $("profileSection").scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      };
-
-      /* ============================================================
-         LOGOUT
-         ============================================================ */
-
-      $("logoutButton").onclick = async () => {
-        try {
-          await supabaseClient.auth.signOut();
-        } catch (error) {
-          console.error(error);
-        }
-      };
-
-      /* ============================================================
-         REFRESH LEADERBOARD
-         ============================================================ */
-
-      $("refreshLeaderboard").onclick = async () => {
-        $("refreshLeaderboard").disabled = true;
-
-        await loadLeaderboard();
-
-        $("refreshLeaderboard").disabled = false;
-
-        toast("Leaderboard refreshed.");
-      };
-
-      /* ============================================================
-         AUTH STATE
-         ============================================================ */
-
-      supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        console.log("Auth state:", event);
-
-        if (session?.user && session.user.id) {
-          currentUser = session.user;
-
-          /*
-              Avoid doing additional Supabase
-              work directly inside the auth callback.
-            */
-
-          setTimeout(async () => {
-            if (!currentUser || !currentUser.id) {
-              return;
-            }
-
-            await ensureProfile(currentUser);
-
-            updateAccountUI();
-
-            await loadPersonalStats();
-
-            await loadLeaderboard();
-          }, 0);
-        } else {
-          currentUser = null;
-
-          profile = null;
-
-          updateAccountUI();
-        }
       });
 
-      /* ============================================================
-         INITIALIZATION
-         ============================================================ */
+      /* Start */
 
-      async function init() {
-        loadLocal();
-
-        updateAccountUI();
-
-        /*
-          Get existing session FIRST.
-
-          We do not query profiles until we know
-          a real authenticated user exists.
-        */
-
-        try {
-          const { data, error } = await supabaseClient.auth.getSession();
-
-          if (error) {
-            console.warn("Session error:", error);
-          }
-
-          if (data?.session?.user && data.session.user.id) {
-            currentUser = data.session.user;
-
-            await ensureProfile(currentUser);
-
-            updateAccountUI();
-
-            await loadPersonalStats();
-          }
-        } catch (error) {
-          console.warn("Initial auth check failed:", error);
-        }
-
-        await loadLeaderboard();
-
-        setupRealtime();
-      }
-
-      /* ============================================================
-         START
-         ============================================================ */
-
-      init();
+      initialize();
     </script>
   </body>
 </html>
-```
