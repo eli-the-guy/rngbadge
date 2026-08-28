@@ -3,9 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digit Roll</title>
+    <title>Digit Roll — Global</title>
 
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -13,25 +12,12 @@
         box-sizing: border-box;
       }
 
-      :root {
-        --bg: #080b12;
-        --card: rgba(20, 26, 40, 0.78);
-        --border: rgba(255, 255, 255, 0.1);
-        --text: #f4f7ff;
-        --muted: #9ba7c0;
-        --purple: #657cff;
-        --purple2: #9a63ff;
-        --green: #8ee6ad;
-        --red: #ff7188;
+      html {
+        scroll-behavior: smooth;
       }
 
-      html,
       body {
         margin: 0;
-        min-height: 100%;
-      }
-
-      body {
         min-height: 100vh;
         font-family:
           system-ui,
@@ -40,22 +26,33 @@
           "Segoe UI",
           sans-serif;
         background: radial-gradient(
-          circle at 50% 0%,
-          #24304d 0,
-          #101522 42%,
-          #080b12 100%
+          circle at 50% -10%,
+          #34466f 0%,
+          #182036 28%,
+          #0d121e 58%,
+          #070a10 100%
         );
-        color: var(--text);
+        color: #f4f7ff;
         padding: 28px;
       }
 
-      button,
-      input {
-        font: inherit;
-      }
-
-      button {
-        border: 0;
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(98, 126, 255, 0.08),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at 80% 70%,
+            rgba(170, 90, 255, 0.07),
+            transparent 32%
+          );
+        z-index: -1;
       }
 
       .app {
@@ -66,12 +63,21 @@
       }
 
       .card {
-        background: var(--card);
-        border: 1px solid var(--border);
+        background: rgba(20, 26, 40, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 22px;
         padding: 22px;
-        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-        backdrop-filter: blur(14px);
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.28),
+          inset 0 1px rgba(255, 255, 255, 0.025);
+        backdrop-filter: blur(16px);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
       }
 
       h1 {
@@ -89,7 +95,7 @@
       }
 
       .sub {
-        color: var(--muted);
+        color: #9ba7c0;
         margin: 5px 0 0;
       }
 
@@ -98,32 +104,31 @@
         font-size: 13px;
       }
 
-      .rollbox {
-        text-align: center;
-        padding: 34px 20px;
-      }
-
-      .number {
-        min-height: 94px;
+      .account {
         display: flex;
-        justify-content: center;
         align-items: center;
-        font-size: clamp(38px, 8vw, 76px);
-        font-weight: 800;
-        letter-spacing: 7px;
-        font-variant-numeric: tabular-nums;
-        margin: 15px 0 20px;
-        text-shadow: 0 0 25px rgba(120, 170, 255, 0.3);
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
-      button.primary {
+      .userPill {
+        padding: 9px 13px;
+        border-radius: 999px;
+        background: rgba(101, 124, 255, 0.14);
+        border: 1px solid rgba(125, 145, 255, 0.28);
+        font-weight: 750;
+      }
+
+      button {
+        border: 0;
         border-radius: 14px;
-        padding: 14px 30px;
-        font-size: 18px;
+        padding: 13px 22px;
+        font-size: 16px;
         font-weight: 800;
         cursor: pointer;
         color: white;
-        background: linear-gradient(135deg, var(--purple), var(--purple2));
+        background: linear-gradient(135deg, #657cff, #9a63ff);
         box-shadow: 0 8px 25px rgba(104, 111, 255, 0.28);
         transition:
           0.15s transform,
@@ -131,19 +136,95 @@
           0.15s opacity;
       }
 
-      button.primary:hover {
+      button:hover {
         transform: translateY(-2px);
         filter: brightness(1.1);
       }
 
-      button.primary:active {
+      button:active {
         transform: translateY(1px);
       }
 
       button:disabled {
-        opacity: 0.55;
+        opacity: 0.5;
         cursor: not-allowed;
-        transform: none !important;
+        transform: none;
+      }
+
+      .secondary {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        box-shadow: none;
+      }
+
+      .danger {
+        background: rgba(255, 80, 100, 0.12);
+        border: 1px solid rgba(255, 100, 120, 0.2);
+        box-shadow: none;
+      }
+
+      .rollbox {
+        text-align: center;
+        padding: 34px 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .rollbox::after {
+        content: "";
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        border-radius: 50%;
+        background: rgba(105, 125, 255, 0.07);
+        filter: blur(60px);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .rollbox > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .number {
+        min-height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: clamp(38px, 8vw, 76px);
+        font-weight: 900;
+        letter-spacing: 7px;
+        font-variant-numeric: tabular-nums;
+        margin: 15px 0 20px;
+        text-shadow:
+          0 0 25px rgba(120, 170, 255, 0.3),
+          0 0 60px rgba(120, 140, 255, 0.1);
+      }
+
+      .number.rolling {
+        animation: numberPulse 0.5s infinite alternate;
+      }
+
+      @keyframes numberPulse {
+        from {
+          transform: scale(1);
+          filter: brightness(1);
+        }
+        to {
+          transform: scale(1.025);
+          filter: brightness(1.25);
+        }
+      }
+
+      #liveRarity {
+        font-size: 22px;
+        font-weight: 850;
+        min-height: 32px;
+        margin: -8px 0 18px;
+        color: #aab5ca;
       }
 
       .grid {
@@ -165,7 +246,7 @@
       }
 
       .label {
-        color: var(--muted);
+        color: #9ba7c0;
       }
 
       .value {
@@ -174,7 +255,7 @@
       }
 
       .xp {
-        color: var(--green);
+        color: #8ee6ad;
         font-weight: 700;
       }
 
@@ -190,14 +271,50 @@
         border-radius: 999px;
         background: rgba(101, 124, 255, 0.14);
         border: 1px solid rgba(125, 145, 255, 0.28);
+        font-size: 14px;
         color: white;
-        cursor: pointer;
-        transition: 0.2s;
       }
 
-      .badge:hover {
-        transform: translateY(-2px);
-        background: rgba(101, 124, 255, 0.23);
+      .badgeButton {
+        box-shadow: none;
+        padding: 8px 11px;
+        font-size: 14px;
+      }
+
+      .badgeButton:hover {
+        background: rgba(125, 145, 255, 0.25);
+      }
+
+      .badges > button {
+        animation: badgeFocus 0.4s ease-out;
+      }
+
+      @keyframes badgeFocus {
+        from {
+          opacity: 0;
+          transform: scale(0.92);
+          filter: blur(3px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+          filter: blur(0);
+        }
+      }
+
+      .badgeFocus {
+        width: 100%;
+        background: rgba(101, 124, 255, 0.12);
+        border: 1px solid rgba(125, 145, 255, 0.35);
+        box-shadow: none;
+        padding: 18px;
+        border-radius: 16px;
+        color: inherit;
+        text-align: left;
+      }
+
+      .badgeFocus:hover {
+        background: rgba(101, 124, 255, 0.2);
       }
 
       .empty {
@@ -235,10 +352,10 @@
       }
 
       .lb {
+        padding: 15px;
+        border-radius: 16px;
         background: rgba(255, 255, 255, 0.025);
         border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 16px;
-        padding: 16px;
       }
 
       .lb h3 {
@@ -253,138 +370,101 @@
         word-break: break-all;
       }
 
-      .liveBoard {
+      .globalRows {
         display: grid;
         gap: 8px;
       }
 
-      .boardRow {
+      .globalRow {
         display: grid;
-        grid-template-columns: 45px 1fr auto auto;
-        gap: 12px;
+        grid-template-columns: 40px 1fr auto auto;
         align-items: center;
-        padding: 12px;
+        gap: 12px;
+        padding: 13px;
         border-radius: 13px;
         background: rgba(255, 255, 255, 0.035);
         border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
-      .boardRank {
-        font-size: 18px;
+      .rank {
         font-weight: 900;
+        color: #aab5ca;
       }
 
-      .boardName {
-        font-weight: 750;
+      .globalPlayer {
+        font-weight: 800;
       }
 
-      .boardRoll {
+      .globalRoll {
         font-family: monospace;
         letter-spacing: 2px;
       }
 
-      .boardChance {
-        color: var(--green);
-        font-weight: 700;
+      .profileGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
       }
 
-      .authCard {
+      .profileStat {
+        padding: 15px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .profileStat .num {
+        font-size: 26px;
+        font-weight: 900;
+      }
+
+      .profileStat .desc {
+        color: #8e9ab2;
+        font-size: 13px;
+      }
+
+      .form {
         display: grid;
-        gap: 15px;
+        gap: 12px;
+      }
+
+      input {
+        width: 100%;
+        padding: 13px 15px;
+        border-radius: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        outline: none;
+        background: rgba(0, 0, 0, 0.22);
+        color: white;
+        font-size: 15px;
+      }
+
+      input:focus {
+        border-color: rgba(125, 145, 255, 0.6);
+        box-shadow: 0 0 0 3px rgba(100, 120, 255, 0.1);
+      }
+
+      .authPanel {
+        display: none;
+      }
+
+      .authPanel.open {
+        display: block;
       }
 
       .authTabs {
         display: flex;
         gap: 8px;
+        margin-bottom: 16px;
       }
 
       .authTab {
-        padding: 10px 16px;
-        border-radius: 11px;
-        cursor: pointer;
-        color: #cbd3e5;
+        flex: 1;
         background: rgba(255, 255, 255, 0.05);
+        box-shadow: none;
       }
 
       .authTab.active {
-        background: rgba(101, 124, 255, 0.22);
-        border: 1px solid rgba(125, 145, 255, 0.3);
-      }
-
-      .authForm {
-        display: grid;
-        gap: 10px;
-      }
-
-      .authForm input {
-        width: 100%;
-        padding: 13px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(0, 0, 0, 0.22);
-        color: white;
-        outline: none;
-      }
-
-      .authForm input:focus {
-        border-color: rgba(125, 145, 255, 0.65);
-      }
-
-      .authMessage {
-        min-height: 20px;
-        font-size: 14px;
-        color: #aab5ca;
-      }
-
-      .profileBox {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        flex-wrap: wrap;
-      }
-
-      .profileName {
-        font-size: 22px;
-        font-weight: 850;
-      }
-
-      .logoutBtn {
-        padding: 9px 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        background: rgba(255, 255, 255, 0.07);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .badgeFocus {
-        width: 100%;
-        background: rgba(101, 124, 255, 0.12);
-        border: 1px solid rgba(125, 145, 255, 0.35);
-        padding: 18px;
-        border-radius: 16px;
-        color: inherit;
-        animation: badgeFocus 0.45s ease-out;
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .badgeFocus:hover {
-        background: rgba(101, 124, 255, 0.2);
-      }
-
-      @keyframes badgeFocus {
-        from {
-          opacity: 0;
-          transform: scale(0.92);
-          filter: blur(3px);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-          filter: blur(0);
-        }
+        background: linear-gradient(135deg, #657cff, #9a63ff);
       }
 
       .modal {
@@ -404,7 +484,7 @@
       }
 
       .modalCard {
-        width: min(500px, 100%);
+        width: min(520px, 100%);
         background: #151c2b;
         border: 1px solid rgba(255, 255, 255, 0.13);
         border-radius: 22px;
@@ -422,51 +502,96 @@
         padding: 4px 10px;
         font-size: 30px;
         color: #9ba7c0;
-        cursor: pointer;
       }
 
       .toast {
         position: fixed;
-        right: 20px;
-        bottom: 20px;
-        background: #151c2b;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 13px;
-        padding: 13px 16px;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
         opacity: 0;
         pointer-events: none;
-        transform: translateY(10px);
+        z-index: 100;
+        background: #151c2b;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        padding: 13px 18px;
+        border-radius: 14px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
         transition: 0.25s;
-        z-index: 50;
       }
 
       .toast.show {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
       }
 
-      @media (max-width: 700px) {
+      .status {
+        margin-top: 10px;
+        min-height: 20px;
+        font-size: 14px;
+        color: #9ba7c0;
+      }
+
+      .realtime {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #68748d;
+      }
+
+      .dot.on {
+        background: #68e08d;
+        box-shadow: 0 0 12px #68e08d;
+      }
+
+      .dot.off {
+        background: #ff657c;
+      }
+
+      .sectionTitle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+      }
+
+      @media (max-width: 750px) {
         body {
           padding: 14px;
         }
-
         .grid,
-        .leader {
+        .leader,
+        .profileGrid {
           grid-template-columns: 1fr;
+        }
+
+        .header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .account {
+          justify-content: flex-start;
+        }
+
+        .globalRow {
+          grid-template-columns: 30px 1fr;
+        }
+
+        .globalRoll,
+        .globalRow .rarity,
+        .globalRow .xp {
+          grid-column: 2;
         }
 
         .number {
           letter-spacing: 3px;
-        }
-
-        .boardRow {
-          grid-template-columns: 35px 1fr;
-        }
-
-        .boardRoll,
-        .boardChance {
-          grid-column: 2;
         }
       }
     </style>
@@ -475,55 +600,26 @@
   <body>
     <div class="app">
       <!-- HEADER -->
-      <div class="card">
-        <h1>🎲 DIGIT ROLL</h1>
-        <p class="sub">Find the strangest 10-digit number possible.</p>
-      </div>
-
-      <!-- AUTH -->
-      <div class="card authCard">
-        <div id="loggedOutUI">
-          <h2>👤 Account</h2>
-
-          <div class="authTabs">
-            <button class="authTab active" id="loginTab">Login</button>
-            <button class="authTab" id="signupTab">Sign Up</button>
-          </div>
-
-          <form class="authForm" id="authForm">
-            <input
-              id="emailInput"
-              type="email"
-              placeholder="Email"
-              required
-              autocomplete="email"
-            />
-
-            <input
-              id="passwordInput"
-              type="password"
-              placeholder="Password"
-              required
-              autocomplete="current-password"
-              minlength="6"
-            />
-
-            <button class="primary" type="submit" id="authSubmit">Login</button>
-          </form>
-
-          <div class="authMessage" id="authMessage"></div>
+      <div class="card header">
+        <div>
+          <h1>🎲 DIGIT ROLL</h1>
+          <p class="sub">Find the strangest 10-digit number possible.</p>
         </div>
 
-        <div id="loggedInUI" style="display: none">
-          <div class="profileBox">
-            <div>
-              <div class="small">SIGNED IN AS</div>
-              <div class="profileName" id="profileUsername">player</div>
-              <div class="small" id="profileEmail"></div>
-            </div>
+        <div class="account">
+          <span class="realtime">
+            <span class="dot" id="realtimeDot"></span>
+            <span id="realtimeText">Connecting...</span>
+          </span>
 
-            <button class="logoutBtn" id="logoutBtn">Log Out</button>
-          </div>
+          <span class="userPill" id="userPill">Guest</span>
+          <button class="secondary" id="authButton">Login / Sign Up</button>
+          <button class="secondary" id="profileButton" style="display: none">
+            Profile
+          </button>
+          <button class="danger" id="logoutButton" style="display: none">
+            Logout
+          </button>
         </div>
       </div>
 
@@ -533,20 +629,13 @@
 
         <div class="number" id="number">??????????</div>
 
-        <div
-          id="liveRarity"
-          style="
-            font-size: 22px;
-            font-weight: 850;
-            min-height: 32px;
-            margin: -8px 0 18px;
-            color: #aab5ca;
-          "
-        >
-          RARITY: —
-        </div>
+        <div id="liveRarity">RARITY: —</div>
 
-        <button class="primary" id="rollBtn">ROLL 🎲</button>
+        <button id="rollBtn">ROLL 🎲</button>
+
+        <div class="small" style="margin-top: 15px">
+          Global leaderboard updates automatically when anyone rolls.
+        </div>
       </div>
 
       <!-- ANALYSIS + HISTORY -->
@@ -587,7 +676,10 @@
         </div>
 
         <div class="card">
-          <h2>📜 Roll History</h2>
+          <div class="sectionTitle">
+            <h2>📜 Roll History</h2>
+            <span class="small" id="historyCount">0 rolls</span>
+          </div>
 
           <div class="history" id="history">
             <span class="empty">No rolls yet.</span>
@@ -595,76 +687,147 @@
         </div>
       </div>
 
-      <!-- PERSONAL STATS -->
-      <div class="card">
-        <h2>📊 Your Stats</h2>
+      <!-- PROFILE -->
+      <div class="card" id="profileSection" style="display: none">
+        <div class="sectionTitle">
+          <div>
+            <h2>👤 Your Profile</h2>
+            <div class="small" id="profileEmail"></div>
+          </div>
+        </div>
 
-        <div class="leader">
-          <div class="lb">
-            <h3>🎲 Total Rolls</h3>
-            <div class="big" id="statRolls">0</div>
+        <div class="profileGrid">
+          <div class="profileStat">
+            <div class="small">USERNAME</div>
+            <div class="num" id="profileUsername">Player</div>
+            <div class="desc">Your public leaderboard name.</div>
           </div>
 
-          <div class="lb">
-            <h3>⭐ Total XP</h3>
-            <div class="big" id="statXP">0</div>
+          <div class="profileStat">
+            <div class="small">TOTAL ROLLS</div>
+            <div class="num" id="profileRolls">0</div>
+            <div class="desc">Rolls recorded to your account.</div>
           </div>
 
-          <div class="lb">
-            <h3>🔥 Best Rarity</h3>
-            <div class="big" id="statBestRarity">—</div>
+          <div class="profileStat">
+            <div class="small">TOTAL XP</div>
+            <div class="num" id="profileXP">0</div>
+            <div class="desc">XP earned from your rolls.</div>
           </div>
 
-          <div class="lb">
-            <h3>🏆 Best Roll</h3>
-            <div class="big" id="statBestRoll">—</div>
+          <div class="profileStat">
+            <div class="small">BEST ROLL</div>
+            <div class="num" id="profileBest">—</div>
+            <div class="desc" id="profileBestMeta">No rolls yet.</div>
           </div>
+        </div>
+
+        <div style="margin-top: 18px">
+          <h3>✏️ Change Username</h3>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <input
+              id="usernameInput"
+              maxlength="24"
+              placeholder="Enter a username"
+              style="flex: 1; min-width: 200px"
+            />
+            <button id="saveUsername">Save Username</button>
+          </div>
+
+          <div class="status" id="usernameStatus"></div>
         </div>
       </div>
 
       <!-- GLOBAL LEADERBOARD -->
       <div class="card">
-        <h2>🌎 Global Leaderboard</h2>
+        <div class="sectionTitle">
+          <div>
+            <h2>🏆 Global Leaderboard</h2>
+            <div class="small">The best rolls from everyone.</div>
+          </div>
 
-        <div class="small" style="margin-bottom: 15px">
-          Updates automatically when players roll.
+          <button class="secondary" id="refreshLeaderboard">↻ Refresh</button>
         </div>
 
-        <div class="liveBoard" id="globalLeaderboard">
-          <div class="empty">Loading leaderboard...</div>
+        <div style="margin-top: 15px">
+          <div class="leader">
+            <div class="lb">
+              <h3>🌎 Best Roll Today</h3>
+              <div class="big" id="todayBest">—</div>
+              <div class="small" id="todayBestMeta">No rolls yet</div>
+            </div>
+
+            <div class="lb">
+              <h3>🌎 Best Roll All Time</h3>
+              <div class="big" id="allBest">—</div>
+              <div class="small" id="allBestMeta">No rolls yet</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 22px">🥇 Top Rolls</h3>
+
+          <div class="globalRows" id="globalRows">
+            <span class="empty">Loading leaderboard...</span>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- BEST ROLLS -->
-      <div class="card">
-        <h2>🏆 Best Rolls</h2>
+    <!-- AUTH MODAL -->
+    <div
+      class="modal"
+      id="authModal"
+      onclick="if (event.target === this) closeAuth();"
+    >
+      <div class="modalCard">
+        <button class="closeModal" onclick="closeAuth()">×</button>
 
-        <div class="leader">
-          <div class="lb">
-            <h3>🌎 Best Roll</h3>
-            <div class="big" id="allBest">—</div>
-            <div class="small" id="allBestMeta">No rolls yet</div>
-          </div>
+        <h2 id="authTitle">🔐 Login</h2>
 
-          <div class="lb">
-            <h3>👤 Your Best</h3>
-            <div class="big" id="personalAll">—</div>
-            <div class="small" id="personalAllMeta">No rolls yet</div>
-          </div>
+        <div class="authTabs">
+          <button class="authTab active" id="loginTab">Login</button>
+          <button class="authTab" id="signupTab">Sign Up</button>
+        </div>
+
+        <div class="form">
+          <input
+            type="email"
+            id="authEmail"
+            placeholder="Email"
+            autocomplete="email"
+          />
+
+          <input
+            type="password"
+            id="authPassword"
+            placeholder="Password"
+            autocomplete="current-password"
+          />
+
+          <input
+            type="text"
+            id="authUsername"
+            placeholder="Username"
+            maxlength="24"
+            style="display: none"
+          />
+
+          <button id="authSubmit">Login</button>
+
+          <div class="status" id="authStatus"></div>
         </div>
       </div>
     </div>
 
     <!-- BADGE MODAL -->
     <div
-      id="badgeModal"
       class="modal"
+      id="badgeModal"
       onclick="if (event.target === this) closeBadgeInfo();"
     >
       <div class="modalCard">
-        <button class="closeModal" type="button" onclick="closeBadgeInfo()">
-          ×
-        </button>
+        <button class="closeModal" onclick="closeBadgeInfo()">×</button>
 
         <div
           id="badgeModalName"
@@ -686,19 +849,20 @@
     <div class="toast" id="toast"></div>
 
     <script>
-      /* =========================================================
-   SUPABASE CONFIG
-   ========================================================= */
+      /* ============================================================
+   SUPABASE
+   ============================================================ */
 
       const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
       const SUPABASE_ANON_KEY =
-        "sb_publishable_TmDnxgFW6x3odYuOgeb3Og_ofKL4her";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
 
       /*
-   IMPORTANT:
-   We deliberately call this supabaseClient instead of
-   "supabase" so it cannot conflict with the CDN's global.
+  IMPORTANT:
+  Do NOT create another variable called "supabase".
+
+  We use "supabaseClient" everywhere.
 */
 
       const supabaseClient = window.supabase.createClient(
@@ -706,58 +870,9 @@
         SUPABASE_ANON_KEY,
       );
 
-      /* =========================================================
-   DATABASE SCHEMA USED BY THIS FILE
-   =========================================================
-
-   profiles:
-     id
-     username
-     created_at
-
-   rolls:
-     id
-     roll
-     rarity
-     one_in
-     shown
-     blanks
-     xp
-     player_id
-     player_name
-     created_at
-
-   No user_id column is used.
-   No display_name column is used.
-   ========================================================= */
-
-      /* =========================================================
-   DOM
-   ========================================================= */
-
-      const $ = (id) => document.getElementById(id);
-
-      /* =========================================================
-   STATE
-   ========================================================= */
-
-      let history = [];
-
-      let personalBest = null;
-      let allTimeBest = null;
-
-      let currentUser = null;
-      let currentProfile = null;
-
-      let authMode = "login";
-
-      let realtimeChannel = null;
-
-      let isRolling = false;
-
-      /* =========================================================
-   BADGE REFERENCES
-   ========================================================= */
+      /* ============================================================
+   REFERENCES
+   ============================================================ */
 
       const references = {
         911: [
@@ -827,13 +942,57 @@
         55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
       };
 
-      /* =========================================================
+      /* ============================================================
+   HELPERS
+   ============================================================ */
+
+      const $ = (id) => document.getElementById(id);
+
+      let history = [];
+      let personalBest = null;
+      let allTimeBest = null;
+      let currentUser = null;
+      let profile = null;
+      let rolling = false;
+      let realtimeChannel = null;
+
+      function toast(message) {
+        $("toast").textContent = message;
+        $("toast").classList.add("show");
+
+        clearTimeout(window.toastTimer);
+
+        window.toastTimer = setTimeout(() => {
+          $("toast").classList.remove("show");
+        }, 3000);
+      }
+
+      function fmt(n) {
+        const value = Number(n);
+
+        if (!Number.isFinite(value)) {
+          return "1 in —";
+        }
+
+        return "1 in " + value.toLocaleString();
+      }
+
+      function meta(x) {
+        if (!x) return "No rolls yet";
+
+        return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
+      }
+
+      function better(a, b) {
+        return !b || Number(a.oneIn) > Number(b.oneIn);
+      }
+
+      /* ============================================================
    RANDOM ROLL
-   ========================================================= */
+   ============================================================ */
 
       function randomRoll() {
         const chars = [];
-
         let blanks = 0;
 
         for (let i = 0; i < 10; i++) {
@@ -854,18 +1013,19 @@
         return chars;
       }
 
-      /* =========================================================
-   ANALYSIS
-   ========================================================= */
+      /* ============================================================
+   ADVANCED ANALYSIS
+   ============================================================ */
 
       function analyze(chars) {
         const digits = chars.filter((x) => x !== "_");
-
         const compact = digits.join("");
 
         const badges = [];
 
-        /* References */
+        /* ----------------------------------------------------------
+     REFERENCES
+     ---------------------------------------------------------- */
 
         for (const [key, [name, explanation, oneIn]] of Object.entries(
           references,
@@ -879,7 +1039,9 @@
           }
         }
 
-        /* Digit counts */
+        /* ----------------------------------------------------------
+     DIGIT COUNTS
+     ---------------------------------------------------------- */
 
         const counts = {};
 
@@ -913,6 +1075,23 @@
           });
         }
 
+        if (maxCount >= 5) {
+          badges.push({
+            name: "☢️ Quint Digit",
+            explanation: "The same visible digit appears at least five times.",
+            oneIn: 10000,
+          });
+        }
+
+        if (maxCount >= 6) {
+          badges.push({
+            name: "👹 Hex Digit",
+            explanation:
+              "One digit dominates the roll with six or more appearances.",
+            oneIn: 100000,
+          });
+        }
+
         if (digits.length > 1 && new Set(digits).size === 1) {
           badges.push({
             name: "👑 Monochrome",
@@ -929,7 +1108,30 @@
           });
         }
 
-        /* Rising */
+        /* ----------------------------------------------------------
+     DOUBLES
+     ---------------------------------------------------------- */
+
+        if (/00|11|22|33|44|55|66|77|88|99/.test(compact)) {
+          badges.push({
+            name: "👯 Double",
+            explanation:
+              "Two identical digits appear directly beside each other.",
+            oneIn: 100,
+          });
+        }
+
+        if (/000|111|222|333|444|555|666|777|888|999/.test(compact)) {
+          badges.push({
+            name: "🔥 Triple Stack",
+            explanation: "Three identical digits appear consecutively.",
+            oneIn: 1000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     RISING SEQUENCES
+     ---------------------------------------------------------- */
 
         if (/012|123|234|345|456|567|678|789/.test(compact)) {
           badges.push({
@@ -939,7 +1141,25 @@
           });
         }
 
-        /* Falling */
+        if (/0123|1234|2345|3456|4567|5678|6789/.test(compact)) {
+          badges.push({
+            name: "🪜 Staircase",
+            explanation: "Four consecutive digits climb steadily upward.",
+            oneIn: 1000,
+          });
+        }
+
+        if (/01234|12345|23456|34567|45678|56789/.test(compact)) {
+          badges.push({
+            name: "🚀 Mega Staircase",
+            explanation: "Five consecutive digits rise steadily upward.",
+            oneIn: 10000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     FALLING
+     ---------------------------------------------------------- */
 
         if (/987|876|765|654|543|432|321|210/.test(compact)) {
           badges.push({
@@ -949,7 +1169,25 @@
           });
         }
 
-        /* Mountain */
+        if (/9876|8765|7654|6543|5432|4321|3210/.test(compact)) {
+          badges.push({
+            name: "🪜 Reverse Staircase",
+            explanation: "Four consecutive digits descend steadily.",
+            oneIn: 1000,
+          });
+        }
+
+        if (/98765|87654|76543|65432|54321|43210/.test(compact)) {
+          badges.push({
+            name: "🚀 Mega Reverse Staircase",
+            explanation: "Five consecutive digits fall steadily downward.",
+            oneIn: 10000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     MOUNTAINS
+     ---------------------------------------------------------- */
 
         const mountainPatterns = [
           "01210",
@@ -978,7 +1216,9 @@
           });
         }
 
-        /* Valley */
+        /* ----------------------------------------------------------
+     VALLEYS
+     ---------------------------------------------------------- */
 
         const valleyPatterns = [
           "21012",
@@ -1007,25 +1247,68 @@
           });
         }
 
-        /* Staircases */
+        /* ----------------------------------------------------------
+     WAVES
+     ---------------------------------------------------------- */
 
-        if (/0123|1234|2345|3456|4567|5678|6789/.test(compact)) {
+        const wavePatterns = [
+          "121",
+          "232",
+          "343",
+          "454",
+          "565",
+          "676",
+          "787",
+          "898",
+
+          "12321",
+          "23432",
+          "34543",
+          "45654",
+          "56765",
+          "67876",
+          "78987",
+        ];
+
+        if (wavePatterns.some((x) => compact.includes(x))) {
           badges.push({
-            name: "🪜 Staircase",
-            explanation: "Four consecutive digits climb steadily upward.",
-            oneIn: 1000,
+            name: "🌊 Wave",
+            explanation:
+              "The digits repeatedly rise and fall, creating a wave-like pattern.",
+            oneIn: 15000,
           });
         }
 
-        if (/9876|8765|7654|6543|5432|4321|3210/.test(compact)) {
-          badges.push({
-            name: "🪜 Reverse Staircase",
-            explanation: "Four consecutive digits descend steadily.",
-            oneIn: 1000,
-          });
+        /* ----------------------------------------------------------
+     MIRRORS
+     ---------------------------------------------------------- */
+
+        for (let len = 3; len <= 7; len++) {
+          for (let i = 0; i <= compact.length - len; i++) {
+            const part = compact.slice(i, i + len);
+
+            if (part.length >= 3) {
+              const reversed = part.split("").reverse().join("");
+
+              if (part === reversed) {
+                badges.push({
+                  name: "🪞 Mirror",
+                  explanation:
+                    "A sequence reads the same forward and backward.",
+                  oneIn: Math.pow(10, len),
+                });
+
+                i = compact.length;
+
+                break;
+              }
+            }
+          }
         }
 
-        /* Alternators */
+        /* ----------------------------------------------------------
+     ALTERNATORS
+     ---------------------------------------------------------- */
 
         if (/0101|1212|2323|3434|4545|5656|6767|7878|8989/.test(compact)) {
           badges.push({
@@ -1035,19 +1318,163 @@
           });
         }
 
-        /* Sort badges */
+        /* ----------------------------------------------------------
+     LOOPS
+     ---------------------------------------------------------- */
+
+        const loopPatterns = [
+          "0123456789",
+          "1234567890",
+          "9876543210",
+          "0987654321",
+        ];
+
+        if (loopPatterns.some((x) => compact.includes(x))) {
+          badges.push({
+            name: "🔄 Digit Loop",
+            explanation: "The digits travel through a complete numeric cycle.",
+            oneIn: 100000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     PYRAMIDS
+     ---------------------------------------------------------- */
+
+        const pyramidPatterns = [
+          "1234321",
+          "2345432",
+          "3456543",
+          "4567654",
+          "5678765",
+
+          "11211",
+          "22322",
+          "33433",
+          "44544",
+          "55655",
+          "66766",
+          "77877",
+          "88988",
+        ];
+
+        if (pyramidPatterns.some((x) => compact.includes(x))) {
+          badges.push({
+            name: "🔺 Pyramid",
+            explanation:
+              "Digits expand toward a center and then contract, creating a pyramid-like pattern.",
+            oneIn: 20000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     PALINDROME
+     ---------------------------------------------------------- */
+
+        if (
+          compact.length >= 4 &&
+          compact === compact.split("").reverse().join("")
+        ) {
+          badges.push({
+            name: "🪞 Perfect Mirror",
+            explanation:
+              "The entire visible number reads identically forward and backward.",
+            oneIn: 100000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     MATHEMATICAL PATTERNS
+     ---------------------------------------------------------- */
+
+        if (digits.length >= 4) {
+          const diffs = [];
+
+          for (let i = 1; i < digits.length; i++) {
+            diffs.push(Number(digits[i]) - Number(digits[i - 1]));
+          }
+
+          if (
+            diffs.length >= 3 &&
+            diffs.every((d) => d === diffs[0]) &&
+            diffs[0] !== 0
+          ) {
+            badges.push({
+              name: "📐 Arithmetic Pattern",
+              explanation:
+                "The visible digits change by the same amount each step.",
+              oneIn: 20000,
+            });
+          }
+        }
+
+        /* ----------------------------------------------------------
+     SQUARE-LIKE / MULTIPLE PATTERNS
+     ---------------------------------------------------------- */
+
+        const squarePatterns = [
+          "149",
+          "169",
+          "196",
+          "256",
+          "361",
+          "441",
+          "529",
+          "625",
+          "729",
+          "841",
+        ];
+
+        if (squarePatterns.some((x) => compact.includes(x))) {
+          badges.push({
+            name: "🧮 Math Pattern",
+            explanation:
+              "A recognizable mathematical square pattern appears inside the roll.",
+            oneIn: 12000,
+          });
+        }
+
+        /* ----------------------------------------------------------
+     SAME PARITY
+     ---------------------------------------------------------- */
+
+        if (digits.length >= 5) {
+          const parity = digits.map((d) => Number(d) % 2);
+
+          if (parity.every((x) => x === parity[0])) {
+            badges.push({
+              name: "⚫⚪ Parity Chain",
+              explanation: "Every visible digit has the same odd/even parity.",
+              oneIn: 32,
+            });
+          }
+        }
+
+        /* ----------------------------------------------------------
+     SORT BADGES
+     ---------------------------------------------------------- */
 
         badges.sort((a, b) => a.oneIn - b.oneIn);
 
-        /* Badge rarity */
+        /* ----------------------------------------------------------
+     CHANCE
+     ---------------------------------------------------------- */
 
         let badgeChance = 1;
 
         for (const b of badges) {
           badgeChance *= b.oneIn;
-        }
 
-        /* Blank bonus */
+          /*
+      Prevent JavaScript's number system from exploding
+      into Infinity too easily.
+    */
+
+          if (badgeChance > 1e100) {
+            badgeChance = 1e100;
+            break;
+          }
+        }
 
         const blanks = chars.filter((x) => x === "_").length;
 
@@ -1055,7 +1482,9 @@
 
         const totalChance = badgeChance * blankMultiplier;
 
-        /* Rarity */
+        /* ----------------------------------------------------------
+     RARITY
+     ---------------------------------------------------------- */
 
         let rarity = "COMMON";
 
@@ -1075,7 +1504,9 @@
 
         if (totalChance >= 1000000000000) rarity = "???";
 
-        /* XP */
+        /* ----------------------------------------------------------
+     XP
+     ---------------------------------------------------------- */
 
         const badgeXP = badges.reduce(
           (sum, b) =>
@@ -1085,7 +1516,12 @@
 
         const blankXP = blanks * 100;
 
-        const xp = Math.max(5, badgeXP + blankXP);
+        const rarityXP = Math.max(
+          0,
+          Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
+        );
+
+        const xp = Math.max(5, badgeXP + blankXP + rarityXP);
 
         return {
           badges,
@@ -1106,24 +1542,23 @@
         };
       }
 
-      /* =========================================================
-   COMPARISON
-   ========================================================= */
-
-      function better(a, b) {
-        return !b || Number(a.oneIn) > Number(b.oneIn);
-      }
-
-      /* =========================================================
+      /* ============================================================
    LOCAL STORAGE
-   ========================================================= */
+   ============================================================ */
 
       function saveLocal() {
-        localStorage.setItem("digitRollHistory", JSON.stringify(history));
+        try {
+          localStorage.setItem("digitRollHistory", JSON.stringify(history));
 
-        localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
+          localStorage.setItem(
+            "digitRollPersonal",
+            JSON.stringify(personalBest),
+          );
 
-        localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
+          localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
+        } catch (e) {
+          console.warn("Local save unavailable", e);
+        }
       }
 
       function loadLocal() {
@@ -1142,30 +1577,16 @@
         }
 
         renderHistory();
-        renderBoards();
       }
 
-      /* =========================================================
-   FORMATTING
-   ========================================================= */
-
-      function fmt(n) {
-        const num = Number(n);
-
-        if (!Number.isFinite(num)) return "1 in —";
-
-        return "1 in " + num.toLocaleString();
-      }
-
-      function meta(x) {
-        return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
-      }
-
-      /* =========================================================
+      /* ============================================================
    HISTORY
-   ========================================================= */
+   ============================================================ */
 
       function renderHistory() {
+        $("historyCount").textContent =
+          history.length + (history.length === 1 ? " roll" : " rolls");
+
         if (!history.length) {
           $("history").innerHTML = '<span class="empty">No rolls yet.</span>';
 
@@ -1177,117 +1598,164 @@
           .map(
             (x) => `
 
-        <div class="historyrow">
+      <div class="historyrow">
 
-          <span class="historynum">
-            ${escapeHTML(x.roll)}
-          </span>
+        <span class="historynum">
+          ${escapeHTML(x.roll)}
+        </span>
 
-          <span class="rarity">
-            ${escapeHTML(x.rarity)}
-          </span>
+        <span class="rarity">
+          ${escapeHTML(x.rarity)}
+        </span>
 
-          <span class="xp">
-            +${Number(x.xp || 0)} XP
-          </span>
+        <span class="xp">
+          +${Number(x.xp) || 0} XP
+        </span>
 
-        </div>
+      </div>
 
-      `,
+    `,
           )
           .join("");
       }
 
-      /* =========================================================
-   LOCAL BEST BOARDS
-   ========================================================= */
-
-      function renderBoards() {
-        $("allBest").textContent = allTimeBest ? allTimeBest.roll : "—";
-
-        $("allBestMeta").textContent = allTimeBest
-          ? meta(allTimeBest)
-          : "No rolls yet";
-
-        $("personalAll").textContent = personalBest ? personalBest.roll : "—";
-
-        $("personalAllMeta").textContent = personalBest
-          ? meta(personalBest)
-          : "No rolls yet";
-      }
-
-      /* =========================================================
-   ESCAPE HTML
-   ========================================================= */
+      /* ============================================================
+   ESCAPE
+   ============================================================ */
 
       function escapeHTML(value) {
         return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       }
 
-      /* =========================================================
+      /* ============================================================
+   BADGE INFO
+   ============================================================ */
+
+      function showBadgeInfo(name, explanation, oneIn) {
+        $("badgeModalName").textContent = name;
+
+        $("badgeModalExplanation").textContent = explanation;
+
+        $("badgeModalChance").textContent =
+          "Badge chance: 1 in " + Number(oneIn).toLocaleString();
+
+        $("badgeModal").classList.add("open");
+      }
+
+      function closeBadgeInfo() {
+        $("badgeModal").classList.remove("open");
+      }
+
+      /* ============================================================
    AUTH UI
-   ========================================================= */
+   ============================================================ */
 
-      function setAuthMode(mode) {
-        authMode = mode;
-
-        if (mode === "login") {
-          $("loginTab").classList.add("active");
-          $("signupTab").classList.remove("active");
-
-          $("authSubmit").textContent = "Login";
-
-          $("passwordInput").autocomplete = "current-password";
-        } else {
-          $("loginTab").classList.remove("active");
-          $("signupTab").classList.add("active");
-
-          $("authSubmit").textContent = "Create Account";
-
-          $("passwordInput").autocomplete = "new-password";
-        }
-
-        $("authMessage").textContent = "";
+      function openAuth() {
+        $("authModal").classList.add("open");
       }
 
-      $("loginTab").onclick = () => setAuthMode("login");
+      function closeAuth() {
+        $("authModal").classList.remove("open");
+      }
 
-      $("signupTab").onclick = () => setAuthMode("signup");
+      window.closeAuth = closeAuth;
+      window.closeBadgeInfo = closeBadgeInfo;
+      window.showBadgeInfo = showBadgeInfo;
 
-      /* =========================================================
-   AUTH FORM
-   ========================================================= */
+      let authMode = "login";
 
-      $("authForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
+      $("loginTab").onclick = () => {
+        authMode = "login";
 
-        const email = $("emailInput").value.trim();
+        $("loginTab").classList.add("active");
+        $("signupTab").classList.remove("active");
 
-        const password = $("passwordInput").value;
+        $("authTitle").textContent = "🔐 Login";
+        $("authSubmit").textContent = "Login";
+        $("authUsername").style.display = "none";
+
+        $("authStatus").textContent = "";
+      };
+
+      $("signupTab").onclick = () => {
+        authMode = "signup";
+
+        $("signupTab").classList.add("active");
+        $("loginTab").classList.remove("active");
+
+        $("authTitle").textContent = "✨ Create Account";
+        $("authSubmit").textContent = "Create Account";
+        $("authUsername").style.display = "block";
+
+        $("authStatus").textContent = "";
+      };
+
+      $("authButton").onclick = openAuth;
+
+      /* ============================================================
+   SIGNUP / LOGIN
+   ============================================================ */
+
+      $("authSubmit").onclick = async () => {
+        const email = $("authEmail").value.trim();
+
+        const password = $("authPassword").value;
+
+        const username = $("authUsername").value.trim();
+
+        if (!email || !password) {
+          $("authStatus").textContent = "Please enter an email and password.";
+
+          return;
+        }
 
         $("authSubmit").disabled = true;
 
-        $("authMessage").textContent = "Please wait...";
+        $("authStatus").textContent =
+          authMode === "login" ? "Logging in..." : "Creating account...";
 
         try {
           if (authMode === "signup") {
+            if (!username) {
+              $("authStatus").textContent = "Please choose a username.";
+
+              $("authSubmit").disabled = false;
+
+              return;
+            }
+
             const { data, error } = await supabaseClient.auth.signUp({
               email,
               password,
+
+              options: {
+                data: {
+                  username,
+                },
+              },
             });
 
             if (error) throw error;
 
-            if (data.session) {
-              $("authMessage").textContent = "Account created!";
-            } else {
-              $("authMessage").textContent =
-                "Account created! Check your email to confirm it, then log in.";
+            if (data.user) {
+              /*
+          The profile is created after signup.
+
+          This is safe even if email confirmation is enabled.
+        */
+
+              if (data.session) {
+                await ensureProfile(data.user, username);
+              }
+
+              $("authStatus").textContent = data.session
+                ? "Account created!"
+                : "Account created! Check your email to confirm it.";
             }
           } else {
             const { data, error } =
@@ -1298,244 +1766,316 @@
 
             if (error) throw error;
 
-            $("authMessage").textContent = "Logged in!";
+            if (data.user) {
+              currentUser = data.user;
 
-            showToast("Welcome back! 🎲");
+              await ensureProfile(data.user);
+
+              closeAuth();
+
+              toast("Welcome back!");
+            }
           }
         } catch (error) {
-          console.error("Auth error:", error);
+          console.error(error);
 
-          $("authMessage").textContent =
-            error.message || "Authentication failed.";
-        } finally {
-          $("authSubmit").disabled = false;
-        }
-      });
-
-      /* =========================================================
-   AUTH STATE
-   ========================================================= */
-
-      async function handleAuthSession(session) {
-        if (!session || !session.user) {
-          currentUser = null;
-          currentProfile = null;
-
-          $("loggedOutUI").style.display = "block";
-
-          $("loggedInUI").style.display = "none";
-
-          resetPersonalStats();
-
-          return;
+          $("authStatus").textContent = friendlyAuthError(error);
         }
 
-        /*
-     THIS IS THE IMPORTANT FIX.
+        $("authSubmit").disabled = false;
+      };
 
-     We only set currentUser after Supabase
-     gives us a real authenticated user.
+      /* ============================================================
+   FRIENDLY AUTH ERRORS
+   ============================================================ */
 
-     Therefore we never perform:
+      function friendlyAuthError(error) {
+        const msg = String(error?.message || error || "");
 
-       id=eq.null
+        if (msg.toLowerCase().includes("email not confirmed")) {
+          return "Your email is not confirmed yet. Check your email, then try logging in again.";
+        }
 
-     against profiles.
-  */
+        if (msg.toLowerCase().includes("invalid login credentials")) {
+          return "Incorrect email or password.";
+        }
 
-        currentUser = session.user;
+        if (msg.toLowerCase().includes("user already registered")) {
+          return "That email already has an account. Try logging in.";
+        }
 
-        $("loggedOutUI").style.display = "none";
-
-        $("loggedInUI").style.display = "block";
-
-        $("profileEmail").textContent = currentUser.email || "";
-
-        await ensureProfile();
-
-        await loadPersonalStats();
+        return msg;
       }
 
-      /* =========================================================
-   ENSURE PROFILE
-   ========================================================= */
+      /* ============================================================
+   PROFILE
+   ============================================================ */
 
-      async function ensureProfile() {
-        if (!currentUser) {
-          return null;
-        }
+      async function ensureProfile(user, suppliedUsername = "") {
+        if (!user) return null;
 
-        const userId = currentUser.id;
-
-        /*
-     EXACT COLUMN:
-       profiles.id
-  */
+        let username =
+          suppliedUsername || user.user_metadata?.username || "Player";
 
         const { data, error } = await supabaseClient
           .from("profiles")
           .select("id,username,created_at")
-          .eq("id", userId)
+          .eq("id", user.id)
           .maybeSingle();
 
         if (error) {
-          console.error("Profile lookup error:", error);
-
-          /*
-       Don't crash the game if profile
-       permissions aren't configured yet.
-    */
-
-          currentProfile = {
-            id: userId,
-            username: "player",
-          };
-
-          $("profileUsername").textContent = "player";
-
-          return currentProfile;
+          console.warn("Profile lookup:", error);
         }
 
         if (data) {
-          currentProfile = data;
-        } else {
-          /*
-       Exact schema:
-         id
-         username
+          profile = data;
 
-       Username automatically starts as "player".
-    */
-
-          const newProfile = {
-            id: userId,
-
-            username: "player",
-          };
-
-          const { data: created, error: createError } = await supabaseClient
-            .from("profiles")
-            .insert(newProfile)
-            .select("id,username,created_at")
-            .single();
-
-          if (createError) {
-            console.error("Profile creation error:", createError);
-
-            currentProfile = newProfile;
-          } else {
-            currentProfile = created;
-          }
+          return data;
         }
 
-        $("profileUsername").textContent = currentProfile.username || "player";
+        /*
+    Only insert when the authenticated user's ID
+    definitely exists.
 
-        return currentProfile;
+    This prevents the previous:
+    id=eq.null
+    problem.
+  */
+
+        const { data: created, error: createError } = await supabaseClient
+          .from("profiles")
+          .insert({
+            id: user.id,
+
+            username: username,
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          /*
+      Another browser may have created it at
+      almost exactly the same time.
+
+      Try one more read.
+    */
+
+          console.warn("Profile creation:", createError);
+
+          const { data: retry } = await supabaseClient
+            .from("profiles")
+            .select("id,username,created_at")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (retry) {
+            profile = retry;
+
+            return retry;
+          }
+
+          return null;
+        }
+
+        profile = created;
+
+        return created;
       }
 
-      /* =========================================================
-   LOGOUT
-   ========================================================= */
+      /* ============================================================
+   UPDATE ACCOUNT UI
+   ============================================================ */
 
-      $("logoutBtn").onclick = async () => {
-        await supabaseClient.auth.signOut();
+      function updateAccountUI() {
+        if (currentUser) {
+          const name =
+            profile?.username ||
+            currentUser.user_metadata?.username ||
+            "Player";
 
-        showToast("Logged out.");
-      };
+          $("userPill").textContent = "👤 " + name;
 
-      /* =========================================================
-   PERSONAL STATS
-   ========================================================= */
+          $("authButton").style.display = "none";
+          $("profileButton").style.display = "inline-block";
+          $("logoutButton").style.display = "inline-block";
 
-      function resetPersonalStats() {
-        $("statRolls").textContent = "0";
-        $("statXP").textContent = "0";
-        $("statBestRarity").textContent = "—";
-        $("statBestRoll").textContent = "—";
+          $("profileSection").style.display = "block";
 
-        personalBest = null;
+          $("profileEmail").textContent = currentUser.email || "";
 
-        renderBoards();
+          $("profileUsername").textContent = name;
+
+          $("usernameInput").value = name;
+        } else {
+          $("userPill").textContent = "Guest";
+
+          $("authButton").style.display = "inline-block";
+          $("profileButton").style.display = "none";
+          $("logoutButton").style.display = "none";
+
+          $("profileSection").style.display = "none";
+        }
       }
+
+      /* ============================================================
+   LOAD PERSONAL STATS
+   ============================================================ */
 
       async function loadPersonalStats() {
         if (!currentUser) {
-          resetPersonalStats();
-
           return;
         }
 
-        const userId = currentUser.id;
-
-        /*
-     EXACT rolls columns:
-
-       roll
-       one_in
-       xp
-       rarity
-       player_id
-
-     player_id is TEXT, so we use the
-     UUID as a string.
-  */
-
         const { data, error } = await supabaseClient
           .from("rolls")
-          .select("roll,one_in,xp,rarity,shown,blanks,created_at")
-          .eq("player_id", String(userId))
+          .select("roll,one_in,xp,badges,rarity,shown,blanks,created_at")
+          .eq("player_id", currentUser.id)
           .order("one_in", { ascending: false });
 
         if (error) {
-          console.error("Personal stats unavailable:", error);
+          console.warn("Personal stats unavailable:", error);
 
           return;
         }
 
         const rows = data || [];
 
-        const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
+        const totalXP = rows.reduce((sum, r) => sum + Number(r.xp || 0), 0);
 
         const best = rows.length ? rows[0] : null;
 
-        $("statRolls").textContent = rows.length.toLocaleString();
+        $("profileRolls").textContent = rows.length.toLocaleString();
 
-        $("statXP").textContent = totalXP.toLocaleString();
+        $("profileXP").textContent = totalXP.toLocaleString();
 
-        $("statBestRarity").textContent = best ? best.rarity : "—";
+        $("profileBest").textContent = best ? best.roll : "—";
 
-        $("statBestRoll").textContent = best ? best.roll : "—";
-
-        if (best) {
-          personalBest = {
-            roll: best.roll,
-            rarity: best.rarity,
-            oneIn: Number(best.one_in),
-            shown: Number(best.shown),
-            blanks: Number(best.blanks || 0),
-            xp: Number(best.xp || 0),
-          };
-        }
-
-        renderBoards();
+        $("profileBestMeta").textContent = best
+          ? `${best.rarity} • ${fmt(best.one_in)}`
+          : "No rolls yet";
       }
 
-      /* =========================================================
-   SAVE ROLL TO SUPABASE
-   ========================================================= */
+      /* ============================================================
+   CHANGE USERNAME
+   ============================================================ */
 
-      async function saveRollToCloud(result) {
+      $("saveUsername").onclick = async () => {
         if (!currentUser) {
-          return false;
+          toast("You need to be logged in.");
+
+          return;
         }
 
-        const username = currentProfile?.username || "player";
+        let newUsername = $("usernameInput").value.trim();
+
+        if (!newUsername) {
+          $("usernameStatus").textContent = "Username cannot be empty.";
+
+          return;
+        }
+
+        if (newUsername.length > 24) {
+          $("usernameStatus").textContent =
+            "Username must be 24 characters or less.";
+
+          return;
+        }
+
+        $("saveUsername").disabled = true;
+
+        $("usernameStatus").textContent = "Saving...";
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("profiles")
+            .update({
+              username: newUsername,
+            })
+            .eq("id", currentUser.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          profile = data;
+
+          /*
+      Also update auth metadata so the username
+      remains available immediately in the session.
+    */
+
+          await supabaseClient.auth.updateUser({
+            data: {
+              username: newUsername,
+            },
+          });
+
+          updateAccountUI();
+
+          await updateExistingRollNames(newUsername);
+
+          $("usernameStatus").textContent = "Username updated!";
+
+          toast("Username changed to " + newUsername);
+        } catch (error) {
+          console.error(error);
+
+          $("usernameStatus").textContent =
+            error.message || "Unable to change username.";
+        }
+
+        $("saveUsername").disabled = false;
+      };
+
+      /*
+  Keep previous rolls' player_name synchronized.
+
+  This is optional and may be blocked by RLS.
+  A failure here should NOT make the username change fail.
+*/
+
+      async function updateExistingRollNames(newUsername) {
+        if (!currentUser) return;
+
+        try {
+          const { error } = await supabaseClient
+            .from("rolls")
+            .update({
+              player_name: newUsername,
+            })
+            .eq("player_id", currentUser.id);
+
+          if (error) {
+            console.warn("Could not update old roll names:", error);
+          }
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      /* ============================================================
+   SAVE CLOUD ROLL
+   ============================================================ */
+
+      async function saveCloudRoll(result) {
+        if (!currentUser) {
+          return;
+        }
+
+        const username =
+          profile?.username || currentUser.user_metadata?.username || "Player";
 
         /*
-     EXACT DATABASE COLUMNS.
+    EXACT columns from your database:
 
-     Notice there is NO user_id.
-     Notice there is NO display_name.
+    roll
+    rarity
+    one_in
+    shown
+    blanks
+    xp
+    player_id
+    player_name
   */
 
         const row = {
@@ -1551,40 +2091,48 @@
 
           xp: result.xp,
 
-          player_id: String(currentUser.id),
+          player_id: currentUser.id,
 
           player_name: username,
         };
 
-        const { error } = await supabaseClient.from("rolls").insert(row);
+        try {
+          const { data, error } = await supabaseClient
+            .from("rolls")
+            .insert(row)
+            .select()
+            .single();
 
-        if (error) {
-          console.error("Cloud roll error:", error);
+          if (error) {
+            console.error("Cloud roll error:", error);
 
-          showToast("Roll saved locally, but cloud saving failed.");
+            toast("Roll saved locally, but cloud save failed.");
 
-          return false;
+            return null;
+          }
+
+          return data;
+        } catch (error) {
+          console.error("Cloud roll exception:", error);
+
+          return null;
         }
-
-        return true;
       }
 
-      /* =========================================================
-   GLOBAL LEADERBOARD
-   ========================================================= */
+      /* ============================================================
+   LEADERBOARD
+   ============================================================ */
 
-      async function loadGlobalLeaderboard() {
+      async function loadLeaderboard() {
         /*
-     No user is required for the global board.
-
-     It reads directly from rolls, which contains
-     player_name already.
+    Only select columns that actually exist
+    in your rolls table.
   */
 
         const { data, error } = await supabaseClient
           .from("rolls")
           .select(
-            "id,roll,rarity,one_in,xp,shown,created_at,player_name,player_id",
+            "id,roll,rarity,one_in,shown,xp,player_id,player_name,created_at",
           )
           .order("one_in", { ascending: false })
           .limit(10);
@@ -1592,49 +2140,102 @@
         if (error) {
           console.error("Leaderboard error:", error);
 
-          $("globalLeaderboard").innerHTML = `
-      <div class="empty">
-        Leaderboard unavailable.
-        Check your Supabase RLS policies.
-      </div>
-      `;
+          $("globalRows").innerHTML = `<span class="empty">
+        Leaderboard unavailable: ${escapeHTML(error.message)}
+      </span>`;
 
           return;
         }
 
-        if (!data || !data.length) {
-          $("globalLeaderboard").innerHTML = `
-      <div class="empty">
-        No global rolls yet.
-      </div>
-      `;
+        const rows = data || [];
+
+        if (!rows.length) {
+          $("globalRows").innerHTML =
+            '<span class="empty">No global rolls yet.</span>';
+
+          $("todayBest").textContent = "—";
+          $("allBest").textContent = "—";
 
           return;
         }
 
-        $("globalLeaderboard").innerHTML = data
+        /*
+    All-time best
+  */
+
+        const best = rows[0];
+
+        $("allBest").textContent = best.roll;
+
+        $("allBestMeta").textContent =
+          `${best.player_name || "Player"} • ${best.rarity} • ${fmt(best.one_in)}`;
+
+        /*
+    Today.
+
+    We fetch the best current list and find today's
+    entries client-side.
+  */
+
+        const todayStart = new Date();
+
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayRows = rows.filter(
+          (x) => new Date(x.created_at) >= todayStart,
+        );
+
+        if (todayRows.length) {
+          const todayBest = todayRows[0];
+
+          $("todayBest").textContent = todayBest.roll;
+
+          $("todayBestMeta").textContent =
+            `${todayBest.player_name || "Player"} • ${todayBest.rarity} • ${fmt(todayBest.one_in)}`;
+        } else {
+          $("todayBest").textContent = "—";
+
+          $("todayBestMeta").textContent = "No rolls today";
+        }
+
+        /*
+    Top list
+  */
+
+        $("globalRows").innerHTML = rows
           .map(
             (row, index) => `
 
-      <div class="boardRow">
+      <div class="globalRow">
 
-        <div class="boardRank">
+        <div class="rank">
           #${index + 1}
         </div>
 
-        <div class="boardName">
-          ${escapeHTML(row.player_name || "player")}
+        <div>
+          <div class="globalPlayer">
+            ${escapeHTML(row.player_name || "Player")}
+          </div>
+
           <div class="small">
-            ${escapeHTML(row.rarity || "COMMON")}
+            ${escapeHTML(
+              row.created_at ? new Date(row.created_at).toLocaleString() : "",
+            )}
           </div>
         </div>
 
-        <div class="boardRoll">
+        <div class="globalRoll">
           ${escapeHTML(row.roll)}
         </div>
 
-        <div class="boardChance">
-          ${fmt(row.one_in)}
+        <div>
+          <div class="rarity">
+            ${escapeHTML(row.rarity)}
+          </div>
+
+          <div class="small">
+            ${fmt(row.one_in)}
+          </div>
         </div>
 
       </div>
@@ -1644,37 +2245,33 @@
           .join("");
       }
 
-      /* =========================================================
+      /* ============================================================
    REALTIME
-   ========================================================= */
+   ============================================================ */
 
       function setupRealtime() {
         if (realtimeChannel) {
-          supabaseClient.removeChannel(realtimeChannel);
+          try {
+            supabaseClient.removeChannel(realtimeChannel);
+          } catch (e) {}
         }
 
         realtimeChannel = supabaseClient
-          .channel("digit-roll-global-rolls")
+          .channel("digit-rolls-global")
 
           .on(
             "postgres_changes",
-
             {
               event: "INSERT",
               schema: "public",
               table: "rolls",
             },
-
             (payload) => {
-              console.log("Realtime roll received:", payload);
+              console.log("Realtime new roll:", payload.new);
 
-              /*
-             Another player rolled.
+              toast("🌎 New global roll!");
 
-             Refresh leaderboard and stats.
-          */
-
-              loadGlobalLeaderboard();
+              loadLeaderboard();
 
               if (currentUser) {
                 loadPersonalStats();
@@ -1682,73 +2279,97 @@
             },
           )
 
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "profiles",
+            },
+            (payload) => {
+              if (
+                currentUser &&
+                payload.new &&
+                payload.new.id === currentUser.id
+              ) {
+                profile = payload.new;
+
+                updateAccountUI();
+              }
+            },
+          )
+
           .subscribe((status) => {
             console.log("Realtime status:", status);
+
+            if (status === "SUBSCRIBED") {
+              $("realtimeDot").classList.add("on");
+
+              $("realtimeDot").classList.remove("off");
+
+              $("realtimeText").textContent = "Realtime Online";
+            } else {
+              $("realtimeDot").classList.remove("on");
+
+              $("realtimeDot").classList.add("off");
+
+              $("realtimeText").textContent = "Realtime Offline";
+            }
           });
       }
 
-      /* =========================================================
-   ROLL
-   ========================================================= */
+      /* ============================================================
+   ROLL DISPLAY
+   ============================================================ */
 
-      $("rollBtn").onclick = async () => {
-        if (isRolling) return;
+      async function performRoll() {
+        if (rolling) return;
 
-        isRolling = true;
+        rolling = true;
 
         $("rollBtn").disabled = true;
 
         $("rollLabel").textContent = "ROLLING...";
 
         $("rarity").textContent = "—";
-
         $("chance").textContent = "—";
-
         $("liveRarity").textContent = "RARITY: ???";
-
         $("shown").textContent = "—";
-
         $("xp").textContent = "—";
-
         $("blankBonus").textContent = "—";
 
-        $("badges").innerHTML = `
-      <span class="empty">
-        The number is being generated...
-      </span>
-      `;
+        $("badges").innerHTML =
+          '<span class="empty">The number is being generated...</span>';
+
+        $("number").classList.add("rolling");
 
         const finalChars = randomRoll();
 
         const visible = Array(10).fill("?");
 
-        $("number").textContent = visible.join("");
-
         let i = 0;
 
-        const digitTimer = setInterval(() => {
-          visible[i] = finalChars[i];
+        await new Promise((resolve) => {
+          const timer = setInterval(() => {
+            visible[i] = finalChars[i];
 
-          $("number").textContent = visible.join("");
+            $("number").textContent = visible.join("");
 
-          i++;
+            i++;
 
-          if (i >= 10) {
-            clearInterval(digitTimer);
+            if (i >= 10) {
+              clearInterval(timer);
 
-            finishRoll(finalChars);
-          }
-        }, 350);
-      };
+              resolve();
+            }
+          }, 900);
+        });
 
-      /* =========================================================
-   FINISH ROLL
-   ========================================================= */
+        $("number").classList.remove("rolling");
 
-      async function finishRoll(chars) {
-        const analysis = analyze(chars);
+        const analysis = analyze(finalChars);
 
-        const roll = chars.join("");
+        const roll = finalChars.join("");
 
         const result = {
           roll,
@@ -1758,7 +2379,15 @@
           time: Date.now(),
         };
 
+        /*
+    Badge reveal phase.
+  */
+
         const badges = analysis.badges;
+
+        const focusMs = badges.length
+          ? Math.max(1000, Math.min(10000, Math.round(10000 / badges.length)))
+          : 3000;
 
         $("rollLabel").textContent = badges.length
           ? "ANALYZING BADGES..."
@@ -1768,15 +2397,12 @@
 
         let bIndex = 0;
 
-        const focusMs = badges.length
-          ? Math.max(800, Math.min(2500, Math.round(6000 / badges.length)))
-          : 1200;
+        await new Promise((resolve) => {
+          const revealBadge = () => {
+            if (bIndex < badges.length) {
+              const b = badges[bIndex];
 
-        const revealBadge = () => {
-          if (bIndex < badges.length) {
-            const b = badges[bIndex];
-
-            $("badges").innerHTML = `
+              $("badges").innerHTML = `
 
           <button
             class="badgeFocus"
@@ -1815,8 +2441,7 @@
               "
             >
               Badge chance:
-              1 in
-              ${Number(b.oneIn).toLocaleString()}
+              1 in ${Number(b.oneIn).toLocaleString()}
             </div>
 
             <div
@@ -1830,63 +2455,55 @@
               class="small"
               style="margin-top:4px"
             >
-              Badge
-              ${bIndex + 1}
-              of
-              ${badges.length}
-              • Less digits bonus:
-              ×${analysis.blankMultiplier.toLocaleString()}
+              Badge ${bIndex + 1}
+              of ${badges.length}
+              • Blank bonus ×${analysis.blankMultiplier.toLocaleString()}
             </div>
 
           </button>
 
-          `;
+        `;
 
-            bIndex++;
+              bIndex++;
 
-            setTimeout(revealBadge, focusMs);
-          } else {
-            showFinalResult(result);
-          }
-        };
+              setTimeout(revealBadge, focusMs);
+            } else {
+              resolve();
+            }
+          };
 
-        setTimeout(revealBadge, 450);
-      }
+          setTimeout(revealBadge, 450);
+        });
 
-      /* =========================================================
-   FINAL RESULT
-   ========================================================= */
-
-      async function showFinalResult(result) {
-        const a = result;
+        /*
+    Final result.
+  */
 
         $("rollLabel").textContent = "FINAL RESULT";
 
-        $("liveRarity").textContent = "RARITY: " + a.rarity;
+        $("liveRarity").textContent = "RARITY: " + analysis.rarity;
 
-        $("rarity").textContent = a.rarity;
+        $("rarity").textContent = analysis.rarity;
 
-        $("chance").textContent = fmt(a.oneIn);
+        $("chance").textContent = fmt(analysis.oneIn);
 
-        $("shown").textContent = a.shown + "/10";
+        $("shown").textContent = analysis.shown + "/10";
 
-        $("blankBonus").textContent = "×" + a.blankMultiplier.toLocaleString();
+        $("blankBonus").textContent =
+          "×" + analysis.blankMultiplier.toLocaleString();
 
-        $("xp").textContent = "+" + a.xp;
+        $("xp").textContent = "+" + analysis.xp;
 
-        if (!a.badges.length) {
-          $("badges").innerHTML = `
-      <span class="empty">
-        No badges. A completely ordinary roll.
-      </span>
-      `;
+        if (!badges.length) {
+          $("badges").innerHTML =
+            '<span class="empty">No badges. A completely ordinary roll.</span>';
         } else {
-          $("badges").innerHTML = a.badges
+          $("badges").innerHTML = badges
             .map(
               (b) => `
 
         <button
-          class="badge"
+          class="badge badgeButton"
           type="button"
           onclick='showBadgeInfo(
             ${JSON.stringify(b.name)},
@@ -1897,12 +2514,14 @@
           ${escapeHTML(b.name)}
         </button>
 
-        `,
+      `,
             )
             .join("");
         }
 
-        /* Local history */
+        /*
+    Local history.
+  */
 
         history.unshift(result);
 
@@ -1920,124 +2539,146 @@
 
         renderHistory();
 
-        renderBoards();
-
         /*
-     Save to Supabase only when logged in.
+    Cloud save if logged in.
   */
 
         if (currentUser) {
-          await saveRollToCloud(result);
-
-          /*
-       Refresh immediately instead of waiting
-       for realtime.
-    */
+          await saveCloudRoll(result);
 
           await loadPersonalStats();
 
-          await loadGlobalLeaderboard();
+          await loadLeaderboard();
         }
 
         $("rollBtn").disabled = false;
 
-        isRolling = false;
+        rolling = false;
       }
 
-      /* =========================================================
-   BADGE MODAL
-   ========================================================= */
+      /* ============================================================
+   ROLL BUTTON
+   ============================================================ */
 
-      function showBadgeInfo(name, explanation, oneIn) {
-        $("badgeModalName").textContent = name;
+      $("rollBtn").onclick = performRoll;
 
-        $("badgeModalExplanation").textContent = explanation;
+      /* ============================================================
+   PROFILE BUTTON
+   ============================================================ */
 
-        $("badgeModalChance").textContent =
-          "Badge chance: 1 in " + Number(oneIn).toLocaleString();
+      $("profileButton").onclick = () => {
+        $("profileSection").scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      };
 
-        $("badgeModal").classList.add("open");
-      }
+      /* ============================================================
+   LOGOUT
+   ============================================================ */
 
-      function closeBadgeInfo() {
-        $("badgeModal").classList.remove("open");
-      }
+      $("logoutButton").onclick = async () => {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch (error) {
+          console.error(error);
+        }
+      };
 
-      /* =========================================================
-   TOAST
-   ========================================================= */
+      /* ============================================================
+   REFRESH LEADERBOARD
+   ============================================================ */
 
-      let toastTimer = null;
+      $("refreshLeaderboard").onclick = async () => {
+        $("refreshLeaderboard").disabled = true;
 
-      function showToast(message) {
-        const toast = $("toast");
+        await loadLeaderboard();
 
-        toast.textContent = message;
+        $("refreshLeaderboard").disabled = false;
 
-        toast.classList.add("show");
+        toast("Leaderboard refreshed.");
+      };
 
-        clearTimeout(toastTimer);
+      /* ============================================================
+   AUTH STATE
+   ============================================================ */
 
-        toastTimer = setTimeout(() => {
-          toast.classList.remove("show");
-        }, 2500);
-      }
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        console.log("Auth state:", event);
 
-      /* =========================================================
-   STARTUP
-   ========================================================= */
+        if (session?.user) {
+          currentUser = session.user;
 
-      async function startup() {
-        /*
-     Load local history immediately.
-  */
+          /*
+        setTimeout avoids doing extra Supabase work
+        directly inside the auth callback.
+      */
 
+          setTimeout(async () => {
+            await ensureProfile(currentUser);
+
+            updateAccountUI();
+
+            await loadPersonalStats();
+
+            await loadLeaderboard();
+          }, 0);
+        } else {
+          currentUser = null;
+
+          profile = null;
+
+          updateAccountUI();
+        }
+      });
+
+      /* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+      async function init() {
         loadLocal();
 
-        /*
-     Load global leaderboard.
-  */
-
-        await loadGlobalLeaderboard();
+        updateAccountUI();
 
         /*
-     Realtime listener.
+    Get the existing session.
 
-     This is independent of login,
-     because the global leaderboard is public.
+    IMPORTANT:
+    We don't try to query profiles until we know
+    there is an authenticated user.
   */
 
-        setupRealtime();
+        try {
+          const { data, error } = await supabaseClient.auth.getSession();
 
-        /*
-     Get current authenticated session.
+          if (error) {
+            console.warn("Session error:", error);
+          }
 
-     IMPORTANT:
-     We do not query profiles until this returns
-     an actual user.
-  */
+          if (data?.session?.user) {
+            currentUser = data.session.user;
 
-        const { data, error } = await supabaseClient.auth.getSession();
+            await ensureProfile(currentUser);
 
-        if (error) {
-          console.error("Session error:", error);
+            updateAccountUI();
+
+            await loadPersonalStats();
+          }
+        } catch (error) {
+          console.warn("Initial auth check failed:", error);
         }
 
-        await handleAuthSession(data?.session || null);
+        await loadLeaderboard();
 
-        /*
-     Keep the UI synchronized when login,
-     logout, or session refresh happens.
-  */
-
-        supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-          await handleAuthSession(session);
-
-          await loadGlobalLeaderboard();
-        });
+        setupRealtime();
       }
 
-      startup();
+      /* ============================================================
+   START
+   ============================================================ */
+
+      init();
     </script>
   </body>
 </html>
