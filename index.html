@@ -303,7 +303,6 @@
           transform: scale(0.92);
           filter: blur(3px);
         }
-
         to {
           opacity: 1;
           transform: scale(1);
@@ -494,9 +493,16 @@
       const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
       const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzIiwicmVmIjoieHVvZmJuZ2hxY2t0bHNtamdmYmpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
 
-      const supabase = window.supabase.createClient(
+      /*
+  IMPORTANT:
+  We deliberately call the client "supabaseClient"
+  instead of "supabase" because the CDN itself exposes
+  window.supabase.
+*/
+
+      const supabaseClient = window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
       );
@@ -870,13 +876,9 @@
       function escapeHTML(value) {
         return String(value)
           .replaceAll("&", "&amp;")
-
           .replaceAll("<", "&lt;")
-
           .replaceAll(">", "&gt;")
-
           .replaceAll('"', "&quot;")
-
           .replaceAll("'", "&#039;");
       }
 
@@ -1062,7 +1064,7 @@
    ===================================================== */
 
       async function loadGlobalRolls() {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
 
           .from("rolls")
 
@@ -1094,7 +1096,7 @@
    ===================================================== */
 
       function setupRealtime() {
-        supabase
+        supabaseClient
 
           .channel("digit-roll-global")
 
@@ -1158,7 +1160,7 @@
    ===================================================== */
 
       async function uploadRoll(result) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
 
           .from("rolls")
 
