@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="en">
   <head>
@@ -202,10 +203,18 @@
         text-shadow:
           0 0 25px rgba(120, 170, 255, 0.3),
           0 0 60px rgba(120, 140, 255, 0.1);
+        transition:
+          color 0.25s ease,
+          text-shadow 0.25s ease,
+          transform 0.15s ease;
       }
 
       .number.rolling {
-        animation: numberPulse 0.5s infinite alternate;
+        animation: numberPulse 0.22s infinite alternate;
+      }
+
+      .number.finalReveal {
+        animation: finalNumberReveal 0.55s ease-out;
       }
 
       @keyframes numberPulse {
@@ -213,9 +222,27 @@
           transform: scale(1);
           filter: brightness(1);
         }
+
         to {
-          transform: scale(1.025);
-          filter: brightness(1.25);
+          transform: scale(1.035);
+          filter: brightness(1.35);
+        }
+      }
+
+      @keyframes finalNumberReveal {
+        0% {
+          transform: scale(1.08);
+          filter: brightness(2.2);
+        }
+
+        60% {
+          transform: scale(0.985);
+          filter: brightness(1.15);
+        }
+
+        100% {
+          transform: scale(1);
+          filter: brightness(1);
         }
       }
 
@@ -224,7 +251,72 @@
         font-weight: 850;
         min-height: 32px;
         margin: -8px 0 18px;
-        color: #aab5ca;
+        transition:
+          color 0.25s ease,
+          text-shadow 0.25s ease;
+      }
+
+      /* ============================================================
+         RARITY COLORS
+         ============================================================ */
+
+      .rarity-common {
+        color: #b7c1d5 !important;
+      }
+
+      .rarity-uncommon {
+        color: #68e08d !important;
+        text-shadow: 0 0 12px rgba(104, 224, 141, 0.22);
+      }
+
+      .rarity-rare {
+        color: #58a6ff !important;
+        text-shadow: 0 0 14px rgba(88, 166, 255, 0.3);
+      }
+
+      .rarity-epic {
+        color: #b56cff !important;
+        text-shadow: 0 0 16px rgba(181, 108, 255, 0.32);
+      }
+
+      .rarity-legendary {
+        color: #ffb84d !important;
+        text-shadow: 0 0 18px rgba(255, 184, 77, 0.38);
+      }
+
+      .rarity-mythic {
+        color: #ff5d8f !important;
+        text-shadow: 0 0 20px rgba(255, 93, 143, 0.4);
+      }
+
+      .rarity-divine {
+        color: #ffe66d !important;
+        text-shadow: 0 0 22px rgba(255, 230, 109, 0.48);
+      }
+
+      .rarity-transcendent {
+        color: #63f5ff !important;
+        text-shadow:
+          0 0 16px rgba(99, 245, 255, 0.5),
+          0 0 35px rgba(99, 245, 255, 0.25);
+      }
+
+      .rarity-unknown {
+        color: #ffffff !important;
+        text-shadow:
+          0 0 12px rgba(255, 255, 255, 0.8),
+          0 0 30px rgba(180, 120, 255, 0.8);
+        animation: unknownRarity 0.7s infinite alternate;
+      }
+
+      @keyframes unknownRarity {
+        from {
+          filter: brightness(1);
+        }
+
+        to {
+          filter: brightness(1.6);
+        }
       }
 
       .grid {
@@ -295,6 +387,7 @@
           transform: scale(0.92);
           filter: blur(3px);
         }
+
         to {
           opacity: 1;
           transform: scale(1);
@@ -343,6 +436,9 @@
 
       .rarity {
         font-weight: 800;
+        transition:
+          color 0.2s ease,
+          text-shadow 0.2s ease;
       }
 
       .leader {
@@ -565,6 +661,7 @@
         body {
           padding: 14px;
         }
+
         .grid,
         .leader,
         .profileGrid {
@@ -613,10 +710,13 @@
           </span>
 
           <span class="userPill" id="userPill">Guest</span>
+
           <button class="secondary" id="authButton">Login / Sign Up</button>
+
           <button class="secondary" id="profileButton" style="display: none">
             Profile
           </button>
+
           <button class="danger" id="logoutButton" style="display: none">
             Logout
           </button>
@@ -627,7 +727,7 @@
       <div class="card rollbox">
         <div class="small" id="rollLabel">READY TO ROLL</div>
 
-        <div class="number" id="number">??????????</div>
+        <div class="number" id="number">0000000000</div>
 
         <div id="liveRarity">RARITY: —</div>
 
@@ -732,6 +832,7 @@
               placeholder="Enter a username"
               style="flex: 1; min-width: 200px"
             />
+
             <button id="saveUsername">Save Username</button>
           </div>
 
@@ -787,6 +888,7 @@
 
         <div class="authTabs">
           <button class="authTab active" id="loginTab">Login</button>
+
           <button class="authTab" id="signupTab">Sign Up</button>
         </div>
 
@@ -850,20 +952,13 @@
 
     <script>
       /* ============================================================
-   SUPABASE
-   ============================================================ */
+         SUPABASE
+         ============================================================ */
 
       const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
       const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
-
-      /*
-  IMPORTANT:
-  Do NOT create another variable called "supabase".
-
-  We use "supabaseClient" everywhere.
-*/
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmJjbmdocWNrdGxzbWpnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
 
       const supabaseClient = window.supabase.createClient(
         SUPABASE_URL,
@@ -871,8 +966,8 @@
       );
 
       /* ============================================================
-   REFERENCES
-   ============================================================ */
+         REFERENCES
+         ============================================================ */
 
       const references = {
         911: [
@@ -943,8 +1038,8 @@
       };
 
       /* ============================================================
-   HELPERS
-   ============================================================ */
+         HELPERS
+         ============================================================ */
 
       const $ = (id) => document.getElementById(id);
 
@@ -958,6 +1053,7 @@
 
       function toast(message) {
         $("toast").textContent = message;
+
         $("toast").classList.add("show");
 
         clearTimeout(window.toastTimer);
@@ -988,8 +1084,64 @@
       }
 
       /* ============================================================
-   RANDOM ROLL
-   ============================================================ */
+         RARITY CLASS
+         ============================================================ */
+
+      function getRarityClass(rarity) {
+        switch (String(rarity || "").toUpperCase()) {
+          case "COMMON":
+            return "rarity-common";
+
+          case "UNCOMMON":
+            return "rarity-uncommon";
+
+          case "RARE":
+            return "rarity-rare";
+
+          case "EPIC":
+            return "rarity-epic";
+
+          case "LEGENDARY":
+            return "rarity-legendary";
+
+          case "MYTHIC":
+            return "rarity-mythic";
+
+          case "DIVINE":
+            return "rarity-divine";
+
+          case "TRANSCENDENT":
+            return "rarity-transcendent";
+
+          case "???":
+            return "rarity-unknown";
+
+          default:
+            return "rarity-common";
+        }
+      }
+
+      function applyRarityClass(element, rarity) {
+        if (!element) return;
+
+        element.classList.remove(
+          "rarity-common",
+          "rarity-uncommon",
+          "rarity-rare",
+          "rarity-epic",
+          "rarity-legendary",
+          "rarity-mythic",
+          "rarity-divine",
+          "rarity-transcendent",
+          "rarity-unknown",
+        );
+
+        element.classList.add(getRarityClass(rarity));
+      }
+
+      /* ============================================================
+         RANDOM ROLL
+         ============================================================ */
 
       function randomRoll() {
         const chars = [];
@@ -1014,18 +1166,31 @@
       }
 
       /* ============================================================
-   ADVANCED ANALYSIS
-   ============================================================ */
+         RANDOM PREVIEW NUMBER
+         ============================================================ */
+
+      function randomPreviewNumber() {
+        let output = "";
+
+        for (let i = 0; i < 10; i++) {
+          output += Math.floor(Math.random() * 10);
+        }
+
+        return output;
+      }
+
+      /* ============================================================
+         ADVANCED ANALYSIS
+         ============================================================ */
 
       function analyze(chars) {
         const digits = chars.filter((x) => x !== "_");
+
         const compact = digits.join("");
 
         const badges = [];
 
-        /* ----------------------------------------------------------
-     REFERENCES
-     ---------------------------------------------------------- */
+        /* REFERENCES */
 
         for (const [key, [name, explanation, oneIn]] of Object.entries(
           references,
@@ -1039,9 +1204,7 @@
           }
         }
 
-        /* ----------------------------------------------------------
-     DIGIT COUNTS
-     ---------------------------------------------------------- */
+        /* DIGIT COUNTS */
 
         const counts = {};
 
@@ -1108,9 +1271,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     DOUBLES
-     ---------------------------------------------------------- */
+        /* DOUBLES */
 
         if (/00|11|22|33|44|55|66|77|88|99/.test(compact)) {
           badges.push({
@@ -1129,9 +1290,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     RISING SEQUENCES
-     ---------------------------------------------------------- */
+        /* RISING */
 
         if (/012|123|234|345|456|567|678|789/.test(compact)) {
           badges.push({
@@ -1157,9 +1316,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     FALLING
-     ---------------------------------------------------------- */
+        /* FALLING */
 
         if (/987|876|765|654|543|432|321|210/.test(compact)) {
           badges.push({
@@ -1185,9 +1342,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     MOUNTAINS
-     ---------------------------------------------------------- */
+        /* MOUNTAINS */
 
         const mountainPatterns = [
           "01210",
@@ -1198,7 +1353,6 @@
           "56765",
           "67876",
           "78987",
-
           "0123210",
           "1234321",
           "2345432",
@@ -1216,9 +1370,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     VALLEYS
-     ---------------------------------------------------------- */
+        /* VALLEYS */
 
         const valleyPatterns = [
           "21012",
@@ -1229,7 +1381,6 @@
           "76567",
           "87678",
           "98789",
-
           "2101234",
           "3212345",
           "4323456",
@@ -1247,9 +1398,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     WAVES
-     ---------------------------------------------------------- */
+        /* WAVES */
 
         const wavePatterns = [
           "121",
@@ -1260,7 +1409,6 @@
           "676",
           "787",
           "898",
-
           "12321",
           "23432",
           "34543",
@@ -1279,9 +1427,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     MIRRORS
-     ---------------------------------------------------------- */
+        /* MIRRORS */
 
         for (let len = 3; len <= 7; len++) {
           for (let i = 0; i <= compact.length - len; i++) {
@@ -1306,9 +1452,7 @@
           }
         }
 
-        /* ----------------------------------------------------------
-     ALTERNATORS
-     ---------------------------------------------------------- */
+        /* ALTERNATORS */
 
         if (/0101|1212|2323|3434|4545|5656|6767|7878|8989/.test(compact)) {
           badges.push({
@@ -1318,9 +1462,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     LOOPS
-     ---------------------------------------------------------- */
+        /* LOOPS */
 
         const loopPatterns = [
           "0123456789",
@@ -1337,9 +1479,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     PYRAMIDS
-     ---------------------------------------------------------- */
+        /* PYRAMIDS */
 
         const pyramidPatterns = [
           "1234321",
@@ -1347,7 +1487,6 @@
           "3456543",
           "4567654",
           "5678765",
-
           "11211",
           "22322",
           "33433",
@@ -1367,9 +1506,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     PALINDROME
-     ---------------------------------------------------------- */
+        /* PALINDROME */
 
         if (
           compact.length >= 4 &&
@@ -1383,9 +1520,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     MATHEMATICAL PATTERNS
-     ---------------------------------------------------------- */
+        /* MATHEMATICAL */
 
         if (digits.length >= 4) {
           const diffs = [];
@@ -1408,9 +1543,7 @@
           }
         }
 
-        /* ----------------------------------------------------------
-     SQUARE-LIKE / MULTIPLE PATTERNS
-     ---------------------------------------------------------- */
+        /* SQUARE-LIKE */
 
         const squarePatterns = [
           "149",
@@ -1434,9 +1567,7 @@
           });
         }
 
-        /* ----------------------------------------------------------
-     SAME PARITY
-     ---------------------------------------------------------- */
+        /* SAME PARITY */
 
         if (digits.length >= 5) {
           const parity = digits.map((d) => Number(d) % 2);
@@ -1450,25 +1581,16 @@
           }
         }
 
-        /* ----------------------------------------------------------
-     SORT BADGES
-     ---------------------------------------------------------- */
+        /* SORT */
 
         badges.sort((a, b) => a.oneIn - b.oneIn);
 
-        /* ----------------------------------------------------------
-     CHANCE
-     ---------------------------------------------------------- */
+        /* CHANCE */
 
         let badgeChance = 1;
 
         for (const b of badges) {
           badgeChance *= b.oneIn;
-
-          /*
-      Prevent JavaScript's number system from exploding
-      into Infinity too easily.
-    */
 
           if (badgeChance > 1e100) {
             badgeChance = 1e100;
@@ -1482,13 +1604,13 @@
 
         const totalChance = badgeChance * blankMultiplier;
 
-        /* ----------------------------------------------------------
-     RARITY
-     ---------------------------------------------------------- */
+        /* RARITY */
 
         let rarity = "COMMON";
 
-        if (badges.length || blanks >= 1) rarity = "UNCOMMON";
+        if (badges.length || blanks >= 1) {
+          rarity = "UNCOMMON";
+        }
 
         if (totalChance >= 100) rarity = "RARE";
 
@@ -1504,9 +1626,7 @@
 
         if (totalChance >= 1000000000000) rarity = "???";
 
-        /* ----------------------------------------------------------
-     XP
-     ---------------------------------------------------------- */
+        /* XP */
 
         const badgeXP = badges.reduce(
           (sum, b) =>
@@ -1525,26 +1645,19 @@
 
         return {
           badges,
-
           badgeChance,
-
           blankMultiplier,
-
           oneIn: totalChance,
-
           rarity,
-
           shown: digits.length,
-
           blanks,
-
           xp,
         };
       }
 
       /* ============================================================
-   LOCAL STORAGE
-   ============================================================ */
+         LOCAL STORAGE
+         ============================================================ */
 
       function saveLocal() {
         try {
@@ -1580,8 +1693,8 @@
       }
 
       /* ============================================================
-   HISTORY
-   ============================================================ */
+         HISTORY
+         ============================================================ */
 
       function renderHistory() {
         $("historyCount").textContent =
@@ -1595,33 +1708,31 @@
 
         $("history").innerHTML = history
           .slice(0, 30)
-          .map(
-            (x) => `
+          .map((x) => {
+            const rarityClass = getRarityClass(x.rarity);
 
-      <div class="historyrow">
+            return `
+                  <div class="historyrow">
+                    <span class="historynum">
+                      ${escapeHTML(x.roll)}
+                    </span>
 
-        <span class="historynum">
-          ${escapeHTML(x.roll)}
-        </span>
+                    <span class="rarity ${rarityClass}">
+                      ${escapeHTML(x.rarity)}
+                    </span>
 
-        <span class="rarity">
-          ${escapeHTML(x.rarity)}
-        </span>
-
-        <span class="xp">
-          +${Number(x.xp) || 0} XP
-        </span>
-
-      </div>
-
-    `,
-          )
+                    <span class="xp">
+                      +${Number(x.xp) || 0} XP
+                    </span>
+                  </div>
+                `;
+          })
           .join("");
       }
 
       /* ============================================================
-   ESCAPE
-   ============================================================ */
+         ESCAPE
+         ============================================================ */
 
       function escapeHTML(value) {
         return String(value ?? "")
@@ -1633,8 +1744,8 @@
       }
 
       /* ============================================================
-   BADGE INFO
-   ============================================================ */
+         BADGE INFO
+         ============================================================ */
 
       function showBadgeInfo(name, explanation, oneIn) {
         $("badgeModalName").textContent = name;
@@ -1652,8 +1763,8 @@
       }
 
       /* ============================================================
-   AUTH UI
-   ============================================================ */
+         AUTH UI
+         ============================================================ */
 
       function openAuth() {
         $("authModal").classList.add("open");
@@ -1664,7 +1775,9 @@
       }
 
       window.closeAuth = closeAuth;
+
       window.closeBadgeInfo = closeBadgeInfo;
+
       window.showBadgeInfo = showBadgeInfo;
 
       let authMode = "login";
@@ -1673,10 +1786,13 @@
         authMode = "login";
 
         $("loginTab").classList.add("active");
+
         $("signupTab").classList.remove("active");
 
         $("authTitle").textContent = "🔐 Login";
+
         $("authSubmit").textContent = "Login";
+
         $("authUsername").style.display = "none";
 
         $("authStatus").textContent = "";
@@ -1686,10 +1802,13 @@
         authMode = "signup";
 
         $("signupTab").classList.add("active");
+
         $("loginTab").classList.remove("active");
 
         $("authTitle").textContent = "✨ Create Account";
+
         $("authSubmit").textContent = "Create Account";
+
         $("authUsername").style.display = "block";
 
         $("authStatus").textContent = "";
@@ -1698,8 +1817,8 @@
       $("authButton").onclick = openAuth;
 
       /* ============================================================
-   SIGNUP / LOGIN
-   ============================================================ */
+         SIGNUP / LOGIN
+         ============================================================ */
 
       $("authSubmit").onclick = async () => {
         const email = $("authEmail").value.trim();
@@ -1743,12 +1862,6 @@
             if (error) throw error;
 
             if (data.user) {
-              /*
-          The profile is created after signup.
-
-          This is safe even if email confirmation is enabled.
-        */
-
               if (data.session) {
                 await ensureProfile(data.user, username);
               }
@@ -1786,8 +1899,8 @@
       };
 
       /* ============================================================
-   FRIENDLY AUTH ERRORS
-   ============================================================ */
+         FRIENDLY AUTH ERRORS
+         ============================================================ */
 
       function friendlyAuthError(error) {
         const msg = String(error?.message || error || "");
@@ -1808,11 +1921,22 @@
       }
 
       /* ============================================================
-   PROFILE
-   ============================================================ */
+         PROFILE
+         EXACT COLUMNS:
+         id
+         username
+         created_at
+         ============================================================ */
 
       async function ensureProfile(user, suppliedUsername = "") {
-        if (!user) return null;
+        /*
+          CRITICAL:
+          Never query profiles with a null user ID.
+        */
+
+        if (!user || !user.id) {
+          return null;
+        }
 
         let username =
           suppliedUsername || user.user_metadata?.username || "Player";
@@ -1834,33 +1958,26 @@
         }
 
         /*
-    Only insert when the authenticated user's ID
-    definitely exists.
-
-    This prevents the previous:
-    id=eq.null
-    problem.
-  */
+          Only create the profile for the
+          authenticated user's real UUID.
+        */
 
         const { data: created, error: createError } = await supabaseClient
           .from("profiles")
           .insert({
             id: user.id,
-
             username: username,
           })
-          .select()
+          .select("id,username,created_at")
           .single();
 
         if (createError) {
-          /*
-      Another browser may have created it at
-      almost exactly the same time.
-
-      Try one more read.
-    */
-
           console.warn("Profile creation:", createError);
+
+          /*
+            Another request may have created
+            the profile at the same time.
+          */
 
           const { data: retry } = await supabaseClient
             .from("profiles")
@@ -1883,8 +2000,8 @@
       }
 
       /* ============================================================
-   UPDATE ACCOUNT UI
-   ============================================================ */
+         ACCOUNT UI
+         ============================================================ */
 
       function updateAccountUI() {
         if (currentUser) {
@@ -1896,7 +2013,9 @@
           $("userPill").textContent = "👤 " + name;
 
           $("authButton").style.display = "none";
+
           $("profileButton").style.display = "inline-block";
+
           $("logoutButton").style.display = "inline-block";
 
           $("profileSection").style.display = "block";
@@ -1910,7 +2029,9 @@
           $("userPill").textContent = "Guest";
 
           $("authButton").style.display = "inline-block";
+
           $("profileButton").style.display = "none";
+
           $("logoutButton").style.display = "none";
 
           $("profileSection").style.display = "none";
@@ -1918,19 +2039,30 @@
       }
 
       /* ============================================================
-   LOAD PERSONAL STATS
-   ============================================================ */
+         PERSONAL STATS
+         EXACT ROLLS COLUMNS ONLY
+         ============================================================ */
 
       async function loadPersonalStats() {
-        if (!currentUser) {
+        if (!currentUser || !currentUser.id) {
           return;
         }
 
+        /*
+          IMPORTANT:
+          "badges" does NOT exist in your rolls table,
+          so it is intentionally NOT selected here.
+        */
+
         const { data, error } = await supabaseClient
           .from("rolls")
-          .select("roll,one_in,xp,badges,rarity,shown,blanks,created_at")
+          .select(
+            "roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
+          )
           .eq("player_id", currentUser.id)
-          .order("one_in", { ascending: false });
+          .order("one_in", {
+            ascending: false,
+          });
 
         if (error) {
           console.warn("Personal stats unavailable:", error);
@@ -1956,17 +2088,17 @@
       }
 
       /* ============================================================
-   CHANGE USERNAME
-   ============================================================ */
+         CHANGE USERNAME
+         ============================================================ */
 
       $("saveUsername").onclick = async () => {
-        if (!currentUser) {
+        if (!currentUser || !currentUser.id) {
           toast("You need to be logged in.");
 
           return;
         }
 
-        let newUsername = $("usernameInput").value.trim();
+        const newUsername = $("usernameInput").value.trim();
 
         if (!newUsername) {
           $("usernameStatus").textContent = "Username cannot be empty.";
@@ -1992,7 +2124,7 @@
               username: newUsername,
             })
             .eq("id", currentUser.id)
-            .select()
+            .select("id,username,created_at")
             .single();
 
           if (error) throw error;
@@ -2000,9 +2132,9 @@
           profile = data;
 
           /*
-      Also update auth metadata so the username
-      remains available immediately in the session.
-    */
+              Keep the username in Supabase Auth
+              metadata too.
+            */
 
           await supabaseClient.auth.updateUser({
             data: {
@@ -2027,15 +2159,14 @@
         $("saveUsername").disabled = false;
       };
 
-      /*
-  Keep previous rolls' player_name synchronized.
-
-  This is optional and may be blocked by RLS.
-  A failure here should NOT make the username change fail.
-*/
+      /* ============================================================
+         UPDATE OLD ROLL NAMES
+         ============================================================ */
 
       async function updateExistingRollNames(newUsername) {
-        if (!currentUser) return;
+        if (!currentUser || !currentUser.id) {
+          return;
+        }
 
         try {
           const { error } = await supabaseClient
@@ -2054,11 +2185,12 @@
       }
 
       /* ============================================================
-   SAVE CLOUD ROLL
-   ============================================================ */
+         SAVE CLOUD ROLL
+         EXACT ROLLS COLUMNS
+         ============================================================ */
 
       async function saveCloudRoll(result) {
-        if (!currentUser) {
+        if (!currentUser || !currentUser.id) {
           return;
         }
 
@@ -2066,17 +2198,19 @@
           profile?.username || currentUser.user_metadata?.username || "Player";
 
         /*
-    EXACT columns from your database:
+          EXACT columns used:
 
-    roll
-    rarity
-    one_in
-    shown
-    blanks
-    xp
-    player_id
-    player_name
-  */
+          roll
+          rarity
+          one_in
+          shown
+          blanks
+          xp
+          player_id
+          player_name
+
+          id and created_at are generated by Supabase.
+        */
 
         const row = {
           roll: result.roll,
@@ -2100,7 +2234,9 @@
           const { data, error } = await supabaseClient
             .from("rolls")
             .insert(row)
-            .select()
+            .select(
+              "id,roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
+            )
             .single();
 
           if (error) {
@@ -2120,29 +2256,28 @@
       }
 
       /* ============================================================
-   LEADERBOARD
-   ============================================================ */
+         LEADERBOARD
+         EXACT ROLLS COLUMNS
+         ============================================================ */
 
       async function loadLeaderboard() {
-        /*
-    Only select columns that actually exist
-    in your rolls table.
-  */
-
         const { data, error } = await supabaseClient
           .from("rolls")
           .select(
-            "id,roll,rarity,one_in,shown,xp,player_id,player_name,created_at",
+            "id,roll,rarity,one_in,shown,blanks,xp,player_id,player_name,created_at",
           )
-          .order("one_in", { ascending: false })
+          .order("one_in", {
+            ascending: false,
+          })
           .limit(10);
 
         if (error) {
           console.error("Leaderboard error:", error);
 
           $("globalRows").innerHTML = `<span class="empty">
-        Leaderboard unavailable: ${escapeHTML(error.message)}
-      </span>`;
+              Leaderboard unavailable:
+              ${escapeHTML(error.message)}
+            </span>`;
 
           return;
         }
@@ -2154,28 +2289,29 @@
             '<span class="empty">No global rolls yet.</span>';
 
           $("todayBest").textContent = "—";
+
           $("allBest").textContent = "—";
 
           return;
         }
 
         /*
-    All-time best
-  */
+          ALL-TIME BEST
+        */
 
         const best = rows[0];
 
         $("allBest").textContent = best.roll;
 
-        $("allBestMeta").textContent =
-          `${best.player_name || "Player"} • ${best.rarity} • ${fmt(best.one_in)}`;
+        $("allBestMeta").innerHTML = `${escapeHTML(
+          best.player_name || "Player",
+        )} • <span class="${getRarityClass(best.rarity)}">${escapeHTML(
+          best.rarity,
+        )}</span> • ${fmt(best.one_in)}`;
 
         /*
-    Today.
-
-    We fetch the best current list and find today's
-    entries client-side.
-  */
+          TODAY
+        */
 
         const todayStart = new Date();
 
@@ -2190,8 +2326,11 @@
 
           $("todayBest").textContent = todayBest.roll;
 
-          $("todayBestMeta").textContent =
-            `${todayBest.player_name || "Player"} • ${todayBest.rarity} • ${fmt(todayBest.one_in)}`;
+          $("todayBestMeta").innerHTML = `${escapeHTML(
+            todayBest.player_name || "Player",
+          )} • <span class="${getRarityClass(todayBest.rarity)}">${escapeHTML(
+            todayBest.rarity,
+          )}</span> • ${fmt(todayBest.one_in)}`;
         } else {
           $("todayBest").textContent = "—";
 
@@ -2199,55 +2338,55 @@
         }
 
         /*
-    Top list
-  */
+          TOP LIST
+        */
 
         $("globalRows").innerHTML = rows
           .map(
             (row, index) => `
+                <div class="globalRow">
 
-      <div class="globalRow">
+                  <div class="rank">
+                    #${index + 1}
+                  </div>
 
-        <div class="rank">
-          #${index + 1}
-        </div>
+                  <div>
+                    <div class="globalPlayer">
+                      ${escapeHTML(row.player_name || "Player")}
+                    </div>
 
-        <div>
-          <div class="globalPlayer">
-            ${escapeHTML(row.player_name || "Player")}
-          </div>
+                    <div class="small">
+                      ${escapeHTML(
+                        row.created_at
+                          ? new Date(row.created_at).toLocaleString()
+                          : "",
+                      )}
+                    </div>
+                  </div>
 
-          <div class="small">
-            ${escapeHTML(
-              row.created_at ? new Date(row.created_at).toLocaleString() : "",
-            )}
-          </div>
-        </div>
+                  <div class="globalRoll">
+                    ${escapeHTML(row.roll)}
+                  </div>
 
-        <div class="globalRoll">
-          ${escapeHTML(row.roll)}
-        </div>
+                  <div>
+                    <div class="rarity ${getRarityClass(row.rarity)}">
+                      ${escapeHTML(row.rarity)}
+                    </div>
 
-        <div>
-          <div class="rarity">
-            ${escapeHTML(row.rarity)}
-          </div>
+                    <div class="small">
+                      ${fmt(row.one_in)}
+                    </div>
+                  </div>
 
-          <div class="small">
-            ${fmt(row.one_in)}
-          </div>
-        </div>
-
-      </div>
-
-    `,
+                </div>
+              `,
           )
           .join("");
       }
 
       /* ============================================================
-   REALTIME
-   ============================================================ */
+         REALTIME
+         ============================================================ */
 
       function setupRealtime() {
         if (realtimeChannel) {
@@ -2289,6 +2428,7 @@
             (payload) => {
               if (
                 currentUser &&
+                currentUser.id &&
                 payload.new &&
                 payload.new.id === currentUser.id
               ) {
@@ -2319,8 +2459,96 @@
       }
 
       /* ============================================================
-   ROLL DISPLAY
-   ============================================================ */
+         ROLL NUMBER ANIMATION
+         ============================================================ */
+
+      async function animateNumberRoll(finalChars) {
+        const numberElement = $("number");
+
+        numberElement.classList.add("rolling");
+
+        /*
+          Rapidly generate REAL numbers.
+
+          The number changes much faster at the
+          beginning and gradually slows down.
+        */
+
+        const duration = 2400;
+
+        const start = performance.now();
+
+        let lastFrame = 0;
+
+        await new Promise((resolve) => {
+          function frame(now) {
+            const elapsed = now - start;
+
+            const progress = Math.min(1, elapsed / duration);
+
+            /*
+                Ease-out makes the rolling feel
+                like it is slowing down before
+                the final number appears.
+              */
+
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            const interval = 38 + eased * 120;
+
+            if (now - lastFrame >= interval) {
+              lastFrame = now;
+
+              /*
+                  During the final part,
+                  occasionally show digits
+                  closer to the actual result.
+                */
+
+              let preview = randomPreviewNumber();
+
+              if (progress > 0.72) {
+                const chars = preview.split("");
+
+                const lockCount = Math.floor(((progress - 0.72) / 0.28) * 10);
+
+                for (let i = 0; i < lockCount; i++) {
+                  chars[i] =
+                    finalChars[i] === "_"
+                      ? String(Math.floor(Math.random() * 10))
+                      : finalChars[i];
+                }
+
+                preview = chars.join("");
+              }
+
+              numberElement.textContent = preview;
+            }
+
+            if (progress < 1) {
+              requestAnimationFrame(frame);
+            } else {
+              numberElement.textContent = finalChars.join("");
+
+              numberElement.classList.remove("rolling");
+
+              numberElement.classList.add("finalReveal");
+
+              setTimeout(() => {
+                numberElement.classList.remove("finalReveal");
+              }, 600);
+
+              resolve();
+            }
+          }
+
+          requestAnimationFrame(frame);
+        });
+      }
+
+      /* ============================================================
+         ROLL DISPLAY
+         ============================================================ */
 
       async function performRoll() {
         if (rolling) return;
@@ -2332,40 +2560,31 @@
         $("rollLabel").textContent = "ROLLING...";
 
         $("rarity").textContent = "—";
+
+        $("rarity").className = "value";
+
         $("chance").textContent = "—";
+
         $("liveRarity").textContent = "RARITY: ???";
+
+        applyRarityClass($("liveRarity"), "???");
+
         $("shown").textContent = "—";
+
         $("xp").textContent = "—";
+
         $("blankBonus").textContent = "—";
 
         $("badges").innerHTML =
           '<span class="empty">The number is being generated...</span>';
 
-        $("number").classList.add("rolling");
-
         const finalChars = randomRoll();
 
-        const visible = Array(10).fill("?");
+        /*
+          REAL NUMBER ROLLING ANIMATION
+        */
 
-        let i = 0;
-
-        await new Promise((resolve) => {
-          const timer = setInterval(() => {
-            visible[i] = finalChars[i];
-
-            $("number").textContent = visible.join("");
-
-            i++;
-
-            if (i >= 10) {
-              clearInterval(timer);
-
-              resolve();
-            }
-          }, 900);
-        });
-
-        $("number").classList.remove("rolling");
+        await animateNumberRoll(finalChars);
 
         const analysis = analyze(finalChars);
 
@@ -2380,8 +2599,8 @@
         };
 
         /*
-    Badge reveal phase.
-  */
+          Badge reveal phase.
+        */
 
         const badges = analysis.badges;
 
@@ -2395,6 +2614,8 @@
 
         $("liveRarity").textContent = "RARITY: ???";
 
+        applyRarityClass($("liveRarity"), "???");
+
         let bIndex = 0;
 
         await new Promise((resolve) => {
@@ -2403,66 +2624,68 @@
               const b = badges[bIndex];
 
               $("badges").innerHTML = `
+                      <button
+                        class="badgeFocus"
+                        type="button"
+                        onclick='showBadgeInfo(
+                          ${JSON.stringify(b.name)},
+                          ${JSON.stringify(b.explanation)},
+                          ${Number(b.oneIn)}
+                        )'
+                      >
 
-          <button
-            class="badgeFocus"
-            type="button"
-            onclick='showBadgeInfo(
-              ${JSON.stringify(b.name)},
-              ${JSON.stringify(b.explanation)},
-              ${Number(b.oneIn)}
-            )'
-          >
+                        <div
+                          style="
+                            font-size:27px;
+                            font-weight:850;
+                            margin-bottom:7px;
+                          "
+                        >
+                          ${escapeHTML(b.name)}
+                        </div>
 
-            <div
-              style="
-                font-size:27px;
-                font-weight:850;
-                margin-bottom:7px
-              "
-            >
-              ${escapeHTML(b.name)}
-            </div>
+                        <div
+                          style="
+                            color:#aab5ca;
+                            line-height:1.45;
+                          "
+                        >
+                          ${escapeHTML(b.explanation)}
+                        </div>
 
-            <div
-              style="
-                color:#aab5ca;
-                line-height:1.45
-              "
-            >
-              ${escapeHTML(b.explanation)}
-            </div>
+                        <div
+                          style="
+                            margin-top:9px;
+                            color:#8ee6ad;
+                            font-weight:750;
+                          "
+                        >
+                          Badge chance:
+                          1 in
+                          ${Number(b.oneIn).toLocaleString()}
+                        </div>
 
-            <div
-              style="
-                margin-top:9px;
-                color:#8ee6ad;
-                font-weight:750
-              "
-            >
-              Badge chance:
-              1 in ${Number(b.oneIn).toLocaleString()}
-            </div>
+                        <div
+                          class="small"
+                          style="margin-top:7px"
+                        >
+                          Click to view this badge again
+                        </div>
 
-            <div
-              class="small"
-              style="margin-top:7px"
-            >
-              Click to view this badge again
-            </div>
+                        <div
+                          class="small"
+                          style="margin-top:4px"
+                        >
+                          Badge
+                          ${bIndex + 1}
+                          of
+                          ${badges.length}
+                          • Blank bonus ×
+                          ${analysis.blankMultiplier.toLocaleString()}
+                        </div>
 
-            <div
-              class="small"
-              style="margin-top:4px"
-            >
-              Badge ${bIndex + 1}
-              of ${badges.length}
-              • Blank bonus ×${analysis.blankMultiplier.toLocaleString()}
-            </div>
-
-          </button>
-
-        `;
+                      </button>
+                    `;
 
               bIndex++;
 
@@ -2476,14 +2699,18 @@
         });
 
         /*
-    Final result.
-  */
+          FINAL RESULT
+        */
 
         $("rollLabel").textContent = "FINAL RESULT";
 
         $("liveRarity").textContent = "RARITY: " + analysis.rarity;
 
+        applyRarityClass($("liveRarity"), analysis.rarity);
+
         $("rarity").textContent = analysis.rarity;
+
+        $("rarity").className = "value " + getRarityClass(analysis.rarity);
 
         $("chance").textContent = fmt(analysis.oneIn);
 
@@ -2501,27 +2728,25 @@
           $("badges").innerHTML = badges
             .map(
               (b) => `
-
-        <button
-          class="badge badgeButton"
-          type="button"
-          onclick='showBadgeInfo(
-            ${JSON.stringify(b.name)},
-            ${JSON.stringify(b.explanation)},
-            ${Number(b.oneIn)}
-          )'
-        >
-          ${escapeHTML(b.name)}
-        </button>
-
-      `,
+                  <button
+                    class="badge badgeButton"
+                    type="button"
+                    onclick='showBadgeInfo(
+                      ${JSON.stringify(b.name)},
+                      ${JSON.stringify(b.explanation)},
+                      ${Number(b.oneIn)}
+                    )'
+                  >
+                    ${escapeHTML(b.name)}
+                  </button>
+                `,
             )
             .join("");
         }
 
         /*
-    Local history.
-  */
+          LOCAL HISTORY
+        */
 
         history.unshift(result);
 
@@ -2540,10 +2765,10 @@
         renderHistory();
 
         /*
-    Cloud save if logged in.
-  */
+          CLOUD SAVE
+        */
 
-        if (currentUser) {
+        if (currentUser && currentUser.id) {
           await saveCloudRoll(result);
 
           await loadPersonalStats();
@@ -2557,14 +2782,14 @@
       }
 
       /* ============================================================
-   ROLL BUTTON
-   ============================================================ */
+         ROLL BUTTON
+         ============================================================ */
 
       $("rollBtn").onclick = performRoll;
 
       /* ============================================================
-   PROFILE BUTTON
-   ============================================================ */
+         PROFILE BUTTON
+         ============================================================ */
 
       $("profileButton").onclick = () => {
         $("profileSection").scrollIntoView({
@@ -2574,8 +2799,8 @@
       };
 
       /* ============================================================
-   LOGOUT
-   ============================================================ */
+         LOGOUT
+         ============================================================ */
 
       $("logoutButton").onclick = async () => {
         try {
@@ -2586,8 +2811,8 @@
       };
 
       /* ============================================================
-   REFRESH LEADERBOARD
-   ============================================================ */
+         REFRESH LEADERBOARD
+         ============================================================ */
 
       $("refreshLeaderboard").onclick = async () => {
         $("refreshLeaderboard").disabled = true;
@@ -2600,21 +2825,25 @@
       };
 
       /* ============================================================
-   AUTH STATE
-   ============================================================ */
+         AUTH STATE
+         ============================================================ */
 
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
         console.log("Auth state:", event);
 
-        if (session?.user) {
+        if (session?.user && session.user.id) {
           currentUser = session.user;
 
           /*
-        setTimeout avoids doing extra Supabase work
-        directly inside the auth callback.
-      */
+              Avoid doing additional Supabase
+              work directly inside the auth callback.
+            */
 
           setTimeout(async () => {
+            if (!currentUser || !currentUser.id) {
+              return;
+            }
+
             await ensureProfile(currentUser);
 
             updateAccountUI();
@@ -2633,8 +2862,8 @@
       });
 
       /* ============================================================
-   INITIALIZATION
-   ============================================================ */
+         INITIALIZATION
+         ============================================================ */
 
       async function init() {
         loadLocal();
@@ -2642,12 +2871,11 @@
         updateAccountUI();
 
         /*
-    Get the existing session.
+          Get existing session FIRST.
 
-    IMPORTANT:
-    We don't try to query profiles until we know
-    there is an authenticated user.
-  */
+          We do not query profiles until we know
+          a real authenticated user exists.
+        */
 
         try {
           const { data, error } = await supabaseClient.auth.getSession();
@@ -2656,7 +2884,7 @@
             console.warn("Session error:", error);
           }
 
-          if (data?.session?.user) {
+          if (data?.session?.user && data.session.user.id) {
             currentUser = data.session.user;
 
             await ensureProfile(currentUser);
@@ -2675,10 +2903,11 @@
       }
 
       /* ============================================================
-   START
-   ============================================================ */
+         START
+         ============================================================ */
 
       init();
     </script>
   </body>
 </html>
+```
