@@ -1,152 +1,377 @@
+```javascript
+/* ============================================================
+   DIGIT ROLL
+   FULL SCRIPT — 6 DIGITS
+   ============================================================ */
+
+
 /* ============================================================
    SUPABASE
    ============================================================ */
 
-const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
+const SUPABASE_URL =
+  "https://xuofbnghqcktlsmjgfbj.supabase.co";
 
-const SUPABASE_ANON_KEY = "sb_publishable_TmDnxgFW6x3odYuOgeb3Og_ofKL4her";
+/*
+ * IMPORTANT:
+ * Replace this with your CURRENT Supabase publishable/anon key.
+ *
+ * The key previously being used is returning:
+ * 401 Invalid API key
+ */
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-);
+const SUPABASE_ANON_KEY =
+  "PASTE_YOUR_CURRENT_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE";
+
+let supabaseClient = null;
+
+if (
+  window.supabase &&
+  SUPABASE_URL &&
+  SUPABASE_ANON_KEY &&
+  !SUPABASE_ANON_KEY.includes("PASTE_YOUR")
+) {
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+}
+
 
 /* ============================================================
    REFERENCES
    ============================================================ */
 
 const references = {
-  911: ["🚨 Emergency 911", "The famous emergency telephone number.", 100000],
 
-  "007": ["🕵️ Agent 007", "The iconic code name of James Bond.", 100000],
+  911: [
+    "🚨 Emergency 911",
+    "The famous emergency telephone number.",
+    "RARE"
+  ],
 
-  420: ["🌿 420", "A famous number from popular culture.", 80000],
+  "007": [
+    "🕵️ Agent 007",
+    "The iconic code name of James Bond.",
+    "RARE"
+  ],
 
-  404: ["🌐 404 Not Found", "The familiar web error code.", 90000],
+  420: [
+    "🌿 420",
+    "A famous number from popular culture.",
+    "UNCOMMON"
+  ],
 
-  1337: ["💻 LEET", "Classic internet and gaming slang for 'leet'.", 120000],
+  404: [
+    "🌐 404 Not Found",
+    "The familiar web error code.",
+    "UNCOMMON"
+  ],
+
+  1337: [
+    "💻 LEET",
+    "Classic internet and gaming slang for 'leet'.",
+    "EPIC"
+  ],
 
   666: [
     "😈 The Number",
     "A famously recognizable number with cultural significance.",
-    150000,
+    "EPIC"
   ],
 
   777: [
     "🎰 Lucky 7s",
-    "Three 7s are a classic lucky slot-machine pattern.",
-    180000,
+    "Three 7s are a classic lucky-slot-machine pattern.",
+    "LEGENDARY"
   ],
 
   42: [
     "🌌 The Answer",
     "The famously celebrated answer to life, the universe, and everything.",
-    70000,
+    "RARE"
   ],
 
   101: [
     "📚 101",
     "A common shorthand for an introductory course or beginner's guide.",
-    35000,
+    "UNCOMMON"
   ],
 
   123: [
     "🔢 Counting Up",
     "The first three digits of the familiar counting sequence.",
-    45000,
+    "UNCOMMON"
   ],
 
-  321: ["🚀 Countdown", "A classic countdown fragment.", 45000],
+  321: [
+    "🚀 Countdown",
+    "A classic countdown fragment.",
+    "UNCOMMON"
+  ],
 
-  314: ["🥧 Pi", "The first three digits of pi.", 55000],
+  314: [
+    "🥧 Pi",
+    "The first three digits of pi.",
+    "RARE"
+  ],
 
   1984: [
     "📖 1984",
     "A recognizable reference to George Orwell's novel.",
-    90000,
+    "EPIC"
   ],
 
-  2001: ["🚀 2001", "A recognizable science-fiction reference.", 90000],
+  2001: [
+    "🚀 2001",
+    "A recognizable science-fiction reference.",
+    "EPIC"
+  ],
 
-  69: ["😎 Nice", "A widely recognized internet-number joke/reference.", 40000],
+  69: [
+    "😎 Nice",
+    "A widely recognized internet-number joke/reference.",
+    "UNCOMMON"
+  ],
 
-  67: ["🔢 67", "A special 67 reference hidden inside the roll.", 25000],
+  67: [
+    "🔢 67",
+    "A special 67 reference hidden inside the roll.",
+    "UNCOMMON"
+  ],
 
-  55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
+  55: [
+    "⚔️ 55 — Kingsammelot",
+    "A Kingsammelot reference.",
+    "UNCOMMON"
+  ]
 };
+
+
+/* ============================================================
+   PERIODIC TABLE — FIRST 9 ELEMENTS
+   ============================================================ */
+
+const elementBadges = {
+
+  "1": {
+    name: "⚛️ Hydrogen",
+    explanation:
+      "The roll contains at least one 1. Hydrogen is element #1.",
+    rarity: "COMMON"
+  },
+
+  "2": {
+    name: "⚛️ Helium",
+    explanation:
+      "The roll contains at least one 2. Helium is element #2.",
+    rarity: "COMMON"
+  },
+
+  "3": {
+    name: "⚛️ Lithium",
+    explanation:
+      "The roll contains at least one 3. Lithium is element #3.",
+    rarity: "COMMON"
+  },
+
+  "4": {
+    name: "⚛️ Beryllium",
+    explanation:
+      "The roll contains at least one 4. Beryllium is element #4.",
+    rarity: "COMMON"
+  },
+
+  "5": {
+    name: "⚛️ Boron",
+    explanation:
+      "The roll contains at least one 5. Boron is element #5.",
+    rarity: "COMMON"
+  },
+
+  "6": {
+    name: "⚛️ Carbon",
+    explanation:
+      "The roll contains at least one 6. Carbon is element #6.",
+    rarity: "COMMON"
+  },
+
+  "7": {
+    name: "⚛️ Nitrogen",
+    explanation:
+      "The roll contains at least one 7. Nitrogen is element #7.",
+    rarity: "COMMON"
+  },
+
+  "8": {
+    name: "⚛️ Oxygen",
+    explanation:
+      "The roll contains at least one 8. Oxygen is element #8.",
+    rarity: "COMMON"
+  },
+
+  "9": {
+    name: "⚛️ Fluorine",
+    explanation:
+      "The roll contains at least one 9. Fluorine is element #9.",
+    rarity: "COMMON"
+  }
+};
+
 
 /* ============================================================
    HELPERS
    ============================================================ */
 
-const $ = (id) => document.getElementById(id);
+const $ = (id) =>
+  document.getElementById(id);
 
 let history = [];
 let personalBest = null;
 let allTimeBest = null;
+
 let currentUser = null;
 let profile = null;
+
 let rolling = false;
 let realtimeChannel = null;
 
+
 function toast(message) {
-  if (!$("toast")) return;
 
-  $("toast").textContent = message;
+  const element = $("toast");
 
-  $("toast").classList.add("show");
+  if (!element) return;
+
+  element.textContent = message;
+
+  element.classList.add("show");
 
   clearTimeout(window.toastTimer);
 
   window.toastTimer = setTimeout(() => {
-    $("toast").classList.remove("show");
+
+    element.classList.remove("show");
+
   }, 3000);
 }
 
-function fmt(n) {
-  const value = Number(n);
+
+function fmt(number) {
+
+  const value = Number(number);
 
   if (!Number.isFinite(value)) {
     return "1 in —";
   }
 
-  return "1 in " + value.toLocaleString();
+  return (
+    "1 in " +
+    Math.round(value).toLocaleString()
+  );
 }
 
-function meta(x) {
-  if (!x) return "No rolls yet";
 
-  return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
+
 
 function better(a, b) {
-  return !b || Number(a.oneIn) > Number(b.oneIn);
+
+  if (!a) return false;
+
+  if (!b) return true;
+
+  return Number(a.oneIn || 0) >
+    Number(b.oneIn || 0);
 }
+
 
 /* ============================================================
    RARITY
    ============================================================ */
 
+const RARITY_ORDER = [
+  "COMMON",
+  "UNCOMMON",
+  "RARE",
+  "EPIC",
+  "LEGENDARY",
+  "MYTHIC",
+  "DIVINE",
+  "TRANSCENDENT",
+  "???"
+];
+
+
+const RARITY_SCORE = {
+
+  COMMON: 0,
+
+  UNCOMMON: 1,
+
+  RARE: 2,
+
+  EPIC: 3,
+
+  LEGENDARY: 4,
+
+  MYTHIC: 5,
+
+  DIVINE: 6,
+
+  TRANSCENDENT: 7,
+
+  "???": 8
+};
+
+
 function rarityClass(rarity) {
+
   const classes = {
+
     COMMON: "rarity-common",
+
     UNCOMMON: "rarity-uncommon",
+
     RARE: "rarity-rare",
+
     EPIC: "rarity-epic",
+
     LEGENDARY: "rarity-legendary",
+
     MYTHIC: "rarity-mythic",
+
     DIVINE: "rarity-divine",
+
     TRANSCENDENT: "rarity-transcendent",
-    "???": "rarity-unknown",
+
+    "???": "rarity-unknown"
   };
 
-  return classes[rarity] || "rarity-common";
+  return (
+    classes[rarity] ||
+    "rarity-common"
+  );
 }
 
-function applyRarityColor(element, rarity) {
+
+function applyRarityColor(
+  element,
+  rarity
+) {
+
   if (!element) return;
 
   element.classList.remove(
+
     "rarity-common",
     "rarity-uncommon",
     "rarity-rare",
@@ -155,128 +380,244 @@ function applyRarityColor(element, rarity) {
     "rarity-mythic",
     "rarity-divine",
     "rarity-transcendent",
-    "rarity-unknown",
+    "rarity-unknown"
+
   );
 
-  element.classList.add(rarityClass(rarity));
+  element.classList.add(
+    rarityClass(rarity)
+  );
 }
+
+
+/* ============================================================
+   RARITY HELPERS
+   ============================================================ */
+
+function badgeRarityFromDifficulty(
+  difficulty
+) {
+
+  if (difficulty <= 2)
+    return "COMMON";
+
+  if (difficulty <= 5)
+    return "UNCOMMON";
+
+  if (difficulty <= 10)
+    return "RARE";
+
+  if (difficulty <= 25)
+    return "EPIC";
+
+  if (difficulty <= 100)
+    return "LEGENDARY";
+
+  if (difficulty <= 500)
+    return "MYTHIC";
+
+  if (difficulty <= 2500)
+    return "DIVINE";
+
+  return "TRANSCENDENT";
+}
+
+
+function rarityValue(rarity) {
+
+  const values = {
+
+    COMMON: 1,
+
+    UNCOMMON: 3,
+
+    RARE: 8,
+
+    EPIC: 20,
+
+    LEGENDARY: 50,
+
+    MYTHIC: 150,
+
+    DIVINE: 500,
+
+    TRANSCENDENT: 2000,
+
+    "???": 10000
+  };
+
+  return values[rarity] || 1;
+}
+
 
 /* ============================================================
    RANDOM ROLL
    ============================================================ */
 
 function randomRoll() {
+
   const chars = [];
 
   let blanks = 0;
 
-  for (let i = 0; i < 10; i++) {
-    if (Math.random() < 0.055) {
+  /*
+   * Exactly SIX positions.
+   */
+
+  for (let i = 0; i < 6; i++) {
+
+    if (Math.random() < 0.035) {
+
       chars.push("_");
+
       blanks++;
+
     } else {
-      chars.push(String(Math.floor(Math.random() * 10)));
+
+      chars.push(
+        String(
+          Math.floor(
+            Math.random() * 10
+          )
+        )
+      );
     }
   }
 
-  if (blanks === 10) {
-    const index = Math.floor(Math.random() * 10);
 
-    chars[index] = String(Math.floor(Math.random() * 10));
+  /*
+   * Never allow an entirely blank roll.
+   */
+
+  if (blanks === 6) {
+
+    const index =
+      Math.floor(
+        Math.random() * 6
+      );
+
+    chars[index] =
+      String(
+        Math.floor(
+          Math.random() * 10
+        )
+      );
   }
 
   return chars;
 }
 
+
 /* ============================================================
-   PATTERN UTILITIES
+   PATTERN DETECTOR HELPERS
    ============================================================ */
 
-function containsAny(str, patterns) {
-  return patterns.some((pattern) => str.includes(pattern));
+function addBadge(
+  badges,
+  name,
+  explanation,
+  rarity,
+  score = 1
+) {
+
+  badges.push({
+
+    name,
+
+    explanation,
+
+    badgeRarity: rarity,
+
+    score: score
+  });
 }
 
-function countConsecutiveSame(digits) {
-  let best = 1;
-  let current = 1;
 
-  for (let i = 1; i < digits.length; i++) {
-    if (digits[i] === digits[i - 1]) {
-      current++;
+function containsAny(
+  text,
+  patterns
+) {
 
-      best = Math.max(best, current);
-    } else {
-      current = 1;
-    }
-  }
-
-  return digits.length ? best : 0;
+  return patterns.some(
+    pattern =>
+      text.includes(pattern)
+  );
 }
 
-function longestAscendingRun(digits) {
-  let best = 1;
-  let current = 1;
-
-  for (let i = 1; i < digits.length; i++) {
-    if (Number(digits[i]) === Number(digits[i - 1]) + 1) {
-      current++;
-      best = Math.max(best, current);
-    } else {
-      current = 1;
-    }
-  }
-
-  return best;
-}
-
-function longestDescendingRun(digits) {
-  let best = 1;
-  let current = 1;
-
-  for (let i = 1; i < digits.length; i++) {
-    if (Number(digits[i]) === Number(digits[i - 1]) - 1) {
-      current++;
-      best = Math.max(best, current);
-    } else {
-      current = 1;
-    }
-  }
-
-  return best;
-}
-
-function isPalindrome(str) {
-  return str.length >= 3 && str === str.split("").reverse().join("");
-}
 
 /* ============================================================
-   ADVANCED PATTERN DETECTOR
+   ADVANCED ANALYSIS
    ============================================================ */
 
 function analyze(chars) {
-  const digits = chars.filter((x) => x !== "_");
 
-  const compact = digits.join("");
+  const digits =
+    chars.filter(
+      x => x !== "_"
+    );
+
+  const compact =
+    digits.join("");
 
   const badges = [];
 
-  const addBadge = (name, explanation, oneIn) => {
-    badges.push({
-      name,
-      explanation,
-      oneIn,
-    });
-  };
 
   /* ==========================================================
-     FAMOUS REFERENCES
+     PERIODIC TABLE
      ========================================================== */
 
-  for (const [key, [name, explanation, oneIn]] of Object.entries(references)) {
-    if (compact.includes(key)) {
-      addBadge(name, explanation, oneIn);
+  const seenElements =
+    new Set();
+
+  for (const digit of digits) {
+
+    if (
+      elementBadges[digit] &&
+      !seenElements.has(digit)
+    ) {
+
+      const element =
+        elementBadges[digit];
+
+      addBadge(
+        badges,
+        element.name,
+        element.explanation,
+        element.rarity,
+        1
+      );
+
+      seenElements.add(digit);
     }
   }
+
+
+  /* ==========================================================
+     REFERENCES
+     ========================================================== */
+
+  for (
+    const [
+      key,
+      [name, explanation, rarity]
+    ]
+    of Object.entries(references)
+  ) {
+
+    if (
+      compact.includes(key)
+    ) {
+
+      addBadge(
+        badges,
+        name,
+        explanation,
+        rarity,
+        rarityValue(rarity)
+      );
+    }
+  }
+
 
   /* ==========================================================
      DIGIT COUNTS
@@ -284,221 +625,384 @@ function analyze(chars) {
 
   const counts = {};
 
-  digits.forEach((d) => {
-    counts[d] = (counts[d] || 0) + 1;
+  digits.forEach(digit => {
+
+    counts[digit] =
+      (counts[digit] || 0) + 1;
   });
 
-  const maxCount = Math.max(0, ...Object.values(counts));
+  const maxCount =
+    Math.max(
+      0,
+      ...Object.values(counts)
+    );
+
+
+  /* ==========================================================
+     REPEATER
+     ========================================================== */
 
   if (maxCount >= 2) {
+
     addBadge(
+
+      badges,
+
       "🔁 Repeater",
+
       "At least one visible digit appears more than once.",
-      5,
+
+      "COMMON",
+
+      1
     );
   }
 
-  if (maxCount >= 3) {
-    addBadge(
-      "🔥 Triple Digit",
-      "A visible digit appears three or more times.",
-      100,
-    );
-  }
-
-  if (maxCount >= 4) {
-    addBadge(
-      "💥 Quad Digit",
-      "A visible digit appears four or more times.",
-      1000,
-    );
-  }
-
-  if (maxCount >= 5) {
-    addBadge(
-      "☢️ Quint Digit",
-      "The same visible digit appears at least five times.",
-      10000,
-    );
-  }
-
-  if (maxCount >= 6) {
-    addBadge(
-      "👹 Hex Digit",
-      "One digit dominates the roll with six or more appearances.",
-      100000,
-    );
-  }
-
-  if (maxCount >= 7) {
-    addBadge(
-      "💀 Sept Digit",
-      "Seven copies of the same digit appear.",
-      1000000,
-    );
-  }
-
-  if (maxCount >= 8) {
-    addBadge("👑 Oct Digit", "Eight copies of one digit appear.", 10000000);
-  }
-
-  if (digits.length > 1 && new Set(digits).size === 1) {
-    addBadge("👑 Monochrome", "Every visible digit is identical.", 1000000);
-  }
-
-  if (digits.length === 10 && new Set(digits).size === 10) {
-    addBadge(
-      "🌈 All Ten Digits",
-      "Every digit from 0 through 9 appears exactly once.",
-      3628800,
-    );
-  }
 
   /* ==========================================================
-     DOUBLES / TRIPLES / QUADS
+     DOUBLES
      ========================================================== */
 
-  if (/00|11|22|33|44|55|66|77|88|99/.test(compact)) {
+  if (
+    /00|11|22|33|44|55|66|77|88|99/
+      .test(compact)
+  ) {
+
     addBadge(
+
+      badges,
+
       "👯 Double",
+
       "Two identical digits appear directly beside each other.",
-      100,
+
+      "UNCOMMON",
+
+      3
     );
   }
 
-  if (/000|111|222|333|444|555|666|777|888|999/.test(compact)) {
-    addBadge(
-      "🔥 Triple Stack",
-      "Three identical digits appear consecutively.",
-      1000,
-    );
-  }
-
-  if (/0000|1111|2222|3333|4444|5555|6666|7777|8888|9999/.test(compact)) {
-    addBadge(
-      "💥 Quad Stack",
-      "Four identical digits appear consecutively.",
-      10000,
-    );
-  }
 
   /* ==========================================================
-     RISING SEQUENCES
+     TRIPLES
      ========================================================== */
 
   if (
-    containsAny(compact, [
-      "012",
-      "123",
-      "234",
-      "345",
-      "456",
-      "567",
-      "678",
-      "789",
-    ])
+    /000|111|222|333|444|555|666|777|888|999/
+      .test(compact)
   ) {
+
     addBadge(
+
+      badges,
+
+      "🔥 Triple Stack",
+
+      "Three identical digits appear consecutively.",
+
+      "RARE",
+
+      8
+    );
+  }
+
+
+  /* ==========================================================
+     QUADS
+     ========================================================== */
+
+  if (
+    /0000|1111|2222|3333|4444|5555|6666|7777|8888|9999/
+      .test(compact)
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "💥 Quad Stack",
+
+      "Four identical digits appear consecutively.",
+
+      "EPIC",
+
+      20
+    );
+  }
+
+
+  /* ==========================================================
+     QUINTS
+     ========================================================== */
+
+  if (
+    /00000|11111|22222|33333|44444|55555|66666|77777|88888|99999/
+      .test(compact)
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "☢️ Quint Stack",
+
+      "Five identical digits appear consecutively.",
+
+      "LEGENDARY",
+
+      50
+    );
+  }
+
+
+  /* ==========================================================
+     SIX OF A KIND
+     ========================================================== */
+
+  if (
+    /^(.)\1{5}$/.test(compact)
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "👑 Six of a Kind",
+
+      "All six visible digits are identical.",
+
+      "MYTHIC",
+
+      150
+    );
+  }
+
+
+  /* ==========================================================
+     MONOCHROME
+     ========================================================== */
+
+  if (
+    digits.length >= 2 &&
+    new Set(digits).size === 1
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "👑 Monochrome",
+
+      "Every visible digit is identical.",
+
+      "MYTHIC",
+
+      150
+    );
+  }
+
+
+  /* ==========================================================
+     ALL TEN DIGITS
+     ========================================================== */
+
+  if (
+    digits.length === 10 &&
+    new Set(digits).size === 10
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "🌈 All Ten Digits",
+
+      "Every digit from 0 through 9 appears exactly once.",
+
+      "TRANSCENDENT",
+
+      2000
+    );
+  }
+
+
+  /* ==========================================================
+     RISING
+     ========================================================== */
+
+  if (
+    containsAny(
+      compact,
+      [
+        "012",
+        "123",
+        "234",
+        "345",
+        "456",
+        "567",
+        "678",
+        "789"
+      ]
+    )
+  ) {
+
+    addBadge(
+
+      badges,
+
       "📈 Rising Sequence",
+
       "Three consecutive digits appear in ascending order.",
-      100,
+
+      "UNCOMMON",
+
+      3
     );
   }
 
+
+  /* ==========================================================
+     FOUR DIGIT STAIRCASE
+     ========================================================== */
+
   if (
-    containsAny(compact, [
-      "0123",
-      "1234",
-      "2345",
-      "3456",
-      "4567",
-      "5678",
-      "6789",
-    ])
+    containsAny(
+      compact,
+      [
+        "0123",
+        "1234",
+        "2345",
+        "3456",
+        "4567",
+        "5678",
+        "6789"
+      ]
+    )
   ) {
+
     addBadge(
+
+      badges,
+
       "🪜 Staircase",
+
       "Four consecutive digits climb steadily upward.",
-      1000,
+
+      "RARE",
+
+      8
     );
   }
 
+
+  /* ==========================================================
+     FIVE DIGIT STAIRCASE
+     ========================================================== */
+
   if (
-    containsAny(compact, ["01234", "12345", "23456", "34567", "45678", "56789"])
+    containsAny(
+      compact,
+      [
+        "01234",
+        "12345",
+        "23456",
+        "34567",
+        "45678",
+        "56789"
+      ]
+    )
   ) {
+
     addBadge(
+
+      badges,
+
       "🚀 Mega Staircase",
+
       "Five consecutive digits rise steadily upward.",
-      10000,
+
+      "EPIC",
+
+      20
     );
   }
 
-  if (
-    containsAny(compact, ["012345", "123456", "234567", "345678", "456789"])
-  ) {
-    addBadge(
-      "🌟 Ultra Staircase",
-      "Six consecutive digits climb in perfect order.",
-      100000,
-    );
-  }
 
   /* ==========================================================
      FALLING
      ========================================================== */
 
   if (
-    containsAny(compact, [
-      "987",
-      "876",
-      "765",
-      "654",
-      "543",
-      "432",
-      "321",
-      "210",
-    ])
+    containsAny(
+      compact,
+      [
+        "987",
+        "876",
+        "765",
+        "654",
+        "543",
+        "432",
+        "321",
+        "210"
+      ]
+    )
   ) {
+
     addBadge(
+
+      badges,
+
       "📉 Falling Sequence",
+
       "Three consecutive digits appear in descending order.",
-      100,
+
+      "UNCOMMON",
+
+      3
     );
   }
 
+
+  /* ==========================================================
+     REVERSE STAIRCASE
+     ========================================================== */
+
   if (
-    containsAny(compact, [
-      "9876",
-      "8765",
-      "7654",
-      "6543",
-      "5432",
-      "4321",
-      "3210",
-    ])
+    containsAny(
+      compact,
+      [
+        "9876",
+        "8765",
+        "7654",
+        "6543",
+        "5432",
+        "4321",
+        "3210"
+      ]
+    )
   ) {
+
     addBadge(
+
+      badges,
+
       "🪜 Reverse Staircase",
+
       "Four consecutive digits descend steadily.",
-      1000,
+
+      "RARE",
+
+      8
     );
   }
 
-  if (
-    containsAny(compact, ["98765", "87654", "76543", "65432", "54321", "43210"])
-  ) {
-    addBadge(
-      "🚀 Mega Reverse Staircase",
-      "Five consecutive digits fall steadily downward.",
-      10000,
-    );
-  }
 
   /* ==========================================================
      MOUNTAINS
      ========================================================== */
 
   const mountainPatterns = [
+
     "01210",
     "12321",
     "23432",
@@ -513,25 +1017,37 @@ function analyze(chars) {
     "2345432",
     "3456543",
     "4567654",
-    "5678765",
-
-    "012343210",
-    "123454321",
+    "5678765"
   ];
 
-  if (containsAny(compact, mountainPatterns)) {
+  if (
+    containsAny(
+      compact,
+      mountainPatterns
+    )
+  ) {
+
     addBadge(
+
+      badges,
+
       "⛰️ Mountain",
-      "Numbers rise to a peak in order, then fall back down.",
-      10000,
+
+      "Numbers rise to a peak in order and then fall back down.",
+
+      "EPIC",
+
+      20
     );
   }
+
 
   /* ==========================================================
      VALLEYS
      ========================================================== */
 
   const valleyPatterns = [
+
     "21012",
     "32123",
     "43234",
@@ -546,22 +1062,37 @@ function analyze(chars) {
     "4323456",
     "5434567",
     "6545678",
-    "7656789",
+    "7656789"
   ];
 
-  if (containsAny(compact, valleyPatterns)) {
+  if (
+    containsAny(
+      compact,
+      valleyPatterns
+    )
+  ) {
+
     addBadge(
+
+      badges,
+
       "🏞️ Valley",
-      "Numbers fall to a low point in order, then rise again.",
-      10000,
+
+      "Numbers fall to a low point in order and then rise again.",
+
+      "EPIC",
+
+      20
     );
   }
+
 
   /* ==========================================================
      WAVES
      ========================================================== */
 
   const wavePatterns = [
+
     "121",
     "232",
     "343",
@@ -577,117 +1108,188 @@ function analyze(chars) {
     "45654",
     "56765",
     "67876",
-    "78987",
+    "78987"
   ];
 
-  if (containsAny(compact, wavePatterns)) {
+  if (
+    containsAny(
+      compact,
+      wavePatterns
+    )
+  ) {
+
     addBadge(
+
+      badges,
+
       "🌊 Wave",
+
       "The digits repeatedly rise and fall, creating a wave-like pattern.",
-      15000,
+
+      "RARE",
+
+      8
     );
   }
+
 
   /* ==========================================================
      MIRRORS
      ========================================================== */
 
-  let mirrorFound = false;
+  for (
+    let len = 3;
+    len <= 6;
+    len++
+  ) {
 
-  for (let len = 3; len <= 8; len++) {
-    for (let i = 0; i <= compact.length - len; i++) {
-      const part = compact.slice(i, i + len);
+    let found = false;
 
-      if (isPalindrome(part)) {
-        addBadge(
-          "🪞 Mirror",
-          "A sequence reads the same forward and backward.",
-          Math.pow(10, len),
+    for (
+      let i = 0;
+      i <= compact.length - len;
+      i++
+    ) {
+
+      const part =
+        compact.slice(
+          i,
+          i + len
         );
 
-        mirrorFound = true;
+      if (
+        part ===
+        part
+          .split("")
+          .reverse()
+          .join("")
+      ) {
+
+        addBadge(
+
+          badges,
+
+          "🪞 Mirror",
+
+          "A sequence reads the same forward and backward.",
+
+          badgeRarityFromDifficulty(
+            Math.pow(10, len - 2)
+          ),
+
+          Math.pow(10, len - 2)
+        );
+
+        found = true;
 
         break;
       }
     }
 
-    if (mirrorFound) break;
+    if (found) break;
   }
+
 
   /* ==========================================================
-     PERFECT MIRROR
+     PERFECT PALINDROME
      ========================================================== */
 
-  if (compact.length >= 4 && compact === compact.split("").reverse().join("")) {
+  if (
+    compact.length >= 4 &&
+    compact ===
+      compact
+        .split("")
+        .reverse()
+        .join("")
+  ) {
+
     addBadge(
+
+      badges,
+
       "🪞 Perfect Mirror",
+
       "The entire visible number reads identically forward and backward.",
-      100000,
+
+      "LEGENDARY",
+
+      50
     );
   }
+
 
   /* ==========================================================
      ALTERNATORS
      ========================================================== */
 
-  const alternatorPatterns = [
-    "0101",
-    "1212",
-    "2323",
-    "3434",
-    "4545",
-    "5656",
-    "6767",
-    "7878",
-    "8989",
+  if (
+    /0101|1212|2323|3434|4545|5656|6767|7878|8989/
+      .test(compact)
+  ) {
 
-    "010101",
-    "121212",
-    "232323",
-    "343434",
-    "454545",
-    "565656",
-    "676767",
-    "787878",
-    "898989",
-  ];
-
-  if (containsAny(compact, alternatorPatterns)) {
     addBadge(
+
+      badges,
+
       "⚡ Alternator",
+
       "Two digits repeatedly alternate back and forth.",
-      5000,
+
+      "EPIC",
+
+      20
     );
   }
+
 
   /* ==========================================================
      LOOPS
      ========================================================== */
 
   const loopPatterns = [
-    "0123456789",
-    "1234567890",
-    "9876543210",
-    "0987654321",
 
-    "012345678",
-    "123456789",
-    "234567890",
+    "012345",
+    "123450",
+    "234501",
+    "345012",
+    "450123",
+    "501234",
+
+    "987654",
+    "876543",
+    "765432",
+    "654321",
+    "543210"
   ];
 
-  if (containsAny(compact, loopPatterns)) {
+  if (
+    containsAny(
+      compact,
+      loopPatterns
+    )
+  ) {
+
     addBadge(
+
+      badges,
+
       "🔄 Digit Loop",
-      "The digits travel through a long numeric cycle.",
-      100000,
+
+      "The digits travel through a repeating numeric cycle.",
+
+      "LEGENDARY",
+
+      50
     );
   }
+
 
   /* ==========================================================
      PYRAMIDS
      ========================================================== */
 
   const pyramidPatterns = [
+
     "1234321",
     "2345432",
     "3456543",
@@ -701,583 +1303,822 @@ function analyze(chars) {
     "55655",
     "66766",
     "77877",
-    "88988",
+    "88988"
   ];
 
-  if (containsAny(compact, pyramidPatterns)) {
+  if (
+    containsAny(
+      compact,
+      pyramidPatterns
+    )
+  ) {
+
     addBadge(
+
+      badges,
+
       "🔺 Pyramid",
+
       "Digits expand toward a center and then contract, creating a pyramid-like pattern.",
-      20000,
+
+      "EPIC",
+
+      20
     );
   }
 
-  /* ==========================================================
-     CENTERED DOUBLES / SYMMETRY
-     ========================================================== */
-
-  const centeredPatterns = [
-    "1001",
-    "1221",
-    "1331",
-    "1441",
-    "1551",
-    "1661",
-    "1771",
-    "1881",
-    "1991",
-
-    "2002",
-    "2112",
-    "2332",
-    "2442",
-    "2552",
-    "2662",
-    "2772",
-    "2882",
-    "2992",
-  ];
-
-  if (containsAny(compact, centeredPatterns)) {
-    addBadge(
-      "🎯 Centered",
-      "Matching outer digits surround a centered pair.",
-      10000,
-    );
-  }
-
-  /* ==========================================================
-     LONGEST SEQUENCES
-     ========================================================== */
-
-  const ascending = longestAscendingRun(digits);
-
-  const descending = longestDescendingRun(digits);
-
-  if (ascending >= 6) {
-    addBadge(
-      "🚀 Long Climb",
-      "At least six digits form a continuous ascending sequence.",
-      100000,
-    );
-  }
-
-  if (descending >= 6) {
-    addBadge(
-      "🛰️ Long Descent",
-      "At least six digits form a continuous descending sequence.",
-      100000,
-    );
-  }
-
-  /* ==========================================================
-     REPEATED BLOCKS
-     ========================================================== */
-
-  let repeatedBlock = false;
-
-  for (let len = 2; len <= 4; len++) {
-    for (let i = 0; i + len * 3 <= compact.length; i++) {
-      const block = compact.slice(i, i + len);
-
-      if (
-        compact.slice(i + len, i + len * 2) === block &&
-        compact.slice(i + len * 2, i + len * 3) === block
-      ) {
-        addBadge(
-          "🔁 Looping Block",
-          `The block "${block}" repeats three times in a row.`,
-          Math.pow(10, len * 3),
-        );
-
-        repeatedBlock = true;
-
-        break;
-      }
-    }
-
-    if (repeatedBlock) break;
-  }
 
   /* ==========================================================
      ARITHMETIC PATTERN
      ========================================================== */
 
-  if (digits.length >= 4) {
+  if (
+    digits.length >= 4
+  ) {
+
     const diffs = [];
 
-    for (let i = 1; i < digits.length; i++) {
-      diffs.push(Number(digits[i]) - Number(digits[i - 1]));
+    for (
+      let i = 1;
+      i < digits.length;
+      i++
+    ) {
+
+      diffs.push(
+        Number(digits[i]) -
+        Number(digits[i - 1])
+      );
     }
 
     if (
       diffs.length >= 3 &&
-      diffs.every((d) => d === diffs[0]) &&
+      diffs.every(
+        difference =>
+          difference === diffs[0]
+      ) &&
       diffs[0] !== 0
     ) {
+
       addBadge(
+
+        badges,
+
         "📐 Arithmetic Pattern",
-        "The visible digits change by the same amount each step.",
-        20000,
+
+        "The visible digits change by the same amount at every step.",
+
+        "EPIC",
+
+        20
       );
     }
   }
 
+
   /* ==========================================================
-     SECOND DIFFERENCE
+     GEOMETRIC-STYLE PATTERN
      ========================================================== */
 
-  if (digits.length >= 5) {
-    const first = [];
+  if (
+    digits.length >= 4
+  ) {
 
-    for (let i = 1; i < digits.length; i++) {
-      first.push(Number(digits[i]) - Number(digits[i - 1]));
-    }
+    const numbers =
+      digits.map(Number);
 
-    const second = [];
+    let geometric = true;
 
-    for (let i = 1; i < first.length; i++) {
-      second.push(first[i] - first[i - 1]);
-    }
+    let ratio = null;
 
-    if (
-      second.length >= 3 &&
-      second.every((x) => x === second[0]) &&
-      second[0] !== 0
+    for (
+      let i = 1;
+      i < numbers.length;
+      i++
     ) {
-      addBadge(
-        "📊 Quadratic Pattern",
-        "The changes themselves follow a consistent arithmetic pattern.",
-        50000,
-      );
-    }
-  }
 
-  /* ==========================================================
-     MULTIPLICATIVE-STYLE PATTERNS
-     ========================================================== */
+      if (
+        numbers[i - 1] === 0
+      ) {
 
-  if (digits.length >= 4) {
-    let alternatingDouble = true;
+        geometric = false;
 
-    for (let i = 1; i < digits.length; i++) {
-      const a = Number(digits[i - 1]);
+        break;
+      }
 
-      const b = Number(digits[i]);
+      const current =
+        numbers[i] /
+        numbers[i - 1];
 
-      if (!((a * 2) % 10 === b || (a * 3) % 10 === b)) {
-        alternatingDouble = false;
+      if (ratio === null) {
+
+        ratio = current;
+
+      } else if (
+        Math.abs(
+          current - ratio
+        ) > 0.0001
+      ) {
+
+        geometric = false;
 
         break;
       }
     }
 
-    if (alternatingDouble) {
+    if (
+      geometric &&
+      ratio !== null &&
+      ratio !== 1
+    ) {
+
       addBadge(
-        "✖️ Multiplication Chain",
-        "Each digit follows a repeating multiplication relationship.",
-        50000,
+
+        badges,
+
+        "✖️ Geometric Pattern",
+
+        "The visible digits follow a consistent multiplication ratio.",
+
+        "LEGENDARY",
+
+        50
       );
     }
   }
+
 
   /* ==========================================================
      PARITY
      ========================================================== */
 
-  if (digits.length >= 5) {
-    const parity = digits.map((d) => Number(d) % 2);
+  if (
+    digits.length >= 5
+  ) {
 
-    if (parity.every((x) => x === parity[0])) {
+    const parity =
+      digits.map(
+        digit =>
+          Number(digit) % 2
+      );
+
+    if (
+      parity.every(
+        value =>
+          value === parity[0]
+      )
+    ) {
+
       addBadge(
+
+        badges,
+
         "⚫⚪ Parity Chain",
+
         "Every visible digit has the same odd/even parity.",
-        32,
+
+        "RARE",
+
+        8
       );
     }
+  }
 
-    let alternatingParity = true;
 
-    for (let i = 1; i < parity.length; i++) {
-      if (parity[i] === parity[i - 1]) {
-        alternatingParity = false;
+  /* ==========================================================
+     ODD / EVEN ALTERNATION
+     ========================================================== */
+
+  if (
+    digits.length >= 4
+  ) {
+
+    let alternating = true;
+
+    for (
+      let i = 1;
+      i < digits.length;
+      i++
+    ) {
+
+      if (
+        Number(digits[i]) % 2 ===
+        Number(digits[i - 1]) % 2
+      ) {
+
+        alternating = false;
 
         break;
       }
     }
 
-    if (alternatingParity) {
+    if (alternating) {
+
       addBadge(
-        "⚡ Odd/Even Alternator",
-        "Odd and even digits alternate throughout the visible sequence.",
-        100,
+
+        badges,
+
+        "⚡ Odd-Even Alternator",
+
+        "Odd and even digits alternate throughout the visible roll.",
+
+        "UNCOMMON",
+
+        3
       );
     }
   }
 
-  /* ==========================================================
-     SUM PATTERNS
-     ========================================================== */
-
-  if (digits.length >= 4) {
-    const sum = digits.reduce((a, b) => a + Number(b), 0);
-
-    if (sum === 42) {
-      addBadge(
-        "🌌 Sum of 42",
-        "The visible digits add up to the famous number 42.",
-        5000,
-      );
-    }
-
-    if (sum === 55) {
-      addBadge(
-        "⚔️ Sum of 55",
-        "The visible digits add up to 55 — another Kingsammelot connection.",
-        6000,
-      );
-    }
-
-    if (sum === 67) {
-      addBadge("🔢 Sum of 67", "The visible digits add up to 67.", 7000);
-    }
-  }
 
   /* ==========================================================
-     DIGITAL ROOT
+     UNIQUE DIGITS
      ========================================================== */
 
-  if (digits.length >= 3) {
-    const sum = digits.reduce((a, b) => a + Number(b), 0);
+  if (
+    digits.length >= 4 &&
+    new Set(digits).size ===
+      digits.length
+  ) {
 
-    const digitalRoot = sum === 0 ? 0 : 1 + ((sum - 1) % 9);
-
-    if (digitalRoot === 7) {
-      addBadge(
-        "🍀 Lucky Root",
-        "The visible digits have a digital root of 7.",
-        1000,
-      );
-    }
-  }
-
-  /* ==========================================================
-     SQUARES
-     ========================================================== */
-
-  const squarePatterns = [
-    "149",
-    "169",
-    "196",
-    "256",
-    "361",
-    "441",
-    "529",
-    "625",
-    "729",
-    "841",
-
-    "144",
-    "121",
-    "100",
-  ];
-
-  if (containsAny(compact, squarePatterns)) {
     addBadge(
-      "🧮 Math Pattern",
-      "A recognizable mathematical square pattern appears inside the roll.",
-      12000,
+
+      badges,
+
+      "✨ No Repeats",
+
+      "Every visible digit is different.",
+
+      "RARE",
+
+      8
     );
   }
 
-  /* ==========================================================
-     PRIME DIGITS
-     ========================================================== */
-
-  if (digits.length >= 5) {
-    const primeDigits = digits.filter((d) => ["2", "3", "5", "7"].includes(d));
-
-    if (primeDigits.length === digits.length) {
-      addBadge(
-        "🔬 Prime Chain",
-        "Every visible digit is a prime digit: 2, 3, 5, or 7.",
-        5000,
-      );
-    }
-  }
 
   /* ==========================================================
-     ALL SAME PARITY
+     DOUBLE PAIR
      ========================================================== */
 
-  if (digits.length >= 5 && digits.every((d) => Number(d) % 2 === 0)) {
-    addBadge("🟦 Even Storm", "Every visible digit is even.", 32);
-  }
+  const pairCount =
+    Object.values(counts)
+      .filter(
+        count => count >= 2
+      )
+      .length;
 
-  if (digits.length >= 5 && digits.every((d) => Number(d) % 2 === 1)) {
-    addBadge("🟥 Odd Storm", "Every visible digit is odd.", 32);
-  }
+  if (
+    pairCount >= 2
+  ) {
 
-  /* ==========================================================
-     PERFECT 7s
-     ========================================================== */
-
-  if (compact.includes("777")) {
     addBadge(
-      "🎰 JACKPOT 777",
-      "Three consecutive 7s create the ultimate lucky slot pattern.",
-      1000000,
+
+      badges,
+
+      "👯‍♂️ Double Pair",
+
+      "At least two different digits each appear at least twice.",
+
+      "RARE",
+
+      8
     );
   }
 
-  if (compact.includes("7777")) {
-    addBadge(
-      "💎 SUPER JACKPOT",
-      "Four consecutive 7s appear in the roll.",
-      10000000,
-    );
-  }
 
   /* ==========================================================
-     SPECIAL 67 / 55
+     THREE PAIRS
      ========================================================== */
 
-  if (compact.includes("6767")) {
+  if (
+    digits.length === 6 &&
+    Object.values(counts)
+      .filter(
+        count => count === 2
+      )
+      .length === 3
+  ) {
+
     addBadge(
-      "🔥 Double 67",
-      "The 67 reference appears twice in a repeating pattern.",
-      100000,
+
+      badges,
+
+      "🎯 Triple Pair",
+
+      "All six positions form three matching pairs.",
+
+      "EPIC",
+
+      20
     );
   }
 
-  if (compact.includes("5555")) {
+
+  /* ==========================================================
+     SPLIT MIRROR
+     ========================================================== */
+
+  if (
+    compact.length === 6 &&
+    compact.slice(0, 3) ===
+      compact
+        .slice(3)
+        .split("")
+        .reverse()
+        .join("")
+  ) {
+
     addBadge(
-      "⚔️ Kingsammelot MAX",
-      "Four 5s appear together — an extreme 55/Kingsammelot pattern.",
-      100000,
+
+      badges,
+
+      "🪞 Split Mirror",
+
+      "The second half mirrors the first half.",
+
+      "LEGENDARY",
+
+      50
     );
   }
+
+
+  /* ==========================================================
+     CENTER DOUBLE
+     ========================================================== */
+
+  if (
+    compact.length === 6 &&
+    compact[2] === compact[3]
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "🎯 Center Double",
+
+      "The two middle digits are identical.",
+
+      "UNCOMMON",
+
+      3
+    );
+  }
+
+
+  /* ==========================================================
+     SAME FIRST / LAST
+     ========================================================== */
+
+  if (
+    compact.length >= 3 &&
+    compact[0] ===
+      compact[compact.length - 1]
+  ) {
+
+    addBadge(
+
+      badges,
+
+      "🔁 Bookend",
+
+      "The first and final visible digits are identical.",
+
+      "UNCOMMON",
+
+      3
+    );
+  }
+
 
   /* ==========================================================
      SORT BADGES
      ========================================================== */
 
-  badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
+  badges.sort(
+    (a, b) =>
+      rarityValue(b.badgeRarity) -
+      rarityValue(a.badgeRarity)
+  );
+
 
   /* ==========================================================
-     BADGE CHANCE
+     OVERALL RARITY
      ========================================================== */
 
-  let badgeChance = 1;
+  let score = 0;
 
   for (const badge of badges) {
-    badgeChance *= Number(badge.oneIn);
 
-    if (badgeChance > 1e100) {
-      badgeChance = 1e100;
-
-      break;
-    }
+    score +=
+      rarityValue(
+        badge.badgeRarity
+      );
   }
 
-  const blanks = chars.filter((x) => x === "_").length;
 
-  const blankMultiplier = Math.pow(10, blanks);
+  /*
+   * Blank positions contribute a little,
+   * but don't completely dominate rarity.
+   */
 
-  const totalChance = badgeChance * blankMultiplier;
+  const blanks =
+    chars.filter(
+      x => x === "_"
+    ).length;
 
-  /* ==========================================================
-     RARITY
-     ========================================================== */
+  score += blanks * 3;
+
+
+  /*
+   * Extra rarity for very strong
+   * structural patterns.
+   */
+
+  if (
+    badges.some(
+      b =>
+        b.badgeRarity ===
+        "TRANSCENDENT"
+    )
+  ) {
+    score += 100;
+  }
+
+  if (
+    badges.some(
+      b =>
+        b.badgeRarity ===
+        "DIVINE"
+    )
+  ) {
+    score += 50;
+  }
+
 
   let rarity = "COMMON";
 
-  if (badges.length || blanks >= 1) {
+  if (score >= 3)
     rarity = "UNCOMMON";
-  }
 
-  if (totalChance >= 100) {
+  if (score >= 8)
     rarity = "RARE";
-  }
 
-  if (totalChance >= 1000) {
+  if (score >= 20)
     rarity = "EPIC";
-  }
 
-  if (totalChance >= 10000) {
+  if (score >= 50)
     rarity = "LEGENDARY";
-  }
 
-  if (totalChance >= 1000000) {
+  if (score >= 150)
     rarity = "MYTHIC";
-  }
 
-  if (totalChance >= 100000000) {
+  if (score >= 500)
     rarity = "DIVINE";
-  }
 
-  if (totalChance >= 10000000000) {
+  if (score >= 2000)
     rarity = "TRANSCENDENT";
+
+  if (score >= 10000)
+    rarity = "???";
+
+
+  /* ==========================================================
+     DISPLAY CHANCE
+     ========================================================== */
+
+  /*
+   * This is now only the overall-roll estimate.
+   * Badge rarity itself is no longer represented as a chance.
+   */
+
+  let oneIn = 1;
+
+  if (score >= 3)
+    oneIn = 5;
+
+  if (score >= 8)
+    oneIn = 25;
+
+  if (score >= 20)
+    oneIn = 100;
+
+  if (score >= 50)
+    oneIn = 500;
+
+  if (score >= 150)
+    oneIn = 5000;
+
+  if (score >= 500)
+    oneIn = 50000;
+
+  if (score >= 2000)
+    oneIn = 500000;
+
+  if (score >= 10000)
+    oneIn = 10000000;
+
+
+  /*
+   * Blanks make the result somewhat more unusual.
+   */
+
+  if (blanks > 0) {
+
+    oneIn *=
+      Math.pow(
+        20,
+        blanks
+      );
   }
 
-  if (totalChance >= 1000000000000) {
-    rarity = "???";
-  }
 
   /* ==========================================================
      XP
      ========================================================== */
 
-  const badgeXP = badges.reduce(
-    (sum, badge) =>
-      sum + Math.max(1, Math.round(Math.log10(badge.oneIn + 1) * 20)),
-    0,
-  );
+  const badgeXP =
+    badges.reduce(
+      (sum, badge) => {
 
-  const blankXP = blanks * 100;
+        return (
+          sum +
+          Math.max(
+            5,
+            rarityValue(
+              badge.badgeRarity
+            )
+          );
+      },
+      0
+    );
 
-  const rarityXP = Math.max(
-    0,
-    Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
-  );
+  const blankXP =
+    blanks * 40;
 
-  const xp = Math.max(5, badgeXP + blankXP + rarityXP);
+  const rarityXP =
+    Math.max(
+      0,
+      Math.floor(
+        Math.log10(
+          Math.max(
+            1,
+            oneIn
+          )
+        ) * 5
+      )
+    );
+
+  const xp =
+    Math.max(
+      5,
+      badgeXP +
+      blankXP +
+      rarityXP
+    );
+
 
   return {
+
     badges,
 
-    badgeChance,
-
-    blankMultiplier,
-
-    oneIn: totalChance,
+    oneIn,
 
     rarity,
 
-    shown: digits.length,
+    shown:
+      digits.length,
 
     blanks,
 
+    blankMultiplier:
+      Math.pow(
+        10,
+        blanks
+      ),
+
     xp,
+
+    score
   };
 }
+
 
 /* ============================================================
    LOCAL STORAGE
    ============================================================ */
 
 function saveLocal() {
+
   try {
-    localStorage.setItem("digitRollHistory", JSON.stringify(history));
 
-    localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
+    localStorage.setItem(
+      "digitRollHistory",
+      JSON.stringify(history)
+    );
 
-    localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
-  } catch (e) {
-    console.warn("Local save unavailable", e);
+    localStorage.setItem(
+      "digitRollPersonal",
+      JSON.stringify(personalBest)
+    );
+
+    localStorage.setItem(
+      "digitRollAll",
+      JSON.stringify(allTimeBest)
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "Local save unavailable",
+      error
+    );
   }
 }
 
+
 function loadLocal() {
+
   try {
-    history = JSON.parse(localStorage.getItem("digitRollHistory")) || [];
+
+    history =
+      JSON.parse(
+        localStorage.getItem(
+          "digitRollHistory"
+        )
+      ) || [];
 
     personalBest =
-      JSON.parse(localStorage.getItem("digitRollPersonal")) || null;
+      JSON.parse(
+        localStorage.getItem(
+          "digitRollPersonal"
+        )
+      ) || null;
 
-    allTimeBest = JSON.parse(localStorage.getItem("digitRollAll")) || null;
-  } catch (e) {
+    allTimeBest =
+      JSON.parse(
+        localStorage.getItem(
+          "digitRollAll"
+        )
+      ) || null;
+
+  } catch (error) {
+
     history = [];
+
     personalBest = null;
+
     allTimeBest = null;
   }
 
   renderHistory();
 }
 
+
 /* ============================================================
    HISTORY
    ============================================================ */
 
 function renderHistory() {
-  if (!$("history")) return;
 
-  $("historyCount").textContent =
-    history.length + (history.length === 1 ? " roll" : " rolls");
+  const count =
+    $("historyCount");
+
+  const historyElement =
+    $("history");
+
+  if (!count || !historyElement)
+    return;
+
+
+  count.textContent =
+    history.length +
+    (
+      history.length === 1
+        ? " roll"
+        : " rolls"
+    );
+
 
   if (!history.length) {
-    $("history").innerHTML = '<span class="empty">No rolls yet.</span>';
+
+    historyElement.innerHTML =
+      '<span class="empty">No rolls yet.</span>';
 
     return;
   }
 
-  $("history").innerHTML = history
-    .slice(0, 30)
-    .map(
-      (x) => `
 
-        <div class="historyrow">
+  historyElement.innerHTML =
+    history
+      .slice(0, 30)
+      .map(
+        x => `
 
-          <span class="historynum">
-            ${escapeHTML(x.roll)}
-          </span>
+          <div class="historyrow">
 
-          <span
-            class="rarity ${rarityClass(x.rarity)}"
-          >
-            ${escapeHTML(x.rarity)}
-          </span>
+            <span class="historynum">
+              ${escapeHTML(x.roll)}
+            </span>
 
-          <span class="xp">
-            +${Number(x.xp) || 0} XP
-          </span>
+            <span
+              class="rarity ${rarityClass(
+                x.rarity
+              )}"
+            >
+              ${escapeHTML(x.rarity)}
+            </span>
 
-        </div>
+            <span class="xp">
+              +${Number(x.xp) || 0} XP
+            </span>
 
-      `,
-    )
-    .join("");
+          </div>
+
+        `
+      )
+      .join("");
 }
 
-/* ============================================================
-   ESCAPE HTML
-   ============================================================ */
-
-function escapeHTML(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-
-    .replace(/</g, "&lt;")
-
-    .replace(/>/g, "&gt;")
-
-    .replace(/"/g, "&quot;")
-
-    .replace(/'/g, "&#039;");
-}
 
 /* ============================================================
    BADGE MODAL
    ============================================================ */
 
-function showBadgeInfo(name, explanation, oneIn) {
-  $("badgeModalName").textContent = name;
+function showBadgeInfo(
+  name,
+  explanation,
+  badgeRarity
+) {
 
-  $("badgeModalExplanation").textContent = explanation;
+  const nameElement =
+    $("badgeModalName");
 
-  $("badgeModalChance").textContent =
-    "Badge chance: 1 in " + Number(oneIn).toLocaleString();
+  const explanationElement =
+    $("badgeModalExplanation");
 
-  $("badgeModal").classList.add("open");
+  const chanceElement =
+    $("badgeModalChance");
+
+  const modal =
+    $("badgeModal");
+
+
+  if (!modal) return;
+
+
+  if (nameElement) {
+
+    nameElement.textContent =
+      name;
+  }
+
+
+  if (explanationElement) {
+
+    explanationElement.textContent =
+      explanation;
+  }
+
+
+  if (chanceElement) {
+
+    chanceElement.textContent =
+      "Badge rarity: " +
+      badgeRarity;
+
+    applyRarityColor(
+      chanceElement,
+      badgeRarity
+    );
+  }
+
+
+  modal.classList.add(
+    "open"
+  );
 }
+
 
 function closeBadgeInfo() {
-  $("badgeModal").classList.remove("open");
+
+  const modal =
+    $("badgeModal");
+
+  if (modal) {
+
+    modal.classList.remove(
+      "open"
+    );
+  }
 }
 
-window.showBadgeInfo = showBadgeInfo;
 
-window.closeBadgeInfo = closeBadgeInfo;
+window.showBadgeInfo =
+  showBadgeInfo;
+
+window.closeBadgeInfo =
+  closeBadgeInfo;
+
 
 /* ============================================================
    AUTH UI
@@ -1285,969 +2126,2274 @@ window.closeBadgeInfo = closeBadgeInfo;
 
 let authMode = "login";
 
+
 function openAuth() {
-  $("authModal").classList.add("open");
+
+  const modal =
+    $("authModal");
+
+  if (modal) {
+
+    modal.classList.add(
+      "open"
+    );
+  }
 }
+
 
 function closeAuth() {
-  $("authModal").classList.remove("open");
+
+  const modal =
+    $("authModal");
+
+  if (modal) {
+
+    modal.classList.remove(
+      "open"
+    );
+  }
 }
 
-window.closeAuth = closeAuth;
 
-$("loginTab").onclick = () => {
-  authMode = "login";
+window.closeAuth =
+  closeAuth;
 
-  $("loginTab").classList.add("active");
 
-  $("signupTab").classList.remove("active");
+if ($("loginTab")) {
 
-  $("authTitle").textContent = "🔐 Login";
+  $("loginTab").onclick = () => {
 
-  $("authSubmit").textContent = "Login";
+    authMode = "login";
 
-  $("authUsername").style.display = "none";
+    $("loginTab")
+      .classList.add("active");
 
-  $("authStatus").textContent = "";
-};
+    $("signupTab")
+      ?.classList.remove("active");
 
-$("signupTab").onclick = () => {
-  authMode = "signup";
+    $("authTitle").textContent =
+      "🔐 Login";
 
-  $("signupTab").classList.add("active");
+    $("authSubmit").textContent =
+      "Login";
 
-  $("loginTab").classList.remove("active");
+    $("authUsername").style.display =
+      "none";
 
-  $("authTitle").textContent = "✨ Create Account";
+    $("authStatus").textContent =
+      "";
+  };
+}
 
-  $("authSubmit").textContent = "Create Account";
 
-  $("authUsername").style.display = "block";
+if ($("signupTab")) {
 
-  $("authStatus").textContent = "";
-};
+  $("signupTab").onclick = () => {
 
-$("authButton").onclick = openAuth;
+    authMode = "signup";
+
+    $("signupTab")
+      .classList.add("active");
+
+    $("loginTab")
+      ?.classList.remove("active");
+
+    $("authTitle").textContent =
+      "✨ Create Account";
+
+    $("authSubmit").textContent =
+      "Create Account";
+
+    $("authUsername").style.display =
+      "block";
+
+    $("authStatus").textContent =
+      "";
+  };
+}
+
+
+if ($("authButton")) {
+
+  $("authButton").onclick =
+    openAuth;
+}
+
 
 /* ============================================================
-   SIGNUP / LOGIN
+   AUTH SUBMIT
    ============================================================ */
 
-$("authSubmit").onclick = async () => {
-  const email = $("authEmail").value.trim();
+if ($("authSubmit")) {
 
-  const password = $("authPassword").value;
+  $("authSubmit").onclick =
+    async () => {
 
-  const username = $("authUsername").value.trim();
+      if (!supabaseClient) {
 
-  if (!email || !password) {
-    $("authStatus").textContent = "Please enter an email and password.";
-
-    return;
-  }
-
-  $("authSubmit").disabled = true;
-
-  $("authStatus").textContent =
-    authMode === "login" ? "Logging in..." : "Creating account...";
-
-  try {
-    if (authMode === "signup") {
-      if (!username) {
-        $("authStatus").textContent = "Please choose a username.";
-
-        $("authSubmit").disabled = false;
+        $("authStatus").textContent =
+          "Supabase is not configured. Add your current anon/publishable key.";
 
         return;
       }
 
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
 
-        options: {
-          data: {
-            username,
-          },
-        },
-      });
+      const email =
+        $("authEmail")
+          .value
+          .trim();
 
-      if (error) throw error;
+      const password =
+        $("authPassword")
+          .value;
 
-      if (data.user) {
-        if (data.session) {
-          await ensureProfile(data.user, username);
+      const username =
+        $("authUsername")
+          .value
+          .trim();
+
+
+      if (
+        !email ||
+        !password
+      ) {
+
+        $("authStatus").textContent =
+          "Please enter an email and password.";
+
+        return;
+      }
+
+
+      $("authSubmit")
+        .disabled = true;
+
+
+      $("authStatus").textContent =
+        authMode === "login"
+          ? "Logging in..."
+          : "Creating account...";
+
+
+      try {
+
+        if (
+          authMode === "signup"
+        ) {
+
+          if (!username) {
+
+            $("authStatus").textContent =
+              "Please choose a username.";
+
+            $("authSubmit")
+              .disabled = false;
+
+            return;
+          }
+
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient.auth.signUp({
+
+              email,
+
+              password,
+
+              options: {
+
+                data: {
+                  username
+                }
+              }
+            });
+
+
+          if (error)
+            throw error;
+
+
+          if (data?.user) {
+
+            if (data.session) {
+
+              await ensureProfile(
+                data.user,
+                username
+              );
+            }
+
+            $("authStatus").textContent =
+              data.session
+                ? "Account created!"
+                : "Account created! Check your email to confirm it.";
+          }
+
+        } else {
+
+          const {
+            data,
+            error
+          } =
+            await supabaseClient.auth
+              .signInWithPassword({
+
+                email,
+
+                password
+              });
+
+
+          if (error)
+            throw error;
+
+
+          if (data?.user) {
+
+            currentUser =
+              data.user;
+
+            await ensureProfile(
+              data.user
+            );
+
+            closeAuth();
+
+            toast(
+              "Welcome back!"
+            );
+          }
         }
 
-        $("authStatus").textContent = data.session
-          ? "Account created!"
-          : "Account created! Check your email to confirm it.";
+      } catch (error) {
+
+        console.error(
+          "Authentication error:",
+          error
+        );
+
+        $("authStatus").textContent =
+          friendlyAuthError(
+            error
+          );
       }
-    } else {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
 
-      if (error) throw error;
 
-      if (data.user) {
-        currentUser = data.user;
+      $("authSubmit")
+        .disabled = false;
+    };
+}
 
-        await ensureProfile(data.user);
-
-        closeAuth();
-
-        toast("Welcome back!");
-      }
-    }
-  } catch (error) {
-    console.error(error);
-
-    $("authStatus").textContent = friendlyAuthError(error);
-  }
-
-  $("authSubmit").disabled = false;
-};
 
 /* ============================================================
-   FRIENDLY AUTH ERRORS
+   AUTH ERRORS
    ============================================================ */
 
-function friendlyAuthError(error) {
-  const msg = String(error?.message || error || "");
+function friendlyAuthError(
+  error
+) {
 
-  if (msg.toLowerCase().includes("email not confirmed")) {
-    return "Your email is not confirmed yet. Check your email, then try logging in again.";
+  const message =
+    String(
+      error?.message ||
+      error ||
+      ""
+    );
+
+  const lower =
+    message.toLowerCase();
+
+
+  if (
+    lower.includes(
+      "invalid api key"
+    )
+  ) {
+
+    return (
+      "Supabase rejected the API key. Replace the key in script.js with your current anon/publishable key."
+    );
   }
 
-  if (msg.toLowerCase().includes("invalid login credentials")) {
-    return "Incorrect email or password.";
+
+  if (
+    lower.includes(
+      "email not confirmed"
+    )
+  ) {
+
+    return (
+      "Your email is not confirmed yet. Check your email, then try logging in again."
+    );
   }
 
-  if (msg.toLowerCase().includes("user already registered")) {
-    return "That email already has an account. Try logging in.";
+
+  if (
+    lower.includes(
+      "invalid login credentials"
+    )
+  ) {
+
+    return (
+      "Incorrect email or password."
+    );
   }
 
-  return msg;
+
+  if (
+    lower.includes(
+      "user already registered"
+    )
+  ) {
+
+    return (
+      "That email already has an account. Try logging in."
+    );
+  }
+
+
+  return message;
 }
+
 
 /* ============================================================
    PROFILE
    ============================================================ */
 
-async function ensureProfile(user, suppliedUsername = "") {
-  if (!user) return null;
+async function ensureProfile(
+  user,
+  suppliedUsername = ""
+) {
 
-  const username = suppliedUsername || user.user_metadata?.username || "Player";
+  if (
+    !user ||
+    !supabaseClient
+  ) {
 
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("id,username,created_at")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Profile lookup:", error);
+    return null;
   }
 
+
+  const username =
+    suppliedUsername ||
+    user.user_metadata?.username ||
+    "Player";
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("profiles")
+      .select(
+        "id,username,created_at"
+      )
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.warn(
+      "Profile lookup:",
+      error
+    );
+
+    if (
+      String(error.message)
+        .toLowerCase()
+        .includes(
+          "invalid api key"
+        )
+    ) {
+
+      return null;
+    }
+  }
+
+
   if (data) {
+
     profile = data;
 
     return data;
   }
 
-  const { data: created, error: createError } = await supabaseClient
-    .from("profiles")
-    .insert({
-      id: user.id,
-      username,
-    })
-    .select()
-    .single();
+
+  const {
+    data: created,
+    error: createError
+  } =
+    await supabaseClient
+      .from("profiles")
+      .insert({
+
+        id: user.id,
+
+        username
+      })
+      .select()
+      .single();
+
 
   if (createError) {
-    console.warn("Profile creation:", createError);
 
-    const { data: retry } = await supabaseClient
-      .from("profiles")
-      .select("id,username,created_at")
-      .eq("id", user.id)
-      .maybeSingle();
+    console.warn(
+      "Profile creation:",
+      createError
+    );
+
+
+    const {
+      data: retry
+    } =
+      await supabaseClient
+        .from("profiles")
+        .select(
+          "id,username,created_at"
+        )
+        .eq(
+          "id",
+          user.id
+        )
+        .maybeSingle();
+
 
     if (retry) {
+
       profile = retry;
 
       return retry;
     }
 
+
     return null;
   }
+
 
   profile = created;
 
   return created;
 }
 
+
 /* ============================================================
    ACCOUNT UI
    ============================================================ */
 
 function updateAccountUI() {
-  if (currentUser) {
+
+  if (
+    currentUser
+  ) {
+
     const name =
-      profile?.username || currentUser.user_metadata?.username || "Player";
+      profile?.username ||
+      currentUser
+        .user_metadata
+        ?.username ||
+      "Player";
 
-    $("userPill").textContent = "👤 " + name;
 
-    $("authButton").style.display = "none";
+    if ($("userPill")) {
 
-    $("profileButton").style.display = "inline-block";
+      $("userPill").textContent =
+        "👤 " + name;
+    }
 
-    $("logoutButton").style.display = "inline-block";
 
-    $("profileSection").style.display = "block";
+    if ($("authButton")) {
 
-    $("profileEmail").textContent = currentUser.email || "";
+      $("authButton")
+        .style.display =
+        "none";
+    }
 
-    $("profileUsername").textContent = name;
 
-    $("usernameInput").value = name;
+    if ($("profileButton")) {
+
+      $("profileButton")
+        .style.display =
+        "inline-block";
+    }
+
+
+    if ($("logoutButton")) {
+
+      $("logoutButton")
+        .style.display =
+        "inline-block";
+    }
+
+
+    if ($("profileSection")) {
+
+      $("profileSection")
+        .style.display =
+        "block";
+    }
+
+
+    if ($("profileEmail")) {
+
+      $("profileEmail")
+        .textContent =
+        currentUser.email || "";
+    }
+
+
+    if ($("profileUsername")) {
+
+      $("profileUsername")
+        .textContent =
+        name;
+    }
+
+
+    if ($("usernameInput")) {
+
+      $("usernameInput")
+        .value =
+        name;
+    }
+
   } else {
-    $("userPill").textContent = "Guest";
 
-    $("authButton").style.display = "inline-block";
+    if ($("userPill")) {
 
-    $("profileButton").style.display = "none";
+      $("userPill")
+        .textContent =
+        "Guest";
+    }
 
-    $("logoutButton").style.display = "none";
 
-    $("profileSection").style.display = "none";
+    if ($("authButton")) {
+
+      $("authButton")
+        .style.display =
+        "inline-block";
+    }
+
+
+    if ($("profileButton")) {
+
+      $("profileButton")
+        .style.display =
+        "none";
+    }
+
+
+    if ($("logoutButton")) {
+
+      $("logoutButton")
+        .style.display =
+        "none";
+    }
+
+
+    if ($("profileSection")) {
+
+      $("profileSection")
+        .style.display =
+        "none";
+    }
   }
 }
+
 
 /* ============================================================
    PERSONAL STATS
    ============================================================ */
 
 async function loadPersonalStats() {
-  if (!currentUser) return;
 
-  const { data, error } = await supabaseClient
-    .from("rolls")
-    .select("roll,one_in,xp,badges,rarity,shown,blanks,created_at")
-    .eq("player_id", currentUser.id)
-    .order("one_in", {
-      ascending: false,
-    });
+  if (
+    !currentUser ||
+    !supabaseClient
+  ) {
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("rolls")
+      .select(
+        "roll,one_in,xp,badges,rarity,shown,blanks,created_at"
+      )
+      .eq(
+        "player_id",
+        currentUser.id
+      )
+      .order(
+        "one_in",
+        {
+          ascending: false
+        }
+      );
+
 
   if (error) {
-    console.warn("Personal stats unavailable:", error);
+
+    console.warn(
+      "Personal stats unavailable:",
+      error
+    );
 
     return;
   }
 
-  const rows = data || [];
 
-  const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
+  const rows =
+    data || [];
 
-  const best = rows.length ? rows[0] : null;
 
-  $("profileRolls").textContent = rows.length.toLocaleString();
+  const totalXP =
+    rows.reduce(
+      (
+        sum,
+        row
+      ) =>
+        sum +
+        Number(
+          row.xp || 0
+        ),
+      0
+    );
 
-  $("profileXP").textContent = totalXP.toLocaleString();
 
-  $("profileBest").textContent = best ? best.roll : "—";
+  const best =
+    rows.length
+      ? rows[0]
+      : null;
 
-  $("profileBestMeta").textContent = best
-    ? `${best.rarity} • ${fmt(best.one_in)}`
-    : "No rolls yet";
 
-  if (best) {
-    applyRarityColor($("profileBestMeta"), best.rarity);
+  if ($("profileRolls")) {
+
+    $("profileRolls")
+      .textContent =
+      rows.length.toLocaleString();
+  }
+
+
+  if ($("profileXP")) {
+
+    $("profileXP")
+      .textContent =
+      totalXP.toLocaleString();
+  }
+
+
+  if ($("profileBest")) {
+
+    $("profileBest")
+      .textContent =
+      best
+        ? best.roll
+        : "—";
+  }
+
+
+  if ($("profileBestMeta")) {
+
+    $("profileBestMeta")
+      .textContent =
+      best
+        ? `${best.rarity} • ${fmt(best.one_in)}`
+        : "No rolls yet";
+
+
+    if (best) {
+
+      applyRarityColor(
+        $("profileBestMeta"),
+        best.rarity
+      );
+    }
   }
 }
 
+
 /* ============================================================
-   USERNAME
+   CHANGE USERNAME
    ============================================================ */
 
-$("saveUsername").onclick = async () => {
-  if (!currentUser) {
-    toast("You need to be logged in.");
+if ($("saveUsername")) {
+
+  $("saveUsername").onclick =
+    async () => {
+
+      if (
+        !currentUser ||
+        !supabaseClient
+      ) {
+
+        toast(
+          "You need to be logged in."
+        );
+
+        return;
+      }
+
+
+      const newUsername =
+        $("usernameInput")
+          .value
+          .trim();
+
+
+      if (!newUsername) {
+
+        $("usernameStatus")
+          .textContent =
+          "Username cannot be empty.";
+
+        return;
+      }
+
+
+      if (
+        newUsername.length > 24
+      ) {
+
+        $("usernameStatus")
+          .textContent =
+          "Username must be 24 characters or less.";
+
+        return;
+      }
+
+
+      $("saveUsername")
+        .disabled = true;
+
+      $("usernameStatus")
+        .textContent =
+        "Saving...";
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient
+            .from("profiles")
+            .update({
+              username:
+                newUsername
+            })
+            .eq(
+              "id",
+              currentUser.id
+            )
+            .select()
+            .single();
+
+
+        if (error)
+          throw error;
+
+
+        profile = data;
+
+
+        await supabaseClient.auth
+          .updateUser({
+
+            data: {
+              username:
+                newUsername
+            }
+          });
+
+
+        updateAccountUI();
+
+
+        await updateExistingRollNames(
+          newUsername
+        );
+
+
+        $("usernameStatus")
+          .textContent =
+          "Username updated!";
+
+
+        toast(
+          "Username changed to " +
+          newUsername
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+        $("usernameStatus")
+          .textContent =
+          error.message ||
+          "Unable to change username.";
+      }
+
+
+      $("saveUsername")
+        .disabled = false;
+    };
+}
+
+
+async function updateExistingRollNames(
+  newUsername
+) {
+
+  if (
+    !currentUser ||
+    !supabaseClient
+  ) {
 
     return;
   }
 
-  const newUsername = $("usernameInput").value.trim();
-
-  if (!newUsername) {
-    $("usernameStatus").textContent = "Username cannot be empty.";
-
-    return;
-  }
-
-  if (newUsername.length > 24) {
-    $("usernameStatus").textContent = "Username must be 24 characters or less.";
-
-    return;
-  }
-
-  $("saveUsername").disabled = true;
-
-  $("usernameStatus").textContent = "Saving...";
 
   try {
-    const { data, error } = await supabaseClient
-      .from("profiles")
-      .update({
-        username: newUsername,
-      })
-      .eq("id", currentUser.id)
-      .select()
-      .single();
 
-    if (error) throw error;
+    const {
+      error
+    } =
+      await supabaseClient
+        .from("rolls")
+        .update({
 
-    profile = data;
+          player_name:
+            newUsername
 
-    await supabaseClient.auth.updateUser({
-      data: {
-        username: newUsername,
-      },
-    });
+        })
+        .eq(
+          "player_id",
+          currentUser.id
+        );
 
-    updateAccountUI();
-
-    await updateExistingRollNames(newUsername);
-
-    $("usernameStatus").textContent = "Username updated!";
-
-    toast("Username changed to " + newUsername);
-  } catch (error) {
-    console.error(error);
-
-    $("usernameStatus").textContent =
-      error.message || "Unable to change username.";
-  }
-
-  $("saveUsername").disabled = false;
-};
-
-async function updateExistingRollNames(newUsername) {
-  if (!currentUser) return;
-
-  try {
-    const { error } = await supabaseClient
-      .from("rolls")
-      .update({
-        player_name: newUsername,
-      })
-      .eq("player_id", currentUser.id);
 
     if (error) {
-      console.warn("Could not update old roll names:", error);
+
+      console.warn(
+        "Could not update old roll names:",
+        error
+      );
     }
-  } catch (e) {
-    console.warn(e);
+
+  } catch (error) {
+
+    console.warn(
+      error
+    );
   }
 }
 
+
 /* ============================================================
-   CLOUD SAVE
+   SAVE CLOUD ROLL
    ============================================================ */
 
-async function saveCloudRoll(result) {
-  if (!currentUser) return null;
+async function saveCloudRoll(
+  result
+) {
+
+  if (
+    !currentUser ||
+    !supabaseClient
+  ) {
+
+    return null;
+  }
+
 
   const username =
-    profile?.username || currentUser.user_metadata?.username || "Player";
+    profile?.username ||
+    currentUser
+      .user_metadata
+      ?.username ||
+    "Player";
+
 
   const row = {
-    roll: result.roll,
 
-    rarity: result.rarity,
+    roll:
+      result.roll,
 
-    one_in: result.oneIn,
+    rarity:
+      result.rarity,
 
-    shown: result.shown,
+    one_in:
+      result.oneIn,
 
-    blanks: result.blanks,
+    shown:
+      result.shown,
 
-    xp: result.xp,
+    blanks:
+      result.blanks,
 
-    player_id: currentUser.id,
+    xp:
+      result.xp,
 
-    player_name: username,
+    player_id:
+      currentUser.id,
 
-    badges: result.badges.map((b) => b.name),
+    player_name:
+      username
   };
 
+
   try {
-    const { data, error } = await supabaseClient
-      .from("rolls")
-      .insert(row)
-      .select()
-      .single();
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("rolls")
+        .insert(row)
+        .select()
+        .single();
+
 
     if (error) {
-      console.error("Cloud roll error:", error);
 
-      toast("Roll saved locally, but cloud save failed.");
+      console.error(
+        "Cloud roll error:",
+        error
+      );
+
+      toast(
+        "Roll saved locally, but cloud save failed."
+      );
 
       return null;
     }
 
+
     return data;
+
   } catch (error) {
-    console.error("Cloud roll exception:", error);
+
+    console.error(
+      "Cloud roll exception:",
+      error
+    );
 
     return null;
   }
 }
+
 
 /* ============================================================
    LEADERBOARD
    ============================================================ */
 
 async function loadLeaderboard() {
-  const { data, error } = await supabaseClient
-    .from("rolls")
-    .select("id,roll,rarity,one_in,shown,xp,player_id,player_name,created_at")
-    .order("one_in", {
-      ascending: false,
-    })
-    .limit(10);
+
+  if (
+    !supabaseClient
+  ) {
+
+    if ($("globalRows")) {
+
+      $("globalRows").innerHTML =
+        '<span class="empty">Cloud leaderboard unavailable until Supabase is configured.</span>';
+    }
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("rolls")
+      .select(
+        "id,roll,rarity,one_in,shown,xp,player_id,player_name,created_at"
+      )
+      .order(
+        "one_in",
+        {
+          ascending: false
+        }
+      )
+      .limit(10);
+
 
   if (error) {
-    console.error("Leaderboard error:", error);
 
-    $("globalRows").innerHTML = `<span class="empty">
-        Leaderboard unavailable:
-        ${escapeHTML(error.message)}
-      </span>`;
+    console.error(
+      "Leaderboard error:",
+      error
+    );
+
+
+    if ($("globalRows")) {
+
+      $("globalRows").innerHTML = `
+
+        <span class="empty">
+          Leaderboard unavailable:
+          ${escapeHTML(error.message)}
+        </span>
+
+      `;
+    }
 
     return;
   }
 
-  const rows = data || [];
+
+  const rows =
+    data || [];
+
 
   if (!rows.length) {
-    $("globalRows").innerHTML =
-      '<span class="empty">No global rolls yet.</span>';
 
-    $("todayBest").textContent = "—";
+    if ($("globalRows")) {
 
-    $("allBest").textContent = "—";
+      $("globalRows").innerHTML =
+        '<span class="empty">No global rolls yet.</span>';
+    }
+
+
+    if ($("todayBest")) {
+
+      $("todayBest")
+        .textContent =
+        "—";
+    }
+
+
+    if ($("allBest")) {
+
+      $("allBest")
+        .textContent =
+        "—";
+    }
+
 
     return;
   }
 
-  const best = rows[0];
 
-  $("allBest").textContent = best.roll;
+  const best =
+    rows[0];
 
-  $("allBestMeta").textContent =
-    `${best.player_name || "Player"} • ${best.rarity} • ${fmt(best.one_in)}`;
 
-  applyRarityColor($("allBestMeta"), best.rarity);
+  if ($("allBest")) {
 
-  const todayStart = new Date();
-
-  todayStart.setHours(0, 0, 0, 0);
-
-  const todayRows = rows.filter((x) => new Date(x.created_at) >= todayStart);
-
-  if (todayRows.length) {
-    const todayBest = todayRows[0];
-
-    $("todayBest").textContent = todayBest.roll;
-
-    $("todayBestMeta").textContent =
-      `${todayBest.player_name || "Player"} • ${todayBest.rarity} • ${fmt(todayBest.one_in)}`;
-
-    applyRarityColor($("todayBestMeta"), todayBest.rarity);
-  } else {
-    $("todayBest").textContent = "—";
-
-    $("todayBestMeta").textContent = "No rolls today";
+    $("allBest")
+      .textContent =
+      best.roll;
   }
 
-  $("globalRows").innerHTML = rows
-    .map(
-      (row, index) => `
 
-        <div class="globalRow">
+  if ($("allBestMeta")) {
 
-          <div class="rank">
-            #${index + 1}
-          </div>
+    $("allBestMeta")
+      .textContent =
+      `${best.player_name || "Player"} • ${best.rarity} • ${fmt(best.one_in)}`;
 
-          <div>
 
-            <div class="globalPlayer">
-              ${escapeHTML(row.player_name || "Player")}
+    applyRarityColor(
+      $("allBestMeta"),
+      best.rarity
+    );
+  }
+
+
+  const todayStart =
+    new Date();
+
+  todayStart.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const todayRows =
+    rows.filter(
+      row =>
+        row.created_at &&
+        new Date(
+          row.created_at
+        ) >= todayStart
+    );
+
+
+  if (
+    todayRows.length
+  ) {
+
+    const todayBest =
+      todayRows[0];
+
+
+    if ($("todayBest")) {
+
+      $("todayBest")
+        .textContent =
+        todayBest.roll;
+    }
+
+
+    if ($("todayBestMeta")) {
+
+      $("todayBestMeta")
+        .textContent =
+        `${todayBest.player_name || "Player"} • ${todayBest.rarity} • ${fmt(todayBest.one_in)}`;
+
+
+      applyRarityColor(
+        $("todayBestMeta"),
+        todayBest.rarity
+      );
+    }
+
+  } else {
+
+    if ($("todayBest")) {
+
+      $("todayBest")
+        .textContent =
+        "—";
+    }
+
+
+    if ($("todayBestMeta")) {
+
+      $("todayBestMeta")
+        .textContent =
+        "No rolls today";
+    }
+  }
+
+
+  if ($("globalRows")) {
+
+    $("globalRows").innerHTML =
+      rows
+        .map(
+          (
+            row,
+            index
+          ) => `
+
+            <div class="globalRow">
+
+              <div class="rank">
+                #${index + 1}
+              </div>
+
+              <div>
+
+                <div class="globalPlayer">
+                  ${escapeHTML(
+                    row.player_name ||
+                    "Player"
+                  )}
+                </div>
+
+                <div class="small">
+                  ${
+                    row.created_at
+                      ? escapeHTML(
+                          new Date(
+                            row.created_at
+                          ).toLocaleString()
+                        )
+                      : ""
+                  }
+                </div>
+
+              </div>
+
+              <div class="globalRoll">
+                ${escapeHTML(
+                  row.roll
+                )}
+              </div>
+
+              <div>
+
+                <div
+                  class="rarity ${rarityClass(
+                    row.rarity
+                  )}"
+                >
+                  ${escapeHTML(
+                    row.rarity
+                  )}
+                </div>
+
+                <div class="small">
+                  ${fmt(
+                    row.one_in
+                  )}
+                </div>
+
+              </div>
+
             </div>
 
-            <div class="small">
-              ${escapeHTML(
-                row.created_at ? new Date(row.created_at).toLocaleString() : "",
-              )}
-            </div>
-
-          </div>
-
-          <div class="globalRoll">
-            ${escapeHTML(row.roll)}
-          </div>
-
-          <div>
-
-            <div
-              class="rarity ${rarityClass(row.rarity)}"
-            >
-              ${escapeHTML(row.rarity)}
-            </div>
-
-            <div class="small">
-              ${fmt(row.one_in)}
-            </div>
-
-          </div>
-
-        </div>
-
-      `,
-    )
-    .join("");
+          `
+        )
+        .join("");
+  }
 }
+
 
 /* ============================================================
    REALTIME
    ============================================================ */
 
 function setupRealtime() {
-  if (realtimeChannel) {
-    try {
-      supabaseClient.removeChannel(realtimeChannel);
-    } catch (e) {}
+
+  if (
+    !supabaseClient
+  ) {
+
+    return;
   }
 
-  realtimeChannel = supabaseClient
-    .channel("digit-rolls-global")
 
-    .on(
-      "postgres_changes",
+  if (
+    realtimeChannel
+  ) {
 
-      {
-        event: "INSERT",
-        schema: "public",
-        table: "rolls",
-      },
+    try {
 
-      (payload) => {
-        console.log("Realtime new roll:", payload.new);
+      supabaseClient
+        .removeChannel(
+          realtimeChannel
+        );
 
-        toast("🌎 New global roll!");
+    } catch (error) {
 
-        loadLeaderboard();
+      console.warn(
+        error
+      );
+    }
+  }
 
-        if (currentUser) {
-          loadPersonalStats();
+
+  realtimeChannel =
+    supabaseClient
+      .channel(
+        "digit-rolls-global"
+      )
+
+
+      .on(
+
+        "postgres_changes",
+
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "rolls"
+        },
+
+        payload => {
+
+          console.log(
+            "Realtime new roll:",
+            payload.new
+          );
+
+          toast(
+            "🌎 New global roll!"
+          );
+
+          loadLeaderboard();
+
+          if (
+            currentUser
+          ) {
+
+            loadPersonalStats();
+          }
         }
-      },
-    )
+      )
 
-    .on(
-      "postgres_changes",
 
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "profiles",
-      },
+      .on(
 
-      (payload) => {
-        if (currentUser && payload.new && payload.new.id === currentUser.id) {
-          profile = payload.new;
+        "postgres_changes",
 
-          updateAccountUI();
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles"
+        },
+
+        payload => {
+
+          if (
+            currentUser &&
+            payload.new &&
+            payload.new.id ===
+              currentUser.id
+          ) {
+
+            profile =
+              payload.new;
+
+            updateAccountUI();
+          }
         }
-      },
-    )
+      )
 
-    .subscribe((status) => {
-      console.log("Realtime status:", status);
 
-      if (status === "SUBSCRIBED") {
-        $("realtimeDot").classList.add("on");
+      .subscribe(
+        status => {
 
-        $("realtimeDot").classList.remove("off");
+          console.log(
+            "Realtime status:",
+            status
+          );
 
-        $("realtimeText").textContent = "Realtime Online";
-      } else {
-        $("realtimeDot").classList.remove("on");
 
-        $("realtimeDot").classList.add("off");
+          const dot =
+            $("realtimeDot");
 
-        $("realtimeText").textContent = "Realtime Offline";
-      }
-    });
+          const text =
+            $("realtimeText");
+
+
+          if (
+            status ===
+            "SUBSCRIBED"
+          ) {
+
+            dot?.classList
+              .add("on");
+
+            dot?.classList
+              .remove("off");
+
+            if (text) {
+
+              text.textContent =
+                "Realtime Online";
+            }
+
+          } else {
+
+            dot?.classList
+              .remove("on");
+
+            dot?.classList
+              .add("off");
+
+            if (text) {
+
+              text.textContent =
+                "Realtime Offline";
+            }
+          }
+        }
+      );
 }
+
 
 /* ============================================================
    ROLL DISPLAY
    ============================================================ */
 
 async function performRoll() {
-  if (rolling) return;
+
+  if (rolling)
+    return;
+
 
   rolling = true;
 
-  $("rollBtn").disabled = true;
 
-  $("rollLabel").textContent = "ROLLING...";
+  if ($("rollBtn")) {
 
-  $("rarity").textContent = "—";
+    $("rollBtn")
+      .disabled = true;
+  }
 
-  $("chance").textContent = "—";
 
-  $("liveRarity").textContent = "RARITY: ???";
+  if ($("rollLabel")) {
 
-  $("shown").textContent = "—";
+    $("rollLabel")
+      .textContent =
+      "ROLLING...";
+  }
 
-  $("xp").textContent = "—";
 
-  $("blankBonus").textContent = "—";
+  if ($("rarity")) {
 
-  $("badges").innerHTML =
-    '<span class="empty">The number is being generated...</span>';
+    $("rarity")
+      .textContent =
+      "—";
+  }
 
-  $("number").classList.add("rolling");
 
-  applyRarityColor($("liveRarity"), "COMMON");
+  if ($("chance")) {
 
-  applyRarityColor($("rarity"), "COMMON");
+    $("chance")
+      .textContent =
+      "—";
+  }
 
-  applyRarityColor($("number"), "COMMON");
 
-  const finalChars = randomRoll();
+  if ($("liveRarity")) {
 
-  const visible = Array(10).fill("?");
+    $("liveRarity")
+      .textContent =
+      "RARITY: ???";
+  }
 
-  let i = 0;
 
-  await new Promise((resolve) => {
-    const timer = setInterval(() => {
-      visible[i] = finalChars[i];
+  if ($("shown")) {
 
-      $("number").textContent = visible.join("");
+    $("shown")
+      .textContent =
+      "—";
+  }
 
-      i++;
 
-      if (i >= 10) {
-        clearInterval(timer);
+  if ($("xp")) {
 
-        resolve();
-      }
-    }, 900);
-  });
+    $("xp")
+      .textContent =
+      "—";
+  }
 
-  $("number").classList.remove("rolling");
 
-  const analysis = analyze(finalChars);
+  if ($("blankBonus")) {
 
-  const roll = finalChars.join("");
+    $("blankBonus")
+      .textContent =
+      "—";
+  }
+
+
+  if ($("badges")) {
+
+    $("badges").innerHTML =
+      '<span class="empty">Generating your 6-digit roll...</span>';
+  }
+
+
+  $("number")
+    ?.classList
+    .add("rolling");
+
+
+  applyRarityColor(
+    $("liveRarity"),
+    "COMMON"
+  );
+
+  applyRarityColor(
+    $("rarity"),
+    "COMMON"
+  );
+
+  applyRarityColor(
+    $("number"),
+    "COMMON"
+  );
+
+
+  const finalChars =
+    randomRoll();
+
+
+  const visible =
+    Array(6).fill("?");
+
+
+  let index = 0;
+
+
+  await new Promise(
+    resolve => {
+
+      const timer =
+        setInterval(
+          () => {
+
+            visible[index] =
+              finalChars[index];
+
+
+            if ($("number")) {
+
+              $("number")
+                .textContent =
+                visible.join("");
+            }
+
+
+            index++;
+
+
+            if (
+              index >= 6
+            ) {
+
+              clearInterval(
+                timer
+              );
+
+              resolve();
+            }
+
+          },
+          500
+        );
+    }
+  );
+
+
+  $("number")
+    ?.classList
+    .remove("rolling");
+
+
+  const analysis =
+    analyze(
+      finalChars
+    );
+
+
+  const roll =
+    finalChars.join("");
+
 
   const result = {
+
     roll,
 
     ...analysis,
 
-    time: Date.now(),
+    time:
+      Date.now()
   };
+
 
   /* ==========================================================
      BADGE REVEAL
      ========================================================== */
 
-  const badges = analysis.badges;
+  const badges =
+    analysis.badges;
 
-  const focusMs = badges.length
-    ? Math.max(1000, Math.min(10000, Math.round(10000 / badges.length)))
-    : 3000;
 
-  $("rollLabel").textContent = badges.length
-    ? "ANALYZING BADGES..."
-    : "NO BADGES FOUND...";
+  if ($("rollLabel")) {
 
-  $("liveRarity").textContent = "RARITY: ???";
+    $("rollLabel")
+      .textContent =
+      badges.length
+        ? "ANALYZING BADGES..."
+        : "NO BADGES FOUND...";
+  }
 
-  let bIndex = 0;
 
-  await new Promise((resolve) => {
-    const revealBadge = () => {
-      if (bIndex < badges.length) {
-        const b = badges[bIndex];
+  if ($("liveRarity")) {
 
-        $("badges").innerHTML = `
+    $("liveRarity")
+      .textContent =
+      "RARITY: ???";
+  }
 
-              <button
-                class="badgeFocus"
-                type="button"
-                onclick='showBadgeInfo(
-                  ${JSON.stringify(b.name)},
-                  ${JSON.stringify(b.explanation)},
-                  ${Number(b.oneIn)}
-                )'
-              >
 
-                <div
-                  style="
-                    font-size:27px;
-                    font-weight:850;
-                    margin-bottom:7px
-                  "
+  const focusMs =
+    badges.length
+      ? Math.max(
+          700,
+          Math.min(
+            2500,
+            Math.round(
+              3500 /
+              badges.length
+            )
+          )
+        )
+      : 1200;
+
+
+  let badgeIndex = 0;
+
+
+  await new Promise(
+    resolve => {
+
+      const reveal =
+        () => {
+
+          if (
+            badgeIndex <
+            badges.length
+          ) {
+
+            const badge =
+              badges[
+                badgeIndex
+              ];
+
+
+            if ($("badges")) {
+
+              $("badges").innerHTML = `
+
+                <button
+                  class="badgeFocus"
+                  type="button"
+                  data-badge-index="${badgeIndex}"
                 >
-                  ${escapeHTML(b.name)}
-                </div>
 
-                <div
-                  style="
-                    color:#aab5ca;
-                    line-height:1.45
-                  "
-                >
-                  ${escapeHTML(b.explanation)}
-                </div>
+                  <div
+                    style="
+                      font-size:27px;
+                      font-weight:850;
+                      margin-bottom:7px;
+                    "
+                  >
+                    ${escapeHTML(
+                      badge.name
+                    )}
+                  </div>
 
-                <div
-                  style="
-                    margin-top:9px;
-                    color:#8ee6ad;
-                    font-weight:750
-                  "
-                >
-                  Badge chance:
-                  1 in
-                  ${Number(b.oneIn).toLocaleString()}
-                </div>
+                  <div
+                    style="
+                      color:#aab5ca;
+                      line-height:1.45;
+                    "
+                  >
+                    ${escapeHTML(
+                      badge.explanation
+                    )}
+                  </div>
 
-                <div
-                  class="small"
-                  style="margin-top:7px"
-                >
-                  Click to view this badge again
-                </div>
+                  <div
+                    class="rarity ${rarityClass(
+                      badge.badgeRarity
+                    )}"
+                    style="
+                      display:inline-block;
+                      margin-top:10px;
+                    "
+                  >
+                    ${escapeHTML(
+                      badge.badgeRarity
+                    )}
+                  </div>
 
-                <div
-                  class="small"
-                  style="margin-top:4px"
-                >
-                  Badge
-                  ${bIndex + 1}
-                  of
-                  ${badges.length}
-                  • Blank bonus ×
-                  ${analysis.blankMultiplier.toLocaleString()}
-                </div>
+                  <div
+                    class="small"
+                    style="margin-top:7px;"
+                  >
+                    Badge
+                    ${badgeIndex + 1}
+                    of
+                    ${badges.length}
+                  </div>
 
-              </button>
+                  <div
+                    class="small"
+                    style="margin-top:4px;"
+                  >
+                    Click to view this badge again
+                  </div>
 
-            `;
+                </button>
 
-        bIndex++;
+              `;
 
-        setTimeout(revealBadge, focusMs);
-      } else {
-        resolve();
-      }
-    };
 
-    setTimeout(revealBadge, 450);
-  });
+              const button =
+                $("badges")
+                  .querySelector(
+                    ".badgeFocus"
+                  );
+
+
+              if (button) {
+
+                button.onclick =
+                  () => {
+
+                    showBadgeInfo(
+
+                      badge.name,
+
+                      badge.explanation,
+
+                      badge.badgeRarity
+                    );
+                  };
+              }
+            }
+
+
+            badgeIndex++;
+
+
+            setTimeout(
+              reveal,
+              focusMs
+            );
+
+          } else {
+
+            resolve();
+          }
+        };
+
+
+      setTimeout(
+        reveal,
+        300
+      );
+    }
+  );
+
 
   /* ==========================================================
      FINAL RESULT
      ========================================================== */
 
-  $("rollLabel").textContent = "FINAL RESULT";
+  if ($("rollLabel")) {
 
-  $("liveRarity").textContent = "RARITY: " + analysis.rarity;
-
-  $("rarity").textContent = analysis.rarity;
-
-  $("chance").textContent = fmt(analysis.oneIn);
-
-  $("shown").textContent = analysis.shown + "/10";
-
-  $("blankBonus").textContent = "×" + analysis.blankMultiplier.toLocaleString();
-
-  $("xp").textContent = "+" + analysis.xp;
-
-  applyRarityColor($("liveRarity"), analysis.rarity);
-
-  applyRarityColor($("rarity"), analysis.rarity);
-
-  applyRarityColor($("number"), analysis.rarity);
-
-  if (!badges.length) {
-    $("badges").innerHTML =
-      '<span class="empty">No badges. A completely ordinary roll.</span>';
-  } else {
-    $("badges").innerHTML = badges
-      .map(
-        (b) => `
-
-          <button
-            class="badge badgeButton"
-            type="button"
-            onclick='showBadgeInfo(
-              ${JSON.stringify(b.name)},
-              ${JSON.stringify(b.explanation)},
-              ${Number(b.oneIn)}
-            )'
-          >
-            ${escapeHTML(b.name)}
-          </button>
-
-        `,
-      )
-      .join("");
+    $("rollLabel")
+      .textContent =
+      "FINAL RESULT";
   }
+
+
+  if ($("liveRarity")) {
+
+    $("liveRarity")
+      .textContent =
+      "RARITY: " +
+      analysis.rarity;
+  }
+
+
+  if ($("rarity")) {
+
+    $("rarity")
+      .textContent =
+      analysis.rarity;
+  }
+
+
+  if ($("chance")) {
+
+    $("chance")
+      .textContent =
+      fmt(
+        analysis.oneIn
+      );
+  }
+
+
+  if ($("shown")) {
+
+    $("shown")
+      .textContent =
+      analysis.shown +
+      "/6";
+  }
+
+
+  if ($("blankBonus")) {
+
+    $("blankBonus")
+      .textContent =
+      "×" +
+      analysis.blankMultiplier
+        .toLocaleString();
+  }
+
+
+  if ($("xp")) {
+
+    $("xp")
+      .textContent =
+      "+" +
+      analysis.xp;
+  }
+
+
+  applyRarityColor(
+    $("liveRarity"),
+    analysis.rarity
+  );
+
+  applyRarityColor(
+    $("rarity"),
+    analysis.rarity
+  );
+
+  applyRarityColor(
+    $("number"),
+    analysis.rarity
+  );
+
+
+  /* ==========================================================
+     FINAL BADGE LIST
+     ========================================================== */
+
+  if ($("badges")) {
+
+    if (!badges.length) {
+
+      $("badges").innerHTML =
+        '<span class="empty">No badges. A completely ordinary roll.</span>';
+
+    } else {
+
+      $("badges").innerHTML =
+        badges
+          .map(
+            (
+              badge,
+              badgeIndex
+            ) => `
+
+              <button
+                class="badge badgeButton"
+                type="button"
+                data-badge-index="${badgeIndex}"
+              >
+
+                <span>
+                  ${escapeHTML(
+                    badge.name
+                  )}
+                </span>
+
+                <span
+                  class="rarity ${rarityClass(
+                    badge.badgeRarity
+                  )}"
+                  style="
+                    margin-left:7px;
+                    font-size:11px;
+                  "
+                >
+                  ${escapeHTML(
+                    badge.badgeRarity
+                  )}
+                </span>
+
+              </button>
+
+            `
+          )
+          .join("");
+
+
+      const buttons =
+        $("badges")
+          .querySelectorAll(
+            ".badgeButton"
+          );
+
+
+      buttons.forEach(
+        button => {
+
+          const badge =
+            badges[
+              Number(
+                button.dataset
+                  .badgeIndex
+              )
+            ];
+
+
+          button.onclick =
+            () => {
+
+              showBadgeInfo(
+
+                badge.name,
+
+                badge.explanation,
+
+                badge.badgeRarity
+              );
+            };
+        }
+      );
+    }
+  }
+
 
   /* ==========================================================
      LOCAL HISTORY
      ========================================================== */
 
-  history.unshift(result);
+  history.unshift(
+    result
+  );
 
-  history = history.slice(0, 30);
+  history =
+    history.slice(
+      0,
+      30
+    );
 
-  if (better(result, personalBest)) {
-    personalBest = result;
+
+  if (
+    better(
+      result,
+      personalBest
+    )
+  ) {
+
+    personalBest =
+      result;
   }
 
-  if (better(result, allTimeBest)) {
-    allTimeBest = result;
+
+  if (
+    better(
+      result,
+      allTimeBest
+    )
+  ) {
+
+    allTimeBest =
+      result;
   }
+
 
   saveLocal();
 
   renderHistory();
 
+
   /* ==========================================================
      CLOUD
      ========================================================== */
 
-  if (currentUser) {
-    await saveCloudRoll(result);
+  if (
+    currentUser &&
+    supabaseClient
+  ) {
+
+    await saveCloudRoll(
+      result
+    );
 
     await loadPersonalStats();
 
     await loadLeaderboard();
   }
 
-  $("rollBtn").disabled = false;
+
+  if ($("rollBtn")) {
+
+    $("rollBtn")
+      .disabled = false;
+  }
+
 
   rolling = false;
 }
 
+
 /* ============================================================
-   BUTTONS
+   ROLL BUTTON
    ============================================================ */
 
-$("rollBtn").onclick = performRoll;
+if ($("rollBtn")) {
 
-$("profileButton").onclick = () => {
-  $("profileSection").scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-  });
-};
+  $("rollBtn").onclick =
+    performRoll;
+}
 
-$("logoutButton").onclick = async () => {
-  try {
-    await supabaseClient.auth.signOut();
-  } catch (error) {
-    console.error(error);
-  }
-};
 
-$("refreshLeaderboard").onclick = async () => {
-  $("refreshLeaderboard").disabled = true;
+/* ============================================================
+   PROFILE BUTTON
+   ============================================================ */
 
-  await loadLeaderboard();
+if ($("profileButton")) {
 
-  $("refreshLeaderboard").disabled = false;
+  $("profileButton").onclick =
+    () => {
 
-  toast("Leaderboard refreshed.");
-};
+      $("profileSection")
+        ?.scrollIntoView({
+
+          behavior: "smooth",
+
+          block: "center"
+        });
+    };
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+if ($("logoutButton")) {
+
+  $("logoutButton").onclick =
+    async () => {
+
+      if (
+        !supabaseClient
+      ) {
+
+        currentUser = null;
+
+        profile = null;
+
+        updateAccountUI();
+
+        return;
+      }
+
+
+      try {
+
+        await supabaseClient
+          .auth
+          .signOut();
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+      }
+    };
+}
+
+
+/* ============================================================
+   REFRESH LEADERBOARD
+   ============================================================ */
+
+if ($("refreshLeaderboard")) {
+
+  $("refreshLeaderboard").onclick =
+    async () => {
+
+      $("refreshLeaderboard")
+        .disabled = true;
+
+
+      await loadLeaderboard();
+
+
+      $("refreshLeaderboard")
+        .disabled = false;
+
+
+      toast(
+        "Leaderboard refreshed."
+      );
+    };
+}
+
 
 /* ============================================================
    AUTH STATE
    ============================================================ */
 
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  console.log("Auth state:", event);
+if (
+  supabaseClient
+) {
 
-  if (session?.user) {
-    currentUser = session.user;
+  supabaseClient.auth
+    .onAuthStateChange(
+      (
+        event,
+        session
+      ) => {
 
-    setTimeout(async () => {
-      await ensureProfile(currentUser);
+        console.log(
+          "Auth state:",
+          event
+        );
 
-      updateAccountUI();
 
-      await loadPersonalStats();
+        if (
+          session?.user
+        ) {
 
-      await loadLeaderboard();
-    }, 0);
-  } else {
-    currentUser = null;
+          currentUser =
+            session.user;
 
-    profile = null;
 
-    updateAccountUI();
-  }
-});
+          /*
+           * Do database work after the
+           * auth event has finished.
+           */
+
+          setTimeout(
+            async () => {
+
+              await ensureProfile(
+                currentUser
+              );
+
+              updateAccountUI();
+
+              await loadPersonalStats();
+
+              await loadLeaderboard();
+
+            },
+            0
+          );
+
+        } else {
+
+          currentUser =
+            null;
+
+          profile =
+            null;
+
+          updateAccountUI();
+        }
+      }
+    );
+}
+
 
 /* ============================================================
    INITIALIZATION
    ============================================================ */
 
 async function init() {
+
   loadLocal();
 
   updateAccountUI();
 
-  try {
-    const { data, error } = await supabaseClient.auth.getSession();
 
-    if (error) {
-      console.warn("Session error:", error);
+  /*
+   * If Supabase isn't configured,
+   * the actual game still works locally.
+   */
+
+  if (
+    !supabaseClient
+  ) {
+
+    console.warn(
+      "Supabase is not configured. Local mode enabled."
+    );
+
+    if ($("realtimeDot")) {
+
+      $("realtimeDot")
+        .classList
+        .remove("on");
+
+      $("realtimeDot")
+        .classList
+        .add("off");
     }
 
-    if (data?.session?.user) {
-      currentUser = data.session.user;
 
-      await ensureProfile(currentUser);
+    if ($("realtimeText")) {
+
+      $("realtimeText")
+        .textContent =
+        "Local Mode";
+    }
+
+
+    return;
+  }
+
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .auth
+        .getSession();
+
+
+    if (error) {
+
+      console.warn(
+        "Session error:",
+        error
+      );
+    }
+
+
+    if (
+      data?.session?.user
+    ) {
+
+      currentUser =
+        data.session.user;
+
+
+      await ensureProfile(
+        currentUser
+      );
+
 
       updateAccountUI();
 
+
       await loadPersonalStats();
     }
+
   } catch (error) {
-    console.warn("Initial auth check failed:", error);
+
+    console.warn(
+      "Initial auth check failed:",
+      error
+    );
   }
+
 
   await loadLeaderboard();
 
   setupRealtime();
 }
 
+
 /* ============================================================
    START
    ============================================================ */
 
 init();
+```
