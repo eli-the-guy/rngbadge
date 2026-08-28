@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Digit Roll — Profile & Stats</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+
+        min-height: 100vh;
+
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        color: #f4f7ff;
+
+        background: radial-gradient(
+          circle at 50% 0%,
+          #29385c 0%,
+          #111827 42%,
+          #070a10 100%
+        );
+
+        padding: 28px;
+      }
+
+      .app {
+        width: min(1100px, 100%);
+
+        margin: auto;
+
+        display: grid;
+
+        gap: 18px;
+      }
+
+      .card {
+        background: rgba(20, 26, 40, 0.78);
+
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        border-radius: 22px;
+
+        padding: 24px;
+
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.3);
+
+        backdrop-filter: blur(15px);
+      }
+
+      .header {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 15px;
+
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        margin: 0;
+
+        font-size: 34px;
+
+        letter-spacing: -1px;
+      }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      .sub {
+        color: #9ba7c0;
+
+        margin: 5px 0 0;
+      }
+
+      button {
+        border: 0;
+
+        border-radius: 13px;
+
+        padding: 12px 20px;
+
+        font-size: 15px;
+
+        font-weight: 800;
+
+        color: white;
+
+        cursor: pointer;
+
+        background: linear-gradient(135deg, #657cff, #9a63ff);
+
+        box-shadow: 0 8px 25px rgba(104, 111, 255, 0.25);
+
+        transition: 0.15s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+
+        filter: brightness(1.1);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      button.secondary {
+        background: rgba(255, 255, 255, 0.08);
+
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        box-shadow: none;
+      }
+
+      button.danger {
+        background: linear-gradient(135deg, #ff5364, #b94375);
+      }
+
+      input {
+        width: 100%;
+
+        border: 1px solid rgba(255, 255, 255, 0.12);
+
+        border-radius: 12px;
+
+        padding: 13px 14px;
+
+        background: rgba(0, 0, 0, 0.2);
+
+        color: white;
+
+        outline: none;
+
+        font-size: 15px;
+      }
+
+      input:focus {
+        border-color: rgba(130, 150, 255, 0.7);
+
+        box-shadow: 0 0 0 3px rgba(100, 120, 255, 0.12);
+      }
+
+      .form {
+        display: grid;
+
+        gap: 12px;
+      }
+
+      .formButtons {
+        display: flex;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+      }
+
+      .auth {
+        max-width: 500px;
+
+        margin: 40px auto;
+      }
+
+      .authTitle {
+        text-align: center;
+
+        margin-bottom: 22px;
+      }
+
+      .message {
+        padding: 12px 14px;
+
+        border-radius: 12px;
+
+        background: rgba(101, 124, 255, 0.1);
+
+        border: 1px solid rgba(101, 124, 255, 0.2);
+
+        color: #b9c4dc;
+
+        display: none;
+      }
+
+      .message.show {
+        display: block;
+      }
+
+      .profile {
+        display: flex;
+
+        align-items: center;
+
+        gap: 18px;
+      }
+
+      .avatar {
+        width: 76px;
+
+        height: 76px;
+
+        border-radius: 50%;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 32px;
+
+        font-weight: 900;
+
+        background: linear-gradient(135deg, #657cff, #9a63ff);
+
+        box-shadow: 0 10px 30px rgba(100, 110, 255, 0.3);
+      }
+
+      .username {
+        font-size: 27px;
+
+        font-weight: 900;
+      }
+
+      .email {
+        color: #8996af;
+
+        font-size: 14px;
+
+        margin-top: 3px;
+      }
+
+      .stats {
+        display: grid;
+
+        grid-template-columns: repeat(4, 1fr);
+
+        gap: 14px;
+      }
+
+      .stat {
+        background: rgba(255, 255, 255, 0.045);
+
+        border: 1px solid rgba(255, 255, 255, 0.07);
+
+        border-radius: 17px;
+
+        padding: 18px;
+      }
+
+      .statLabel {
+        color: #8996af;
+
+        font-size: 13px;
+
+        margin-bottom: 7px;
+      }
+
+      .statValue {
+        font-size: 25px;
+
+        font-weight: 900;
+
+        font-variant-numeric: tabular-nums;
+      }
+
+      .statIcon {
+        font-size: 22px;
+
+        margin-bottom: 7px;
+      }
+
+      .grid {
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 18px;
+      }
+
+      .row {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 15px;
+
+        padding: 12px 0;
+
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .label {
+        color: #9ba7c0;
+      }
+
+      .value {
+        font-weight: 850;
+
+        text-align: right;
+      }
+
+      .rarity {
+        font-weight: 900;
+      }
+
+      .badges {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 9px;
+      }
+
+      .badge {
+        padding: 9px 12px;
+
+        border-radius: 999px;
+
+        background: rgba(101, 124, 255, 0.14);
+
+        border: 1px solid rgba(125, 145, 255, 0.28);
+
+        font-size: 14px;
+
+        font-weight: 750;
+      }
+
+      .empty {
+        color: #68748d;
+      }
+
+      .rank {
+        text-align: center;
+
+        padding: 25px;
+      }
+
+      .rankNumber {
+        font-size: 58px;
+
+        font-weight: 950;
+
+        background: linear-gradient(135deg, #ffffff, #8fa3ff);
+
+        -webkit-background-clip: text;
+
+        background-clip: text;
+
+        color: transparent;
+      }
+
+      .rankLabel {
+        color: #8e9ab2;
+      }
+
+      .progress {
+        width: 100%;
+
+        height: 10px;
+
+        background: rgba(255, 255, 255, 0.07);
+
+        border-radius: 999px;
+
+        overflow: hidden;
+
+        margin-top: 15px;
+      }
+
+      .progressBar {
+        height: 100%;
+
+        width: 0%;
+
+        background: linear-gradient(90deg, #657cff, #9a63ff);
+
+        border-radius: 999px;
+
+        transition: width 0.5s ease;
+      }
+
+      .status {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        color: #8e9ab2;
+
+        font-size: 13px;
+      }
+
+      .dot {
+        width: 9px;
+
+        height: 9px;
+
+        border-radius: 50%;
+
+        background: #55e88b;
+
+        box-shadow: 0 0 12px rgba(85, 232, 139, 0.7);
+      }
+
+      .dot.off {
+        background: #ff5f6d;
+
+        box-shadow: 0 0 12px rgba(255, 95, 109, 0.7);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 800px) {
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 500px) {
+        body {
+          padding: 14px;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .profile {
+          align-items: flex-start;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <!-- AUTH SCREEN -->
+
+      <div id="authScreen" class="card auth">
+        <div class="authTitle">
+          <div style="font-size: 48px; margin-bottom: 5px">🎲</div>
+
+          <h1>DIGIT ROLL</h1>
+
+          <p class="sub">Sign in to view your profile and stats.</p>
+        </div>
+
+        <div class="form">
+          <input
+            id="email"
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+          />
+
+          <input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+          />
+
+          <input
+            id="username"
+            type="text"
+            placeholder="Username — only needed when signing up"
+            maxlength="24"
+          />
+
+          <div class="formButtons">
+            <button id="loginBtn">🔐 Log In</button>
+
+            <button id="signupBtn" class="secondary">✨ Create Account</button>
+          </div>
+
+          <div id="authMessage" class="message"></div>
+        </div>
+      </div>
+
+      <!-- PROFILE SCREEN -->
+
+      <div id="profileScreen" class="hidden">
+        <div class="card">
+          <div class="header">
+            <div>
+              <h1>👤 MY PROFILE</h1>
+
+              <p class="sub">Your Digit Roll journey.</p>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap">
+              <button id="refreshBtn" class="secondary">🔄 Refresh</button>
+
+              <button id="logoutBtn" class="danger">Log Out</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 22px" class="profile">
+            <div class="avatar" id="avatar">?</div>
+
+            <div>
+              <div class="username" id="profileUsername">Player</div>
+
+              <div class="email" id="profileEmail"></div>
+
+              <div class="status" style="margin-top: 7px">
+                <span class="dot" id="statusDot"></span>
+
+                <span id="statusText"> Connected </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN STATS -->
+
+        <div class="stats">
+          <div class="stat">
+            <div class="statIcon">🎲</div>
+
+            <div class="statLabel">TOTAL ROLLS</div>
+
+            <div class="statValue" id="totalRolls">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="statIcon">⭐</div>
+
+            <div class="statLabel">TOTAL XP</div>
+
+            <div class="statValue" id="totalXP">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="statIcon">🏆</div>
+
+            <div class="statLabel">BEST ROLL</div>
+
+            <div class="statValue" id="bestRoll">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="statIcon">🎖️</div>
+
+            <div class="statLabel">BADGES</div>
+
+            <div class="statValue" id="badgeCount">—</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <!-- DETAILS -->
+
+          <div class="card">
+            <h2>📊 Detailed Stats</h2>
+
+            <div class="row">
+              <span class="label"> Best rarity </span>
+
+              <span class="value rarity" id="bestRarity"> — </span>
+            </div>
+
+            <div class="row">
+              <span class="label"> Best chance </span>
+
+              <span class="value" id="bestChance"> — </span>
+            </div>
+
+            <div class="row">
+              <span class="label"> Rolls today </span>
+
+              <span class="value" id="rollsToday"> — </span>
+            </div>
+
+            <div class="row">
+              <span class="label"> Best roll today </span>
+
+              <span class="value" id="bestToday"> — </span>
+            </div>
+
+            <div class="row">
+              <span class="label"> Average XP / roll </span>
+
+              <span class="value" id="averageXP"> — </span>
+            </div>
+
+            <div class="row">
+              <span class="label"> Account created </span>
+
+              <span class="value" id="accountCreated"> — </span>
+            </div>
+          </div>
+
+          <!-- GLOBAL RANK -->
+
+          <div class="card rank">
+            <h2>🌎 Global Rank</h2>
+
+            <div class="rankNumber" id="globalRank">—</div>
+
+            <div class="rankLabel">based on best roll</div>
+
+            <div class="progress">
+              <div class="progressBar" id="rankProgress"></div>
+            </div>
+
+            <p class="small" id="rankText" style="margin-top: 12px">
+              Loading leaderboard...
+            </p>
+          </div>
+        </div>
+
+        <!-- BADGES -->
+
+        <div class="card">
+          <h2>🎖️ Badges Discovered</h2>
+
+          <div class="badges" id="badges">
+            <span class="empty"> Loading badges... </span>
+          </div>
+        </div>
+
+        <!-- PROFILE EDIT -->
+
+        <div class="card">
+          <h2>⚙️ Profile Settings</h2>
+
+          <div style="max-width: 500px">
+            <div class="form">
+              <input
+                id="newUsername"
+                type="text"
+                maxlength="24"
+                placeholder="Display name"
+              />
+
+              <button id="saveProfileBtn">💾 Save Profile</button>
+
+              <div id="profileMessage" class="message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* =====================================================
+   SUPABASE CONFIG
+   ===================================================== */
+
+      const SUPABASE_URL = "https://xuofbnghqcktlsmjgfbj.supabase.co";
+
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1b2ZibmdocWNrdGxzbWlnZmJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NTk5NjQsImV4cCI6MjEwMzQzNTk2NH0.T-hifShe3Q9kl4hJroq8Td09LKS0mUblswA281h9A6s";
+
+      /*
+  IMPORTANT:
+  The client is called supabaseClient.
+  This avoids the "Identifier 'supabase'
+  has already been declared" problem.
+*/
+
+      const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+      );
+
+      /* =====================================================
+   HELPERS
+   ===================================================== */
+
+      const $ = (id) => document.getElementById(id);
+
+      function showMessage(element, text) {
+        element.textContent = text;
+
+        element.classList.add("show");
+      }
+
+      function hideMessage(element) {
+        element.classList.remove("show");
+      }
+
+      function formatNumber(n) {
+        return Number(n || 0).toLocaleString();
+      }
+
+      function formatDate(timestamp) {
+        if (!timestamp) return "—";
+
+        return new Date(timestamp).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      function todayStart() {
+        const d = new Date();
+
+        d.setHours(0, 0, 0, 0);
+
+        return d.toISOString();
+      }
+
+      /* =====================================================
+   AUTH
+   ===================================================== */
+
+      async function login() {
+        const email = $("email").value.trim();
+
+        const password = $("password").value;
+
+        if (!email || !password) {
+          showMessage(
+            $("authMessage"),
+            "Please enter your email and password.",
+          );
+
+          return;
+        }
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+
+          password,
+        });
+
+        if (error) {
+          showMessage($("authMessage"), error.message);
+
+          return;
+        }
+
+        hideMessage($("authMessage"));
+
+        await loadProfile(data.user);
+      }
+
+      async function signup() {
+        const email = $("email").value.trim();
+
+        const password = $("password").value;
+
+        const username = $("username").value.trim();
+
+        if (!email || !password) {
+          showMessage($("authMessage"), "Email and password are required.");
+
+          return;
+        }
+
+        if (password.length < 6) {
+          showMessage(
+            $("authMessage"),
+            "Your password needs at least 6 characters.",
+          );
+
+          return;
+        }
+
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+
+          password,
+
+          options: {
+            data: {
+              username: username || "Player",
+            },
+          },
+        });
+
+        if (error) {
+          showMessage($("authMessage"), error.message);
+
+          return;
+        }
+
+        if (data.session) {
+          await loadProfile(data.user);
+        } else {
+          showMessage(
+            $("authMessage"),
+            "Account created! Check your email if email confirmation is enabled in Supabase.",
+          );
+        }
+      }
+
+      async function logout() {
+        await supabaseClient.auth.signOut();
+
+        $("profileScreen").classList.add("hidden");
+
+        $("authScreen").classList.remove("hidden");
+      }
+
+      /* =====================================================
+   PROFILE
+   ===================================================== */
+
+      async function loadProfile(user) {
+        if (!user) return;
+
+        $("authScreen").classList.add("hidden");
+
+        $("profileScreen").classList.remove("hidden");
+
+        $("profileEmail").textContent = user.email || "";
+
+        $("accountCreated").textContent = formatDate(user.created_at);
+
+        const { data, error } = await supabaseClient
+
+          .from("profiles")
+
+          .select("username")
+
+          .eq("id", user.id)
+
+          .maybeSingle();
+
+        let username = data?.username;
+
+        if (!username) {
+          username = user.user_metadata?.username || "Player";
+        }
+
+        $("profileUsername").textContent = username;
+
+        $("newUsername").value = username;
+
+        $("avatar").textContent = username.charAt(0).toUpperCase();
+
+        await loadStats(user);
+      }
+
+      /* =====================================================
+   SAVE PROFILE
+   ===================================================== */
+
+      async function saveProfile() {
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        if (!user) return;
+
+        const username = $("newUsername").value.trim();
+
+        if (!username) {
+          showMessage($("profileMessage"), "Please enter a username.");
+
+          return;
+        }
+
+        const { error } = await supabaseClient
+
+          .from("profiles")
+
+          .upsert({
+            id: user.id,
+
+            username: username,
+          });
+
+        if (error) {
+          showMessage($("profileMessage"), error.message);
+
+          return;
+        }
+
+        await supabaseClient.auth.updateUser({
+          data: {
+            username: username,
+          },
+        });
+
+        $("profileUsername").textContent = username;
+
+        $("avatar").textContent = username.charAt(0).toUpperCase();
+
+        showMessage($("profileMessage"), "Profile saved!");
+      }
+
+      /* =====================================================
+   LOAD STATS
+   ===================================================== */
+
+      async function loadStats(user) {
+        setStatus(true, "Loading stats...");
+
+        const { data, error } = await supabaseClient
+
+          .from("rolls")
+
+          .select("*")
+
+          .eq("player_id", user.id)
+
+          .order("created_at", {
+            ascending: false,
+          });
+
+        if (error) {
+          console.error(error);
+
+          setStatus(false, "Could not load stats");
+
+          return;
+        }
+
+        const rolls = data || [];
+
+        calculateStats(rolls);
+
+        await calculateGlobalRank(user.id);
+
+        setStatus(true, "Stats up to date");
+      }
+
+      /* =====================================================
+   CALCULATE PERSONAL STATS
+   ===================================================== */
+
+      function calculateStats(rolls) {
+        $("totalRolls").textContent = formatNumber(rolls.length);
+
+        const totalXP = rolls.reduce((sum, r) => sum + Number(r.xp || 0), 0);
+
+        $("totalXP").textContent = formatNumber(totalXP);
+
+        $("averageXP").textContent = rolls.length
+          ? Math.round(totalXP / rolls.length)
+          : "0";
+
+        const best = rolls.reduce(
+          (best, r) =>
+            !best || Number(r.one_in) > Number(best.one_in) ? r : best,
+          null,
+        );
+
+        if (best) {
+          $("bestRoll").textContent = best.roll;
+
+          $("bestRarity").textContent = best.rarity;
+
+          $("bestChance").textContent =
+            "1 in " + Number(best.one_in).toLocaleString();
+        } else {
+          $("bestRoll").textContent = "—";
+
+          $("bestRarity").textContent = "—";
+
+          $("bestChance").textContent = "—";
+        }
+
+        const start = new Date();
+
+        start.setHours(0, 0, 0, 0);
+
+        const todayRolls = rolls.filter((r) => new Date(r.created_at) >= start);
+
+        $("rollsToday").textContent = formatNumber(todayRolls.length);
+
+        const bestToday = todayRolls.reduce(
+          (best, r) =>
+            !best || Number(r.one_in) > Number(best.one_in) ? r : best,
+          null,
+        );
+
+        $("bestToday").textContent = bestToday ? bestToday.roll : "—";
+
+        /*
+    Count unique badge-like discoveries from
+    the badge data stored by the main game.
+
+    If the main game later stores badge names
+    directly in the database, this can be upgraded
+    to an exact global badge collection.
+  */
+
+        const badgeSet = new Set();
+
+        rolls.forEach((r) => {
+          if (r.badges && Array.isArray(r.badges)) {
+            r.badges.forEach((b) => badgeSet.add(b.name || b));
+          }
+        });
+
+        $("badgeCount").textContent = formatNumber(badgeSet.size);
+
+        renderBadges(badgeSet);
+      }
+
+      /* =====================================================
+   BADGES
+   ===================================================== */
+
+      function renderBadges(badgeSet) {
+        if (!badgeSet.size) {
+          $("badges").innerHTML = `
+        <span class="empty">
+          No badge data has been recorded yet.
+          Keep rolling!
+        </span>
+      `;
+
+          return;
+        }
+
+        $("badges").innerHTML = [...badgeSet]
+          .map(
+            (badge) =>
+              `
+            <div class="badge">
+              ${escapeHTML(badge)}
+            </div>
+          `,
+          )
+          .join("");
+      }
+
+      /* =====================================================
+   GLOBAL RANK
+   ===================================================== */
+
+      async function calculateGlobalRank(userId) {
+        /*
+    Get the best roll from every player.
+
+    This works directly with the existing rolls
+    table and does not require another table.
+  */
+
+        const { data, error } = await supabaseClient
+
+          .from("rolls")
+
+          .select("player_id,one_in");
+
+        if (error) {
+          console.error("Rank error:", error);
+
+          $("globalRank").textContent = "—";
+
+          $("rankText").textContent = "Unable to calculate rank.";
+
+          return;
+        }
+
+        const bestByPlayer = new Map();
+
+        (data || []).forEach((row) => {
+          const current = bestByPlayer.get(row.player_id);
+
+          if (!current || Number(row.one_in) > Number(current)) {
+            bestByPlayer.set(row.player_id, Number(row.one_in));
+          }
+        });
+
+        const leaderboard = [...bestByPlayer.entries()].sort(
+          (a, b) => b[1] - a[1],
+        );
+
+        const rank = leaderboard.findIndex((x) => x[0] === userId) + 1;
+
+        const totalPlayers = leaderboard.length;
+
+        if (rank <= 0) {
+          $("globalRank").textContent = "—";
+
+          $("rankText").textContent =
+            "Roll something to enter the leaderboard.";
+
+          return;
+        }
+
+        $("globalRank").textContent = "#" + rank;
+
+        $("rankText").textContent = `${rank} of ${totalPlayers} player${
+          totalPlayers === 1 ? "" : "s"
+        }`;
+
+        const percentage =
+          totalPlayers > 1
+            ? Math.max(2, 100 - ((rank - 1) / (totalPlayers - 1)) * 100)
+            : 100;
+
+        $("rankProgress").style.width = percentage + "%";
+      }
+
+      /* =====================================================
+   CONNECTION STATUS
+   ===================================================== */
+
+      function setStatus(connected, text) {
+        const dot = $("statusDot");
+
+        const statusText = $("statusText");
+
+        if (connected) {
+          dot.classList.remove("off");
+        } else {
+          dot.classList.add("off");
+        }
+
+        statusText.textContent = text;
+      }
+
+      /* =====================================================
+   ESCAPE HTML
+   ===================================================== */
+
+      function escapeHTML(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+
+          .replaceAll("<", "&lt;")
+
+          .replaceAll(">", "&gt;")
+
+          .replaceAll('"', "&quot;")
+
+          .replaceAll("'", "&#039;");
+      }
+
+      /* =====================================================
+   EVENTS
+   ===================================================== */
+
+      $("loginBtn").addEventListener("click", login);
+
+      $("signupBtn").addEventListener("click", signup);
+
+      $("logoutBtn").addEventListener("click", logout);
+
+      $("refreshBtn").addEventListener("click", async () => {
+        const {
+          data: { user },
+        } = await supabaseClient.auth.getUser();
+
+        if (user) {
+          await loadStats(user);
+        }
+      });
+
+      $("saveProfileBtn").addEventListener("click", saveProfile);
+
+      /* =====================================================
+   AUTH STATE
+   ===================================================== */
+
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          await loadProfile(session.user);
+        } else {
+          $("profileScreen").classList.add("hidden");
+
+          $("authScreen").classList.remove("hidden");
+        }
+      });
+
+      /* =====================================================
+   INITIAL LOAD
+   ===================================================== */
+
+      (async () => {
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+
+        if (session?.user) {
+          await loadProfile(session.user);
+        }
+      })();
+    </script>
+  </body>
+</html>
