@@ -261,10 +261,15 @@ function analyze(chars) {
   const badges = [];
 
   const addBadge = (name, explanation, oneIn) => {
+    const baseOneIn = Math.max(1, Number(oneIn) || 1);
+
     badges.push({
       name,
       explanation,
-      oneIn,
+      // Kept for XP/display context. The roll rarity below is NOT
+      // calculated by multiplying these values together anymore.
+      oneIn: baseOneIn,
+      baseOneIn,
     });
   };
 
@@ -1065,26 +1070,57 @@ function analyze(chars) {
   badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
 
   /* ==========================================================
-     BADGE CHANCE
-     ========================================================== */
+     COMBINED BADGE RARITY
+     ==========================================================
 
-  let badgeChance = 1;
+     IMPORTANT: badge rarities describe individual events.
+     Multiplying them assumes every badge is independent, which
+     is false for patterns that naturally trigger each other.
 
-  for (const badge of badges) {
-    badgeChance *= Number(badge.oneIn);
+     Instead, the roll gets a single combined rarity based on the
+     rarity information carried by the badges that happened together.
+     The rarest badge establishes the floor; additional badges add
+     diminishing amounts of rarity rather than multiplying blindly.
 
-    if (badgeChance > 1e100) {
-      badgeChance = 1e100;
+     This makes combinations such as 777 + Triple Stack + Repeater
+     rare, but does not pretend they are three unrelated events.
+  ========================================================== */
 
-      break;
+  const combinedBadgeRarity = (list) => {
+    if (!list.length) return 1;
+
+    const values = list
+      .map((badge) => Math.max(1, Number(badge.baseOneIn ?? badge.oneIn) || 1))
+      .sort((a, b) => b - a);
+
+    // The rarest badge is already evidence for the whole roll.
+    // Each additional badge contributes only the square-root of
+    // its independent rarity, preventing correlated badges from
+    // exploding the result.
+    let result = values[0];
+
+    for (let i = 1; i < values.length; i++) {
+      result *= Math.sqrt(values[i]);
+
+      if (result >= 1e100) return 1e100;
     }
-  }
+
+    return Math.max(1, Math.min(1e100, Math.round(result)));
+  };
+
+  const badgeChance = combinedBadgeRarity(badges);
+
+  // Give every badge its own displayed rarity while keeping the
+  // roll's main 1-in-X value tied to the complete badge set.
+  badges.forEach((badge) => {
+    badge.oneIn = Math.max(1, Math.round(Number(badge.baseOneIn) || 1));
+  });
 
   const blanks = chars.filter((x) => x === "_").length;
 
   const blankMultiplier = Math.pow(10, blanks);
 
-  const totalChance = badgeChance * blankMultiplier;
+  const totalChance = Math.min(1e100, badgeChance * blankMultiplier);
 
   /* ==========================================================
      RARITY
