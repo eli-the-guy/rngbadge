@@ -266,8 +266,6 @@ function analyze(chars) {
     badges.push({
       name,
       explanation,
-      // Kept for XP/display context. The roll rarity below is NOT
-      // calculated by multiplying these values together anymore.
       oneIn: baseOneIn,
       baseOneIn,
     });
@@ -1070,20 +1068,26 @@ function analyze(chars) {
   badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
 
   /* ==========================================================
-     COMBINED BADGE RARITY
+     TRUE COMBINED BADGE RARITY
      ==========================================================
 
-     IMPORTANT: badge rarities describe individual events.
-     Multiplying them assumes every badge is independent, which
-     is false for patterns that naturally trigger each other.
+     The old system multiplied every badge's rarity as if all
+     badges were completely independent. That is not appropriate
+     for pattern badges because one roll can naturally trigger
+     several related badges at once.
 
-     Instead, the roll gets a single combined rarity based on the
-     rarity information carried by the badges that happened together.
-     The rarest badge establishes the floor; additional badges add
-     diminishing amounts of rarity rather than multiplying blindly.
+     We instead calculate the rarity of the COMPLETE badge set:
 
-     This makes combinations such as 777 + Triple Stack + Repeater
-     rare, but does not pretend they are three unrelated events.
+       1. The rarest badge supplies the base rarity.
+       2. Every additional badge makes that exact combination rarer.
+       3. Additional badges have diminishing influence so related
+          badges do not create absurd astronomical values.
+       4. The resulting value is used for BOTH the roll's 1-in-X
+          rarity and the badge popup's "together" chance.
+
+     This is deliberately based on the badges that actually
+     appeared together, rather than adding arbitrary rarity
+     bonuses after the fact.
   ========================================================== */
 
   const combinedBadgeRarity = (list) => {
@@ -1093,14 +1097,15 @@ function analyze(chars) {
       .map((badge) => Math.max(1, Number(badge.baseOneIn ?? badge.oneIn) || 1))
       .sort((a, b) => b - a);
 
-    // The rarest badge is already evidence for the whole roll.
-    // Each additional badge contributes only the square-root of
-    // its independent rarity, preventing correlated badges from
-    // exploding the result.
+    // Start with the rarest badge.
     let result = values[0];
 
+    // Each extra badge contributes according to its rarity, but
+    // with progressively smaller weight. This treats the badges
+    // as a combination instead of blindly multiplying them.
     for (let i = 1; i < values.length; i++) {
-      result *= Math.sqrt(values[i]);
+      const weight = 1 / Math.sqrt(i + 1);
+      result *= Math.pow(values[i], weight);
 
       if (result >= 1e100) return 1e100;
     }
@@ -1110,15 +1115,16 @@ function analyze(chars) {
 
   const badgeChance = combinedBadgeRarity(badges);
 
-  // Give every badge its own displayed rarity while keeping the
-  // roll's main 1-in-X value tied to the complete badge set.
+  // Every badge on this roll shares the rarity of the combination
+  // it belongs to. Keep baseOneIn so the calculation can still
+  // distinguish the individual badge's underlying rarity.
   badges.forEach((badge) => {
-    badge.oneIn = Math.max(1, Math.round(Number(badge.baseOneIn) || 1));
+    badge.combinedOneIn = badgeChance;
   });
 
-  const blanks = chars.filter((x) => x === "_").length;
+  const blanks = chars.filter((x) => x === "_");
 
-  const blankMultiplier = Math.pow(10, blanks);
+  const blankMultiplier = Math.pow(10, blanks.length);
 
   const totalChance = Math.min(1e100, badgeChance * blankMultiplier);
 
@@ -2034,7 +2040,7 @@ async function performRoll() {
                 onclick='showBadgeInfo(
                   ${JSON.stringify(b.name)},
                   ${JSON.stringify(b.explanation)},
-                  ${Number(b.oneIn)}
+                  ${Number(b.combinedOneIn ?? b.oneIn)}
                 )'
               >
 
@@ -2141,7 +2147,7 @@ async function performRoll() {
             onclick='showBadgeInfo(
               ${JSON.stringify(b.name)},
               ${JSON.stringify(b.explanation)},
-              ${Number(b.oneIn)}
+              ${Number(b.combinedOneIn ?? b.oneIn)}
             )'
           >
             ${escapeHTML(b.name)}
