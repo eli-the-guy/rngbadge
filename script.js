@@ -2032,6 +2032,7 @@ async function loadPersonalStats() {
   }
 
   const rows = data || [];
+  window.currentLeaderboardRows = rows;
 
   const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
 
@@ -2266,7 +2267,7 @@ async function loadLeaderboard() {
         <button
           class="globalRow leaderboardClickable"
           type="button"
-          onclick="showLeaderboardPlayer(${JSON.stringify(row).replace(/</g, "\u003c")})"
+          onclick="showLeaderboardPlayerByIndex(${index})"
           title="Click to view this roll's badges"
         >
 
@@ -2457,6 +2458,17 @@ function ensureLeaderboardBadgeModal() {
   document.body.appendChild(modal);
 }
 
+function showLeaderboardPlayerByIndex(index) {
+  const rows = Array.isArray(window.currentLeaderboardRows)
+    ? window.currentLeaderboardRows
+    : [];
+
+  const row = rows[index];
+  if (!row) return;
+
+  showLeaderboardPlayer(row);
+}
+
 function showLeaderboardPlayer(row) {
   ensureLeaderboardBadgeModal();
 
@@ -2486,6 +2498,12 @@ function showLeaderboardPlayer(row) {
 
   $("leaderboardBadgeModal").classList.add("open");
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeLeaderboardPlayer();
+  }
+});
 
 function closeLeaderboardPlayer() {
   const modal = $("leaderboardBadgeModal");
