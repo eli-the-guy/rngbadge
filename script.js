@@ -73,6 +73,289 @@ const references = {
   67: ["🔢 67", "A special 67 reference hidden inside the roll.", 25000],
 
   55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
+
+  1985: [
+    "🍄 Super Mario Bros.",
+    "The release year of the original Super Mario Bros. on the NES.",
+    90000,
+  ],
+  1986: [
+    "🗡️ The Legend of Zelda",
+    "A classic year for the original The Legend of Zelda.",
+    90000,
+  ],
+  1989: [
+    "🎮 Game Boy Era",
+    "The year Nintendo released the original Game Boy in Japan.",
+    75000,
+  ],
+  1991: [
+    "💨 Sonic 1991",
+    "The year Sonic the Hedgehog first sped onto the scene.",
+    85000,
+  ],
+  1993: ["👹 DOOM", "The iconic year the original DOOM was released.", 100000],
+  1994: [
+    "🪖 Warcraft / System Shock",
+    "1994 was a landmark year for PC gaming, including Warcraft and System Shock.",
+    90000,
+  ],
+  1996: [
+    "🦖 Quake / Pokémon",
+    "1996 was a huge year for gaming, including Quake and the original Pokémon releases.",
+    110000,
+  ],
+  1997: ["🚗 GTA", "The original Grand Theft Auto arrived in 1997.", 85000],
+  2002: [
+    "🔑 Kingdom Hearts",
+    "Kingdom Hearts released in 2002 and became a major action-RPG series.",
+    90000,
+  ],
+  2008: ["🧟 Left 4 Dead", "The original Left 4 Dead released in 2008.", 95000],
+  2014: [
+    "📹 Five Nights at Freddy's",
+    "The original Five Nights at Freddy's released in 2014.",
+    100000,
+  ],
+  2021: [
+    "🤝 It Takes Two",
+    "It Takes Two released in 2021 and won Game of the Year.",
+    100000,
+  ],
+  2024: [
+    "🤖 Astro Bot",
+    "Astro Bot released in 2024 and became a celebrated platforming adventure.",
+    90000,
+  ],
+  1998: [
+    "🔬 Half-Life",
+    "The year the original Half-Life changed first-person gaming.",
+    100000,
+  ],
+  1999: ["⚡ 1999 Gaming", "A classic late-90s gaming reference year.", 70000],
+  2000: [
+    "🕹️ Y2K Gaming",
+    "A round-number reference to the turn-of-the-millennium gaming era.",
+    60000,
+  ],
+  2004: [
+    "🪖 Halo 2",
+    "Halo 2 released in 2004 and became a landmark console shooter.",
+    100000,
+  ],
+  2005: [
+    "🧟 Resident Evil 4",
+    "A legendary survival-horror/action game released in 2005.",
+    95000,
+  ],
+  2006: ["🧱 Roblox Era", "Roblox was founded in 2006.", 90000],
+  2007: [
+    "🔵 Portal / TF2",
+    "2007 was stacked with gaming classics including Portal and Team Fortress 2.",
+    110000,
+  ],
+  2009: ["⛏️ Minecraft", "Minecraft first appeared publicly in 2009.", 120000],
+  2011: [
+    "🐉 Skyrim / Terraria",
+    "2011 gave us major gaming releases including Skyrim and Terraria.",
+    110000,
+  ],
+  2012: [
+    "💎 Borderlands 2",
+    "A major looter-shooter classic released in 2012.",
+    85000,
+  ],
+  2013: ["🚘 GTA V", "Grand Theft Auto V launched in 2013.", 120000],
+  2015: ["❤️ Undertale", "The indie RPG Undertale released in 2015.", 100000],
+  2016: ["🦾 Overwatch", "The original Overwatch released in 2016.", 95000],
+  2017: [
+    "⛏️ Fortnite / Hollow Knight",
+    "2017 was a huge year for gaming, including Fortnite and Hollow Knight.",
+    105000,
+  ],
+  2018: [
+    "🏔️ Celeste",
+    "The acclaimed precision-platformer Celeste released in 2018.",
+    90000,
+  ],
+  2020: [
+    "🚀 Among Us",
+    "Among Us became a massive gaming phenomenon in 2020.",
+    90000,
+  ],
+  2022: [
+    "💍 Elden Ring",
+    "Elden Ring released in 2022 and became a landmark action RPG.",
+    110000,
+  ],
+  2023: [
+    "⭐ Baldur's Gate 3",
+    "Baldur's Gate 3 released in 2023 and became a major RPG hit.",
+    100000,
+  ],
+  2077: [
+    "🌃 Night City",
+    "Cyberpunk 2077 reference: 2077 is the game's futuristic setting year.",
+    150000,
+  ],
+  64: ["🎮 Nintendo 64", "64 is a classic Nintendo console reference.", 50000],
+  360: ["🟢 Xbox 360", "360 is an iconic Xbox console reference.", 45000],
+  720: [
+    "🎮 720",
+    "A gaming-number reference associated with 720-degree spins and classic trick shots.",
+    50000,
+  ],
+  1080: [
+    "🖥️ 1080p Gaming",
+    "1080 is a classic gaming resolution reference.",
+    35000,
+  ],
+  9001: [
+    "💥 OVER 9000",
+    "A legendary internet and gaming-culture number reference.",
+    70000,
+  ],
+  "0451": [
+    "🔑 0451",
+    "A famous immersive-sim door-code reference used across games such as System Shock and Deus Ex.",
+    120000,
+  ],
+  1337: ["💻 LEET", "Classic internet and gaming slang for 'leet'.", 120000],
+
+  /* Minecraft / gaming easter eggs */
+  303: [
+    "👁️ Entity 303",
+    "A famous Minecraft creepypasta-style myth about the mysterious Entity 303.",
+    180000,
+  ],
+  418: [
+    "🎵 C418",
+    "Reference to C418, the musician strongly associated with Minecraft's iconic soundtrack.",
+    140000,
+  ],
+  422: [
+    "⚠️ Minecraft 422",
+    "A reference to the infamous Minecraft Error 422 creepypasta concept.",
+    200000,
+  ],
+  11: [
+    "💿 Disc 11",
+    "A mysterious Minecraft music-disc reference known for its unsettling audio.",
+    160000,
+  ],
+  13: ["💿 Disc 13", "One of Minecraft's original music-disc numbers.", 120000],
+  2010: [
+    "🧱 Minecraft Alpha",
+    "Minecraft entered its Alpha era in 2010.",
+    110000,
+  ],
+  2011: ["🐉 Minecraft 1.0", "Minecraft officially released in 2011.", 130000],
+  12550820: [
+    "🌌 Far Lands",
+    "A reference to Minecraft's legendary Far Lands distance.",
+    5000000,
+  ],
+  3030: [
+    "👁️ Entity 303 Echo",
+    "A playful extended Entity 303 number reference.",
+    250000,
+  ],
+  404: [
+    "🌐 Missing Chunk",
+    "A Minecraft-flavored twist on the classic 404 missing-page number.",
+    90000,
+  ],
+  64: [
+    "🧱 64 Stack",
+    "64 is the classic Minecraft stack size for many blocks and items.",
+    50000,
+  ],
+  16: [
+    "🧱 16 Stack",
+    "16 is a classic Minecraft stack size for several items.",
+    35000,
+  ],
+  32: [
+    "🧱 32 Stack",
+    "32 appears as a familiar stack quantity in Minecraft history.",
+    30000,
+  ],
+  256: [
+    "⬆️ Build Height 256",
+    "256 was the classic maximum build height in older Minecraft versions.",
+    90000,
+  ],
+  319: [
+    "🪨 Minecraft Height",
+    "319 is associated with modern Minecraft's expanded build range.",
+    80000,
+  ],
+
+  /* More gaming easter eggs */
+  1986: [
+    "🗡️ Zelda 1986",
+    "The original The Legend of Zelda launched in 1986.",
+    90000,
+  ],
+  1994: [
+    "⚔️ Warcraft 1994",
+    "A classic PC-gaming year associated with Warcraft and other landmarks.",
+    90000,
+  ],
+  1996: [
+    "⚡ Pokémon 1996",
+    "The original Pokémon games launched in Japan in 1996.",
+    110000,
+  ],
+  1998: [
+    "🔬 Half-Life 1998",
+    "Half-Life released in 1998 and became a landmark first-person game.",
+    100000,
+  ],
+  2004: ["🪖 Halo 2", "Halo 2 released in 2004.", 100000],
+  2007: [
+    "🔵 Portal Era",
+    "2007 was the release year of Portal and Team Fortress 2.",
+    110000,
+  ],
+  2012: ["💎 Borderlands 2", "Borderlands 2 released in 2012.", 85000],
+  2015: ["❤️ Undertale", "Undertale released in 2015.", 100000],
+  2017: [
+    "⛏️ Fortnite / Hollow Knight",
+    "2017 was a huge year for gaming, including Fortnite and Hollow Knight.",
+    105000,
+  ],
+  2018: ["🏔️ Celeste", "Celeste released in 2018.", 90000],
+  2020: [
+    "🚀 Among Us",
+    "Among Us became a huge gaming phenomenon in 2020.",
+    90000,
+  ],
+  2022: ["💍 Elden Ring", "Elden Ring released in 2022.", 110000],
+  2023: ["⭐ Baldur's Gate 3", "Baldur's Gate 3 released in 2023.", 100000],
+  1987: [
+    "🦇 Castlevania",
+    "A classic Castlevania-era gaming reference.",
+    80000,
+  ],
+  1993: ["👹 DOOM", "The original DOOM released in 1993.", 100000],
+  1997: ["🚗 GTA", "The original Grand Theft Auto released in 1997.", 85000],
+  1999: ["🌀 Sonic Adventure", "A late-90s Sonic gaming reference.", 80000],
+  2001: [
+    "🧢 Halo / Xbox Era",
+    "2001 was the launch year of the original Halo on Xbox.",
+    100000,
+  ],
+  2006: ["🧱 Roblox Era", "Roblox was founded in 2006.", 90000],
+  2008: ["🧟 Left 4 Dead", "Left 4 Dead released in 2008.", 95000],
+  2013: ["🚘 GTA V", "Grand Theft Auto V launched in 2013.", 120000],
+  2016: ["🦾 Overwatch", "Overwatch released in 2016.", 95000],
+  2019: [
+    "🔥 Classic 2019",
+    "A general late-2010s gaming reference year.",
+    60000,
+  ],
+  2024: ["🤖 Astro Bot", "Astro Bot released in 2024.", 90000],
 };
 
 /* ============================================================
@@ -261,15 +544,10 @@ function analyze(chars) {
   const badges = [];
 
   const addBadge = (name, explanation, oneIn) => {
-    const baseOneIn = Math.max(1, Number(oneIn) || 1);
-
     badges.push({
       name,
       explanation,
-      // Kept for XP/display context. The roll rarity below is NOT
-      // calculated by multiplying these values together anymore.
-      oneIn: baseOneIn,
-      baseOneIn,
+      oneIn,
     });
   };
 
@@ -1070,43 +1348,26 @@ function analyze(chars) {
   badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
 
   /* ==========================================================
-     COMBINED BADGE RARITY
-     ==========================================================
+     BADGE CHANCE
+     ========================================================== */
 
-     Badge values describe individual events. Simply multiplying
-     them assumes every badge is independent, which is not true
-     for overlapping pattern badges.
+  let badgeChance = 1;
 
-     The rarest badge establishes the rarity floor. Additional
-     badges contribute diminishing rarity, so a combination becomes
-     rarer without treating related badges as unrelated events.
-  ========================================================== */
+  for (const badge of badges) {
+    badgeChance *= Number(badge.oneIn);
 
-  const combinedBadgeRarity = (list) => {
-    if (!list.length) return 1;
+    if (badgeChance > 1e100) {
+      badgeChance = 1e100;
 
-    const values = list
-      .map((badge) => Math.max(1, Number(badge.baseOneIn ?? badge.oneIn) || 1))
-      .sort((a, b) => b - a);
-
-    let result = values[0];
-
-    for (let i = 1; i < values.length; i++) {
-      result *= Math.sqrt(values[i]);
-
-      if (result >= 1e100) return 1e100;
+      break;
     }
-
-    return Math.max(1, Math.min(1e100, Math.round(result)));
-  };
-
-  const badgeChance = combinedBadgeRarity(badges);
+  }
 
   const blanks = chars.filter((x) => x === "_").length;
 
   const blankMultiplier = Math.pow(10, blanks);
 
-  const totalChance = Math.min(1e100, badgeChance * blankMultiplier);
+  const totalChance = badgeChance * blankMultiplier;
 
   /* ==========================================================
      RARITY
@@ -1735,7 +1996,9 @@ async function saveCloudRoll(result) {
 async function loadLeaderboard() {
   const { data, error } = await supabaseClient
     .from("rolls")
-    .select("id,roll,rarity,one_in,shown,xp,player_id,player_name,created_at")
+    .select(
+      "id,roll,rarity,one_in,shown,xp,player_id,player_name,badges,created_at",
+    )
     .order("one_in", {
       ascending: false,
     })
@@ -1799,7 +2062,12 @@ async function loadLeaderboard() {
     .map(
       (row, index) => `
 
-        <div class="globalRow">
+        <button
+          class="globalRow leaderboardClickable"
+          type="button"
+          onclick="showLeaderboardPlayer(${JSON.stringify(row).replace(/</g, "\u003c")})"
+          title="Click to view this roll's badges"
+        >
 
           <div class="rank">
             #${index + 1}
@@ -1835,14 +2103,200 @@ async function loadLeaderboard() {
               ${fmt(row.one_in)}
             </div>
 
+            <div class="small leaderboardBadgeHint">
+              ${Array.isArray(row.badges) && row.badges.length ? `🏅 ${row.badges.length} badge${row.badges.length === 1 ? "" : "s"}` : "No badges"}
+            </div>
+
           </div>
 
-        </div>
+        </button>
 
       `,
     )
     .join("");
 }
+
+/* ============================================================
+   LEADERBOARD BADGE VIEWER
+   ============================================================ */
+
+function ensureLeaderboardBadgeModal() {
+  if ($("leaderboardBadgeModal")) return;
+
+  const style = document.createElement("style");
+  style.id = "leaderboardBadgeViewerStyles";
+  style.textContent = `
+    .leaderboardClickable {
+      width: 100%;
+      border: 0;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .16s ease, filter .16s ease, background .16s ease;
+    }
+
+    .leaderboardClickable:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .leaderboardClickable:focus-visible {
+      outline: 2px solid #8ee6ad;
+      outline-offset: 2px;
+    }
+
+    .leaderboardBadgeHint {
+      color: #8ee6ad;
+      margin-top: 3px;
+    }
+
+    .leaderboardBadgeModal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(10px);
+    }
+
+    .leaderboardBadgeModal.open {
+      display: flex;
+    }
+
+    .leaderboardBadgeCard {
+      width: min(620px, 100%);
+      max-height: min(760px, 90vh);
+      overflow: auto;
+      padding: 26px;
+      border-radius: 22px;
+      background: rgba(19,24,35,.96);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    }
+
+    .leaderboardBadgeHeader {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .leaderboardBadgeTitle {
+      font-size: 25px;
+      font-weight: 850;
+    }
+
+    .leaderboardBadgeSubtitle {
+      margin-top: 5px;
+      color: #aab5ca;
+      font-size: 14px;
+    }
+
+    .leaderboardBadgeClose {
+      border: 0;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .leaderboardBadgeList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .leaderboardBadgeItem {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .leaderboardBadgeItemName {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .leaderboardBadgeEmpty {
+      color: #aab5ca;
+      padding: 20px;
+      text-align: center;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const modal = document.createElement("div");
+  modal.id = "leaderboardBadgeModal";
+  modal.className = "leaderboardBadgeModal";
+  modal.innerHTML = `
+    <div class="leaderboardBadgeCard" role="dialog" aria-modal="true" aria-labelledby="leaderboardBadgeTitle">
+      <div class="leaderboardBadgeHeader">
+        <div>
+          <div id="leaderboardBadgeTitle" class="leaderboardBadgeTitle">Player Badges</div>
+          <div id="leaderboardBadgeSubtitle" class="leaderboardBadgeSubtitle"></div>
+        </div>
+        <button class="leaderboardBadgeClose" type="button" aria-label="Close" onclick="closeLeaderboardPlayer()">×</button>
+      </div>
+      <div id="leaderboardBadgeList" class="leaderboardBadgeList"></div>
+    </div>
+  `;
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeLeaderboardPlayer();
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showLeaderboardPlayer(row) {
+  ensureLeaderboardBadgeModal();
+
+  const badges = Array.isArray(row?.badges) ? row.badges : [];
+  const name = row?.player_name || "Player";
+
+  $("leaderboardBadgeTitle").textContent = `${name}'s Badges`;
+  $("leaderboardBadgeSubtitle").textContent =
+    `${row?.roll || "—"} • ${row?.rarity || "COMMON"} • ${fmt(row?.one_in || 1)}`;
+
+  const list = $("leaderboardBadgeList");
+
+  if (!badges.length) {
+    list.innerHTML =
+      '<div class="leaderboardBadgeEmpty">This roll had no badges.</div>';
+  } else {
+    list.innerHTML = badges
+      .map(
+        (badge, index) => `
+        <div class="leaderboardBadgeItem">
+          <div class="leaderboardBadgeItemName">🏅 ${index + 1}. ${escapeHTML(badge)}</div>
+        </div>
+      `,
+      )
+      .join("");
+  }
+
+  $("leaderboardBadgeModal").classList.add("open");
+}
+
+function closeLeaderboardPlayer() {
+  const modal = $("leaderboardBadgeModal");
+  if (modal) modal.classList.remove("open");
+}
+
+window.showLeaderboardPlayer = showLeaderboardPlayer;
+window.closeLeaderboardPlayer = closeLeaderboardPlayer;
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeLeaderboardPlayer();
+});
 
 /* ============================================================
    REALTIME
