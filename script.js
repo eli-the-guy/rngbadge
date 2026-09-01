@@ -1073,17 +1073,13 @@ function analyze(chars) {
      COMBINED BADGE RARITY
      ==========================================================
 
-     IMPORTANT: badge rarities describe individual events.
-     Multiplying them assumes every badge is independent, which
-     is false for patterns that naturally trigger each other.
+     Badge values describe individual events. Simply multiplying
+     them assumes every badge is independent, which is not true
+     for overlapping pattern badges.
 
-     Instead, the roll gets a single combined rarity based on the
-     rarity information carried by the badges that happened together.
-     The rarest badge establishes the floor; additional badges add
-     diminishing amounts of rarity rather than multiplying blindly.
-
-     This makes combinations such as 777 + Triple Stack + Repeater
-     rare, but does not pretend they are three unrelated events.
+     The rarest badge establishes the rarity floor. Additional
+     badges contribute diminishing rarity, so a combination becomes
+     rarer without treating related badges as unrelated events.
   ========================================================== */
 
   const combinedBadgeRarity = (list) => {
@@ -1093,10 +1089,6 @@ function analyze(chars) {
       .map((badge) => Math.max(1, Number(badge.baseOneIn ?? badge.oneIn) || 1))
       .sort((a, b) => b - a);
 
-    // The rarest badge is already evidence for the whole roll.
-    // Each additional badge contributes only the square-root of
-    // its independent rarity, preventing correlated badges from
-    // exploding the result.
     let result = values[0];
 
     for (let i = 1; i < values.length; i++) {
@@ -1109,12 +1101,6 @@ function analyze(chars) {
   };
 
   const badgeChance = combinedBadgeRarity(badges);
-
-  // Give every badge its own displayed rarity while keeping the
-  // roll's main 1-in-X value tied to the complete badge set.
-  badges.forEach((badge) => {
-    badge.oneIn = Math.max(1, Math.round(Number(badge.baseOneIn) || 1));
-  });
 
   const blanks = chars.filter((x) => x === "_").length;
 
