@@ -222,6 +222,151 @@ const references = {
   ],
   1337: ["💻 LEET", "Classic internet and gaming slang for 'leet'.", 120000],
 
+  /* Internet / meme references */
+  21: [
+    "🔢 9 + 10 = 21",
+    "A classic internet meme based on the famous 9 + 10 joke.",
+    60000,
+  ],
+  42: [
+    "🌌 The Answer",
+    "The famous answer to life, the universe, and everything.",
+    70000,
+  ],
+  69: ["😎 Nice", "A classic internet-number meme/reference.", 40000],
+  420: ["🌿 420", "A widely recognized internet number meme/reference.", 80000],
+  1337: ["💻 LEET", "Classic internet and gaming slang for 'leet'.", 120000],
+  9001: [
+    "💥 OVER 9000",
+    "A legendary internet meme reference popularized by Dragon Ball Z.",
+    70000,
+  ],
+  69420: [
+    "🔥 69,420",
+    "A classic internet meme combination of two famous meme numbers.",
+    250000,
+  ],
+  42069: [
+    "🌀 42069",
+    "A chaotic combination of two classic internet meme numbers.",
+    250000,
+  ],
+  123456: [
+    "🔢 Password Meme",
+    "The famous obvious-number-sequence joke used for hilariously weak passwords.",
+    100000,
+  ],
+  111111: [
+    "📢 SIX ONES",
+    "A perfectly repeated number that became a familiar internet-style pattern.",
+    90000,
+  ],
+  222222: [
+    "✌️ DOUBLE TWOS",
+    "Six identical 2s — an absurdly clean repeated-number pattern.",
+    110000,
+  ],
+  333333: [
+    "3️⃣ TRIPLE THREES",
+    "Six 3s in a row — maximum repetition energy.",
+    120000,
+  ],
+  444444: [
+    "4️⃣ FOUR FOUR FOUR",
+    "Six 4s in a row — an ultra-clean repeated sequence.",
+    120000,
+  ],
+  555555: [
+    "5️⃣ FIVE FIVE FIVE",
+    "Six 5s in a row — a classic repeated-digit flex.",
+    120000,
+  ],
+  666666: [
+    "😈 SIX SIX SIX",
+    "Six 6s — an exaggerated version of the famous 666 reference.",
+    180000,
+  ],
+  777777: [
+    "🎰 ULTRA LUCKY 7s",
+    "Six 7s in a row — a ridiculous jackpot-style pattern.",
+    220000,
+  ],
+  888888: [
+    "♾️ INFINITE EIGHTS",
+    "Six 8s — an extremely clean repeating pattern.",
+    160000,
+  ],
+  999999: [
+    "📈 MAX NINES",
+    "Six 9s — the digit maximum repeated across the entire roll.",
+    160000,
+  ],
+  123456789: [
+    "📈 The Classic Climb",
+    "The familiar 1-through-9 sequence seen everywhere online.",
+    350000,
+  ],
+  987654321: [
+    "📉 The Reverse Climb",
+    "The 9-through-1 reverse of the classic counting sequence.",
+    350000,
+  ],
+  314159: [
+    "🥧 Pi Digits",
+    "A longer recognizable sequence from the digits of pi.",
+    300000,
+  ],
+  271828: [
+    "📐 Euler's Number",
+    "A recognizable sequence from the digits of e.",
+    300000,
+  ],
+  161803: [
+    "🌀 Golden Ratio",
+    "A recognizable sequence from the digits of the golden ratio.",
+    300000,
+  ],
+  101010: [
+    "💾 Binary Vibes",
+    "A repeating 1010 pattern that looks like a tiny binary joke.",
+    100000,
+  ],
+  010101: [
+    "💾 Reverse Binary Vibes",
+    "A repeating 0101 pattern with unmistakable binary aesthetics.",
+    120000,
+  ],
+  2001: [
+    "🚀 Space Meme",
+    "A recognizable science-fiction number reference.",
+    90000,
+  ],
+  1984: [
+    "📖 1984",
+    "A famous cultural reference and frequent internet meme number.",
+    90000,
+  ],
+  2012: [
+    "🌎 2012",
+    "The famous 'end of the world' year that became an enduring meme.",
+    80000,
+  ],
+  2016: [
+    "🦍 Harambe Era",
+    "A reference to the internet culture surrounding 2016.",
+    100000,
+  ],
+  2020: [
+    "🦠 The Year 2020",
+    "A hugely recognizable internet-culture reference to the chaotic year 2020.",
+    100000,
+  ],
+  404: [
+    "🌐 404",
+    "The classic 'not found' internet error turned into a meme.",
+    90000,
+  ],
+
   /* Minecraft / gaming easter eggs */
   303: [
     "👁️ Entity 303",
