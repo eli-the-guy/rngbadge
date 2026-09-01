@@ -557,6 +557,9 @@ function better(a, b) {
 
 function rarityClass(rarity) {
   const classes = {
+    NOVICE: "rarity-novice",
+    PLAIN: "rarity-plain",
+    BASIC: "rarity-basic",
     COMMON: "rarity-common",
     UNCOMMON: "rarity-uncommon",
     RARE: "rarity-rare",
@@ -565,6 +568,12 @@ function rarityClass(rarity) {
     MYTHIC: "rarity-mythic",
     DIVINE: "rarity-divine",
     TRANSCENDENT: "rarity-transcendent",
+    CELESTIAL: "rarity-celestial",
+    ASCENDED: "rarity-ascended",
+    OMNIPOTENT: "rarity-omnipotent",
+    INFINITE: "rarity-infinite",
+    BEYOND: "rarity-beyond",
+    ABSOLUTE: "rarity-absolute",
     "???": "rarity-unknown",
   };
 
@@ -575,6 +584,9 @@ function applyRarityColor(element, rarity) {
   if (!element) return;
 
   element.classList.remove(
+    "rarity-novice",
+    "rarity-plain",
+    "rarity-basic",
     "rarity-common",
     "rarity-uncommon",
     "rarity-rare",
@@ -583,6 +595,12 @@ function applyRarityColor(element, rarity) {
     "rarity-mythic",
     "rarity-divine",
     "rarity-transcendent",
+    "rarity-celestial",
+    "rarity-ascended",
+    "rarity-omnipotent",
+    "rarity-infinite",
+    "rarity-beyond",
+    "rarity-absolute",
     "rarity-unknown",
   );
 
@@ -1518,10 +1536,23 @@ function analyze(chars) {
      RARITY
      ========================================================== */
 
-  let rarity = "COMMON";
+  let rarity = "NOVICE";
+
+  // More granular tiers below the old COMMON range.
+  if (totalChance >= 2) {
+    rarity = "PLAIN";
+  }
+
+  if (totalChance >= 5) {
+    rarity = "BASIC";
+  }
+
+  if (totalChance >= 10) {
+    rarity = "COMMON";
+  }
 
   if (badges.length || blanks >= 1) {
-    rarity = "UNCOMMON";
+    rarity = totalChance >= 10 ? "UNCOMMON" : rarity;
   }
 
   if (totalChance >= 100) {
@@ -1548,7 +1579,32 @@ function analyze(chars) {
     rarity = "TRANSCENDENT";
   }
 
+  // New ultra-high tiers.
   if (totalChance >= 1000000000000) {
+    rarity = "CELESTIAL";
+  }
+
+  if (totalChance >= 100000000000000) {
+    rarity = "ASCENDED";
+  }
+
+  if (totalChance >= 10000000000000000) {
+    rarity = "OMNIPOTENT";
+  }
+
+  if (totalChance >= 1000000000000000000) {
+    rarity = "INFINITE";
+  }
+
+  if (totalChance >= 100000000000000000000) {
+    rarity = "BEYOND";
+  }
+
+  if (totalChance >= 10000000000000000000000) {
+    rarity = "ABSOLUTE";
+  }
+
+  if (totalChance >= 1000000000000000000000000) {
     rarity = "???";
   }
 
