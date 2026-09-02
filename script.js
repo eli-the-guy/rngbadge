@@ -987,21 +987,30 @@ function ensureShopUI() {
 
   const nav = document.createElement("div");
   nav.id = "digitRollNav";
-  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button>`;
+  nav.innerHTML = `
+    <button id="drShopBtn" class="drNavBtn" type="button">🛒 Shop</button>
+    <button id="drBadgesBtn" class="drNavBtn" type="button">🏅 Badges</button>
+    <button id="drGiftBtn" class="drNavBtn" type="button">🎁 Gift XP</button>`;
   document.body.appendChild(nav);
+  // Use real event listeners instead of inline onclick handlers so the
+  // navigation works even when the page has a strict Content-Security-Policy.
+  $("drShopBtn").addEventListener("click", openDigitRollShop);
+  $("drBadgesBtn").addEventListener("click", openDigitRollBadges);
+  $("drGiftBtn").addEventListener("click", giftDigitRollXP);
 
   const overlay = document.createElement("div");
   overlay.id = "digitRollShopOverlay";
   overlay.className = "drOverlay";
   overlay.innerHTML = `
     <div class="drPage" role="dialog" aria-modal="true">
-      <div class="drPageHead"><div id="drPageTitle" class="drPageTitle">Shop</div><button class="drClose" onclick="closeDigitRollPages()">×</button></div>
+      <div class="drPageHead"><div id="drPageTitle" class="drPageTitle">Shop</div><button id="drCloseBtn" class="drClose" type="button">×</button></div>
       <div id="drPageContent"></div>
     </div>`;
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeDigitRollPages();
   });
   document.body.appendChild(overlay);
+  $("drCloseBtn").addEventListener("click", closeDigitRollPages);
   updateShopUI();
 }
 
