@@ -541,6 +541,13 @@ let rollLengthLevel = Number(
 );
 const BASE_ROLL_LENGTH = 5;
 const MAX_ROLL_LENGTH = 10;
+const STARTING_XP_CAP = 10000;
+const MAX_XP_CAP = 100000;
+const XP_CAP_STEP = 10000;
+let xpCapLevel = Math.max(
+  0,
+  Math.min(9, Number(localStorage.getItem("digitRollXPCapLevel") || 0)),
+);
 
 const ROLL_LENGTH_ITEMS = [
   { level: 1, cost: 1000, name: "🔢 Number Upgrade I" },
@@ -806,7 +813,7 @@ function getEarnedXP() {
 
 function ensureXPBalance() {
   if (!Number.isFinite(xpBalance)) {
-    xpBalance = Math.max(0, getEarnedXP() - xpSpent);
+    xpBalance = clampXP(getEarnedXP() - xpSpent);
     localStorage.setItem("digitRollXPBalance", String(xpBalance));
   }
   return xpBalance;
@@ -826,7 +833,7 @@ async function loadXPWallet() {
       .maybeSingle();
     if (error) throw error;
     if (data) {
-      xpBalance = Math.max(0, Number(data.xp_balance) || 0);
+      xpBalance = clampXP(Number(data.xp_balance) || 0);
       localStorage.setItem("digitRollXPBalance", String(xpBalance));
       return true;
     }
@@ -1034,7 +1041,7 @@ function updateShopUI() {
   const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
   const gloveBonus = glove ? glove.bonus : 0;
 
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${getMaxXPBalance().toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
     <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to 10.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
     <div class="drShopSection"><h2>🔢 Number Charms</h2><p style="color:#aab5ca">Number Charms are <b>one-time-use</b>. Each one guarantees one copy of its digit on your next roll, then disappears. You can queue up to your current roll length in total. Digits that appear more often across badge references cost more XP.</p><div class="drShopGrid">${getNumberCharmHTML(balance)}</div></div>
     <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
@@ -1050,7 +1057,45 @@ function updateShopUI() {
         const next = item.level === luckyGlovesLevel + 1;
         return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyDigitRollGloves(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
       },
+    ).join("")}</div></div>
+    <div class="drShopSection"><h2>📈 XP Rebirth</h2><p style="color:#aab5ca">Your current XP Rebirth cap is <b>${getMaxXPBalance().toLocaleString()} XP</b>. Each Rebirth raises your maximum XP balance by 10,000, up to 100,000. <b>Roll XP is a separate upgrade system.</b></p><div class="drShopGrid">${Array.from(
+      { length: 9 },
+      (_, i) => {
+        const level = i + 1;
+        const newCap = STARTING_XP_CAP + level * XP_CAP_STEP;
+        const cost = STARTING_XP_CAP + i * XP_CAP_STEP;
+        const owned = xpCapLevel >= level;
+        const next = level === xpCapLevel + 1;
+        const maxed = getMaxXPBalance() >= MAX_XP_CAP;
+        const affordable = balance >= cost;
+        return `<div class="drShopItem"><h3 style="color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,.45)">👑 XP Rebirth ${level}</h3><p>Raises your XP balance cap to <b style="color:#ffd700">${newCap.toLocaleString()} XP</b>.</p><p>Cost: <b style="color:#ffd700">${cost.toLocaleString()} XP</b> — exactly your current maximum XP balance.</p><button class="drBuy" ${owned || !next || !affordable || maxed ? "disabled" : ""} onclick="buyXPCapUpgrade(${level},${cost})" style="border-color:#ffd700;color:#ffd700;box-shadow:0 0 14px rgba(255,215,0,.18)">${owned ? "✓ Owned" : maxed ? "✓ Maximum Reached" : !next ? "Locked" : affordable ? `Buy for ${cost.toLocaleString()} XP` : "Not enough XP"}</button></div>`;
+      },
     ).join("")}</div></div>`;
+}
+
+function buyXPCapUpgrade(level, cost) {
+  level = Number(level);
+  cost = Number(cost);
+  if (!Number.isInteger(level) || level !== xpCapLevel + 1) return;
+  if (getMaxXPBalance() >= MAX_XP_CAP) {
+    toast("Your XP cap is already 100,000.");
+    return;
+  }
+  const expectedCost = getMaxXPBalance();
+  if (cost !== expectedCost) return;
+  if (getXPBalance() < expectedCost) {
+    toast(`You need ${expectedCost.toLocaleString()} XP to buy this upgrade.`);
+    return;
+  }
+  xpBalance = clampXP(getXPBalance() - expectedCost);
+  xpSpent += expectedCost;
+  xpCapLevel = Math.min(9, xpCapLevel + 1);
+  saveXPCapState();
+  saveShopState();
+  toast(
+    `👑 XP Rebirth complete! Your XP cap is now ${getMaxXPBalance().toLocaleString()} XP!`,
+  );
+  updateShopUI();
 }
 
 function buyNumberCharm(digit, cost) {
@@ -1162,6 +1207,7 @@ window.buyDigitRollCharm = buyDigitRollCharm;
 window.buyDigitRollGloves = buyDigitRollGloves;
 window.buyRollLengthUpgrade = buyRollLengthUpgrade;
 window.buyNumberCharm = buyNumberCharm;
+window.buyXPCapUpgrade = buyXPCapUpgrade;
 window.giftDigitRollXP = giftDigitRollXP;
 
 function toast(message) {
@@ -2301,10 +2347,7 @@ function analyze(chars) {
      giving dramatically better rewards for extremely rare rolls.
      ========================================================== */
   const rarityBase = Math.max(1, Number(totalChance) || 1);
-  const xp = Math.min(
-    10000,
-    Math.max(1, Math.round(5 * Math.sqrt(Math.max(1, totalChance)))),
-  );
+  const xp = Math.max(5, Math.round(5 * Math.sqrt(rarityBase)));
 
   return {
     badges,
@@ -2721,7 +2764,7 @@ async function loadPersonalStats() {
   const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
 
   if (!Number.isFinite(xpBalance)) {
-    xpBalance = Math.max(0, totalXP - xpSpent);
+    xpBalance = clampXP(totalXP - xpSpent);
     localStorage.setItem("digitRollXPBalance", String(xpBalance));
   }
 
@@ -3345,7 +3388,7 @@ async function performRoll() {
   const usedCharmBonus = consumeCharm();
   const usedNumberCharms = consumeNumberCharms();
   if (usedCharmBonus) saveShopState();
-  xpBalance = getXPBalance() + Number(analysis.xp || 0);
+  xpBalance = clampXP(getXPBalance() + Number(analysis.xp || 0));
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
   await syncXPWallet();
 
