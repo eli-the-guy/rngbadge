@@ -2301,7 +2301,10 @@ function analyze(chars) {
      giving dramatically better rewards for extremely rare rolls.
      ========================================================== */
   const rarityBase = Math.max(1, Number(totalChance) || 1);
-  const xp = Math.max(5, Math.round(5 * Math.sqrt(rarityBase)));
+  const xp = Math.min(
+    100000,
+    Math.max(1, Math.round(5 * Math.sqrt(Math.max(1, totalChance)))),
+  );
 
   return {
     badges,
