@@ -521,24 +521,36 @@ let realtimeChannel = null;
    SHOP / BADGE COLLECTION
    ============================================================ */
 
-let shopLuckLevel = Number(localStorage.getItem("digitRollLuckLevel") || 0);
+let charmBonus = Number(localStorage.getItem("digitRollCharmBonus") || 0);
+let luckyGlovesLevel = Number(
+  localStorage.getItem("digitRollLuckyGlovesLevel") || 0,
+);
 let xpSpent = Number(localStorage.getItem("digitRollXPSpent") || 0);
 let xpBalance =
   localStorage.getItem("digitRollXPBalance") !== null
     ? Number(localStorage.getItem("digitRollXPBalance"))
     : null;
 
-const LUCK_SHOP_ITEMS = [
+const LUCK_CHARM_ITEMS = [
   { level: 1, cost: 250, bonus: 1, name: "🍀 Lucky Charm I" },
-  { level: 2, cost: 750, bonus: 1, name: "🍀 Lucky Charm II" },
-  { level: 3, cost: 2000, bonus: 1, name: "✨ Lucky Charm III" },
-  { level: 4, cost: 5000, bonus: 1, name: "✨ Lucky Charm IV" },
-  { level: 5, cost: 12000, bonus: 1, name: "💎 Lucky Charm V" },
-  { level: 6, cost: 30000, bonus: 1, name: "💎 Lucky Charm VI" },
-  { level: 7, cost: 75000, bonus: 1, name: "🌟 Lucky Charm VII" },
-  { level: 8, cost: 200000, bonus: 1, name: "🌟 Lucky Charm VIII" },
-  { level: 9, cost: 500000, bonus: 1, name: "👑 Lucky Charm IX" },
-  { level: 10, cost: 1500000, bonus: 1, name: "👑 Lucky Charm X" },
+  { level: 2, cost: 1000, bonus: 2, name: "🍀 Lucky Charm II" },
+  { level: 3, cost: 5000, bonus: 3, name: "✨ Lucky Charm III" },
+  { level: 4, cost: 25000, bonus: 4, name: "✨ Lucky Charm IV" },
+  { level: 5, cost: 100000, bonus: 5, name: "💎 Lucky Charm V" },
+  { level: 6, cost: 500000, bonus: 6, name: "💎 Lucky Charm VI" },
+  { level: 7, cost: 2500000, bonus: 7, name: "🌟 Lucky Charm VII" },
+  { level: 8, cost: 10000000, bonus: 8, name: "🌟 Lucky Charm VIII" },
+  { level: 9, cost: 50000000, bonus: 9, name: "👑 Lucky Charm IX" },
+  { level: 10, cost: 250000000, bonus: 10, name: "👑 Lucky Charm X" },
+];
+
+const LUCKY_GLOVE_ITEMS = [
+  { level: 1, cost: 5000000, bonus: 1, name: "🧤 Lucky Gloves I" },
+  { level: 2, cost: 25000000, bonus: 2, name: "🧤 Lucky Gloves II" },
+  { level: 3, cost: 100000000, bonus: 3, name: "🧤 Lucky Gloves III" },
+  { level: 4, cost: 500000000, bonus: 4, name: "🧤 Lucky Gloves IV" },
+  { level: 5, cost: 2500000000, bonus: 5, name: "🧤 Lucky Gloves V" },
+  { level: 6, cost: 10000000000, bonus: 6, name: "🧤 Lucky Gloves VI" },
 ];
 
 const staticBadgeCatalog = {};
@@ -716,7 +728,8 @@ function getXPBalance() {
 }
 
 function saveShopState() {
-  localStorage.setItem("digitRollLuckLevel", String(shopLuckLevel));
+  localStorage.setItem("digitRollCharmBonus", String(charmBonus));
+  localStorage.setItem("digitRollLuckyGlovesLevel", String(luckyGlovesLevel));
   localStorage.setItem("digitRollXPSpent", String(xpSpent));
 }
 
@@ -732,8 +745,13 @@ function getUnlockedBadgeNames() {
   return unlocked;
 }
 
+function getGuaranteedBadgeCount() {
+  const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
+  return Math.max(0, charmBonus + (glove ? glove.bonus : 0));
+}
+
 function applyGuaranteedBadges(result) {
-  const count = Math.max(0, shopLuckLevel);
+  const count = getGuaranteedBadgeCount();
   if (!count) return result;
 
   Object.values(result.badges || {}).forEach((b) =>
@@ -753,8 +771,17 @@ function applyGuaranteedBadges(result) {
   }
 
   result.badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
-
   return result;
+}
+
+function consumeCharm() {
+  if (charmBonus > 0) {
+    const used = charmBonus;
+    charmBonus = 0;
+    localStorage.setItem("digitRollCharmBonus", "0");
+    return used;
+  }
+  return 0;
 }
 
 function ensureShopUI() {
@@ -775,13 +802,14 @@ function ensureShopUI() {
     .drPageTitle { font-size:28px; font-weight:900; }
     .drClose { border:0; background:rgba(255,255,255,.08); color:#fff; width:40px; height:40px; border-radius:12px; cursor:pointer; font-size:22px; }
     .drBalance { padding:16px; border-radius:16px; background:rgba(142,230,173,.08); border:1px solid rgba(142,230,173,.18); margin-bottom:18px; font-size:18px; font-weight:800; }
+    .drShopSection { margin-top:22px; }
+    .drShopSection h2 { margin:0 0 10px; }
     .drShopGrid, .drBadgeGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
     .drShopItem, .drBadgeCard { padding:16px; border-radius:16px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.08); }
     .drShopItem h3, .drBadgeCard h3 { margin:0 0 7px; font-size:17px; }
     .drShopItem p, .drBadgeCard p { color:#aab5ca; line-height:1.45; margin:6px 0; }
     .drBuy { width:100%; border:0; border-radius:11px; padding:11px; cursor:pointer; font-weight:850; background:rgba(142,230,173,.16); color:#fff; margin-top:10px; }
     .drBuy:disabled { opacity:.45; cursor:not-allowed; }
-    .drLocked { text-align:center; padding:26px 12px; }
     .drRarity { font-weight:850; margin-top:8px; }
     @media(max-width:650px){ #digitRollNav{top:auto;bottom:14px;right:14px;} .drPage{margin:20px auto;padding:18px;} }
   `;
@@ -828,13 +856,28 @@ function updateShopUI() {
       .join("")}</div>`;
     return;
   }
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🍀 Guaranteed badges per roll: ${shopLuckLevel}</div><div class="drShopGrid">${LUCK_SHOP_ITEMS.map(
-    (item) => {
-      const owned = shopLuckLevel >= item.level;
-      const affordable = balance >= item.cost;
-      return `<div class="drShopItem"><h3>${item.name}</h3><p>Guarantees <b>+${item.bonus}</b> extra badge on every roll.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !affordable ? "disabled" : ""} onclick="buyDigitRollLuck(${item.level},${item.cost})">${owned ? "✓ Purchased" : affordable ? "Buy" : "Not enough XP"}</button></div>`;
-    },
-  ).join("")}</div>`;
+
+  const activeCharm = charmBonus
+    ? `🍀 Active charm: +${charmBonus} badge${charmBonus === 1 ? "" : "s"} on your next roll`
+    : "🍀 No charm active";
+  const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
+  const gloveBonus = glove ? glove.bonus : 0;
+
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+    <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
+      (item) => {
+        const affordable = balance >= item.cost;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Next roll only: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${!affordable ? "disabled" : ""} onclick="buyDigitRollCharm(${item.level},${item.cost},${item.bonus})">${affordable ? "Buy & Activate" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>
+    <div class="drShopSection"><h2>🧤 Lucky Gloves</h2><p style="color:#aab5ca">Lucky Gloves are permanent upgrades. They are intentionally VERY expensive and add badges to every roll.</p><div class="drShopGrid">${LUCKY_GLOVE_ITEMS.map(
+      (item) => {
+        const owned = luckyGlovesLevel >= item.level;
+        const affordable = balance >= item.cost;
+        const next = item.level === luckyGlovesLevel + 1;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyDigitRollGloves(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>`;
 }
 
 function openDigitRollShop() {
@@ -854,9 +897,28 @@ function closeDigitRollPages() {
     $("digitRollShopOverlay").classList.remove("open");
 }
 
-function buyDigitRollLuck(level, cost) {
-  if (level !== shopLuckLevel + 1) {
-    toast("Buy the previous luck bonus first.");
+function buyDigitRollCharm(level, cost, bonus) {
+  const item = LUCK_CHARM_ITEMS[level - 1];
+  if (!item || item.cost !== cost) return;
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  charmBonus = Math.max(charmBonus, Number(bonus) || item.bonus);
+  saveShopState();
+  toast(
+    `🍀 ${item.name} activated! +${charmBonus} guaranteed badges on your next roll.`,
+  );
+  updateShopUI();
+}
+
+function buyDigitRollGloves(level, cost) {
+  const item = LUCKY_GLOVE_ITEMS[level - 1];
+  if (!item || item.cost !== cost) return;
+  if (level !== luckyGlovesLevel + 1) {
+    toast("Buy the previous Lucky Gloves level first.");
     return;
   }
   if (getXPBalance() < cost) {
@@ -865,10 +927,10 @@ function buyDigitRollLuck(level, cost) {
   }
   xpBalance = getXPBalance() - cost;
   xpSpent += cost;
-  shopLuckLevel = level;
+  luckyGlovesLevel = level;
   saveShopState();
   toast(
-    `🍀 Luck upgraded! +${shopLuckLevel} guaranteed badge${shopLuckLevel === 1 ? "" : "s"} per roll.`,
+    `🧤 Lucky Gloves upgraded! +${item.bonus} guaranteed badge${item.bonus === 1 ? "" : "s"} every roll.`,
   );
   updateShopUI();
 }
@@ -876,7 +938,8 @@ function buyDigitRollLuck(level, cost) {
 window.openDigitRollShop = openDigitRollShop;
 window.openDigitRollBadges = openDigitRollBadges;
 window.closeDigitRollPages = closeDigitRollPages;
-window.buyDigitRollLuck = buyDigitRollLuck;
+window.buyDigitRollCharm = buyDigitRollCharm;
+window.buyDigitRollGloves = buyDigitRollGloves;
 
 function toast(message) {
   if (!$("toast")) return;
@@ -3024,6 +3087,8 @@ async function performRoll() {
   const analysis = analyze(finalChars);
 
   applyGuaranteedBadges(analysis);
+  const usedCharmBonus = consumeCharm();
+  if (usedCharmBonus) saveShopState();
   xpBalance = getXPBalance() + Number(analysis.xp || 0);
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
 
