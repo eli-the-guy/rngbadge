@@ -541,13 +541,6 @@ let rollLengthLevel = Number(
 );
 const BASE_ROLL_LENGTH = 5;
 const MAX_ROLL_LENGTH = 10;
-const STARTING_XP_CAP = 10000;
-const MAX_XP_CAP = 100000;
-const XP_CAP_STEP = 10000;
-let xpCapLevel = Math.max(
-  0,
-  Math.min(9, Number(localStorage.getItem("digitRollXPCapLevel") || 0)),
-);
 
 const ROLL_LENGTH_ITEMS = [
   { level: 1, cost: 1000, name: "🔢 Number Upgrade I" },
@@ -619,7 +612,7 @@ function getNumberCharmHTML(balance) {
     const cost = getNumberCharmCost(digit);
     const full = getTotalNumberCharmsPending() >= cap;
     const affordable = balance >= cost;
-    return `<div class="drShopItem"><h3>🔢 Number Charm ${digit}</h3><p>Next roll only: guarantees <b>+1 ${digit}</b>.</p><p>Ready: <b>${count}/${cap}</b> • Cost: <b>${cost.toLocaleString()} XP</b></p><button class="drBuy" ${full || !affordable ? "disabled" : ""} data-dr-action="numberCharm" data-digit="${digit}" data-cost="${cost}">${full ? "✓ At Current Cap" : affordable ? "Buy +1 ${digit}" : "Not enough XP"}</button></div>`;
+    return `<div class="drShopItem"><h3>🔢 Number Charm ${digit}</h3><p>Next roll only: guarantees <b>+1 ${digit}</b>.</p><p>Ready: <b>${count}/${cap}</b> • Cost: <b>${cost.toLocaleString()} XP</b></p><button class="drBuy" ${full || !affordable ? "disabled" : ""} onclick="buyNumberCharm(${digit},${cost})">${full ? "✓ At Current Cap" : affordable ? "Buy +1 ${digit}" : "Not enough XP"}</button></div>`;
   }).join("");
 }
 
@@ -813,7 +806,7 @@ function getEarnedXP() {
 
 function ensureXPBalance() {
   if (!Number.isFinite(xpBalance)) {
-    xpBalance = clampXP(getEarnedXP() - xpSpent);
+    xpBalance = Math.max(0, getEarnedXP() - xpSpent);
     localStorage.setItem("digitRollXPBalance", String(xpBalance));
   }
   return xpBalance;
@@ -833,7 +826,7 @@ async function loadXPWallet() {
       .maybeSingle();
     if (error) throw error;
     if (data) {
-      xpBalance = clampXP(Number(data.xp_balance) || 0);
+      xpBalance = Math.max(0, Number(data.xp_balance) || 0);
       localStorage.setItem("digitRollXPBalance", String(xpBalance));
       return true;
     }
@@ -955,193 +948,54 @@ async function giftDigitRollXP() {
 }
 
 function ensureShopUI() {
-  // Build the shop/badge UI once. Everything uses normal event listeners
-  // instead of inline onclick handlers, which avoids CSP/browser UI issues.
-  if ($("digitRollShopOverlay")) return;
-
-  if (!$("digitRollShopStyles")) {
-    const style = document.createElement("style");
-    style.id = "digitRollShopStyles";
-    style.textContent = `
-      #digitRollNav {
-        position: fixed !important;
-        top: 18px !important;
-        right: 18px !important;
-        z-index: 2147483647 !important;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        pointer-events: auto !important;
-      }
-      .drNavBtn {
-        appearance: none;
-        border: 1px solid rgba(255,255,255,.16);
-        background: rgba(18,23,34,.94);
-        color: #fff;
-        padding: 11px 15px;
-        border-radius: 12px;
-        cursor: pointer;
-        font: inherit;
-        font-weight: 800;
-        line-height: 1;
-        box-shadow: 0 8px 30px rgba(0,0,0,.28);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        pointer-events: auto !important;
-        user-select: none;
-      }
-      .drNavBtn:hover { background: rgba(40,48,68,.98); transform: translateY(-1px); }
-      .drNavBtn:active { transform: translateY(0); }
-
-      #digitRollShopOverlay {
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 2147483646 !important;
-        display: none;
-        padding: 30px 18px;
-        overflow: auto;
-        box-sizing: border-box;
-        background: rgba(0,0,0,.78);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        pointer-events: auto !important;
-      }
-      #digitRollShopOverlay.open { display: block !important; }
-
-      .drPage {
-        position: relative;
-        z-index: 1;
-        width: min(1000px, 100%);
-        min-height: 120px;
-        margin: 50px auto;
-        box-sizing: border-box;
-        background: rgba(18,23,34,.98);
-        border: 1px solid rgba(255,255,255,.14);
-        border-radius: 24px;
-        padding: 26px;
-        box-shadow: 0 30px 100px rgba(0,0,0,.65);
-        color: #fff;
-        pointer-events: auto !important;
-      }
-      .drPageHead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-      }
-      .drPageTitle { font-size: 28px; font-weight: 900; }
-      .drClose {
-        appearance: none;
-        border: 0;
-        background: rgba(255,255,255,.08);
-        color: #fff;
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        cursor: pointer;
-        font: inherit;
-        font-size: 24px;
-        line-height: 1;
-        pointer-events: auto !important;
-      }
-      .drClose:hover { background: rgba(255,255,255,.15); }
-      .drBalance {
-        padding: 16px;
-        border-radius: 16px;
-        background: rgba(142,230,173,.08);
-        border: 1px solid rgba(142,230,173,.18);
-        margin-bottom: 18px;
-        font-size: 18px;
-        font-weight: 800;
-      }
-      .drShopSection { margin-top: 22px; }
-      .drShopSection h2 { margin: 0 0 10px; }
-      .drShopGrid, .drBadgeGrid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 12px;
-      }
-      .drShopItem, .drBadgeCard {
-        padding: 16px;
-        border-radius: 16px;
-        background: rgba(255,255,255,.045);
-        border: 1px solid rgba(255,255,255,.08);
-        box-sizing: border-box;
-      }
-      .drShopItem h3, .drBadgeCard h3 { margin: 0 0 7px; font-size: 17px; }
-      .drShopItem p, .drBadgeCard p { color: #aab5ca; line-height: 1.45; margin: 6px 0; }
-      .drBuy {
-        width: 100%;
-        border: 0;
-        border-radius: 11px;
-        padding: 11px;
-        cursor: pointer;
-        font: inherit;
-        font-weight: 850;
-        background: rgba(142,230,173,.16);
-        color: #fff;
-        margin-top: 10px;
-        pointer-events: auto !important;
-      }
-      .drBuy:hover:not(:disabled) { background: rgba(142,230,173,.28); }
-      .drBuy:disabled { opacity: .45; cursor: not-allowed; }
-      .drRarity { font-weight: 850; margin-top: 8px; }
-      @media(max-width:650px){
-        #digitRollNav { top: auto !important; bottom: 14px !important; right: 14px !important; }
-        .drPage { margin: 20px auto; padding: 18px; }
-        .drPageTitle { font-size: 24px; }
-      }
-    `;
-    document.head.appendChild(style);
+  if ($("digitRollShopOverlay")) {
+    updateShopUI();
+    return;
   }
+
+  const style = document.createElement("style");
+  style.id = "digitRollShopStyles";
+  style.textContent = `
+    #digitRollNav { position:fixed; top:18px; right:18px; z-index:10000; display:flex; gap:8px; }
+    .drNavBtn { border:1px solid rgba(255,255,255,.12); background:rgba(18,23,34,.88); color:#fff; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:800; backdrop-filter:blur(10px); }
+    .drOverlay { position:fixed; inset:0; z-index:9998; display:none; padding:30px 18px; overflow:auto; background:rgba(0,0,0,.76); backdrop-filter:blur(12px); }
+    .drOverlay.open { display:block; }
+    .drPage { width:min(1000px,100%); margin:50px auto; background:rgba(18,23,34,.97); border:1px solid rgba(255,255,255,.12); border-radius:24px; padding:26px; box-shadow:0 30px 100px rgba(0,0,0,.55); }
+    .drPageHead { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-bottom:20px; }
+    .drPageTitle { font-size:28px; font-weight:900; }
+    .drClose { border:0; background:rgba(255,255,255,.08); color:#fff; width:40px; height:40px; border-radius:12px; cursor:pointer; font-size:22px; }
+    .drBalance { padding:16px; border-radius:16px; background:rgba(142,230,173,.08); border:1px solid rgba(142,230,173,.18); margin-bottom:18px; font-size:18px; font-weight:800; }
+    .drShopSection { margin-top:22px; }
+    .drShopSection h2 { margin:0 0 10px; }
+    .drShopGrid, .drBadgeGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+    .drShopItem, .drBadgeCard { padding:16px; border-radius:16px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.08); }
+    .drShopItem h3, .drBadgeCard h3 { margin:0 0 7px; font-size:17px; }
+    .drShopItem p, .drBadgeCard p { color:#aab5ca; line-height:1.45; margin:6px 0; }
+    .drBuy { width:100%; border:0; border-radius:11px; padding:11px; cursor:pointer; font-weight:850; background:rgba(142,230,173,.16); color:#fff; margin-top:10px; }
+    .drBuy:disabled { opacity:.45; cursor:not-allowed; }
+    .drRarity { font-weight:850; margin-top:8px; }
+    @media(max-width:650px){ #digitRollNav{top:auto;bottom:14px;right:14px;} .drPage{margin:20px auto;padding:18px;} }
+  `;
+  document.head.appendChild(style);
 
   const nav = document.createElement("div");
   nav.id = "digitRollNav";
-  nav.innerHTML = `
-    <button class="drNavBtn" id="drShopBtn" type="button">🛒 Shop</button>
-    <button class="drNavBtn" id="drBadgesBtn" type="button">🏅 Badges</button>
-    <button class="drNavBtn" id="drGiftBtn" type="button">🎁 Gift XP</button>
-  `;
-
-  // Put these directly on the root document so a transformed wrapper cannot
-  // create a stacking context that traps the fixed-position UI.
-  (document.documentElement || document.body).appendChild(nav);
+  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button>`;
+  document.body.appendChild(nav);
 
   const overlay = document.createElement("div");
   overlay.id = "digitRollShopOverlay";
   overlay.className = "drOverlay";
   overlay.innerHTML = `
-    <div class="drPage" role="dialog" aria-modal="true" aria-labelledby="drPageTitle">
-      <div class="drPageHead">
-        <div id="drPageTitle" class="drPageTitle">XP Shop</div>
-        <button class="drClose" id="drCloseBtn" type="button" aria-label="Close">×</button>
-      </div>
+    <div class="drPage" role="dialog" aria-modal="true">
+      <div class="drPageHead"><div id="drPageTitle" class="drPageTitle">Shop</div><button class="drClose" onclick="closeDigitRollPages()">×</button></div>
       <div id="drPageContent"></div>
-    </div>
-  `;
-  (document.documentElement || document.body).appendChild(overlay);
-
-  // Navigation events are attached once and survive UI re-renders.
-  $("drShopBtn").addEventListener("click", openDigitRollShop);
-  $("drBadgesBtn").addEventListener("click", openDigitRollBadges);
-  $("drGiftBtn").addEventListener("click", giftDigitRollXP);
-  $("drCloseBtn").addEventListener("click", closeDigitRollPages);
-
+    </div>`;
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeDigitRollPages();
   });
-
-  // Escape always closes the shop/badge overlay.
-  if (!window._digitRollShopEscapeBound) {
-    window._digitRollShopEscapeBound = true;
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeDigitRollPages();
-    });
-  }
-
-  window.digitRollPage = window.digitRollPage || "shop";
-  overlay.addEventListener("click", handleDigitRollShopClick);
+  document.body.appendChild(overlay);
+  updateShopUI();
 }
 
 function updateShopUI() {
@@ -1175,18 +1029,18 @@ function updateShopUI() {
     const owned = rollLengthLevel >= item.level;
     const next = item.level === rollLengthLevel + 1;
     const affordable = balance >= item.cost;
-    return `<div class="drShopItem"><h3>${item.name}</h3><p>Permanently adds <b>+1 number</b> to every roll.</p><p>Roll length after purchase: <b>${BASE_ROLL_LENGTH + item.level}</b></p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} data-dr-action="rollLength" data-level="${item.level}" data-cost="${item.cost}">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+    return `<div class="drShopItem"><h3>${item.name}</h3><p>Permanently adds <b>+1 number</b> to every roll.</p><p>Roll length after purchase: <b>${BASE_ROLL_LENGTH + item.level}</b></p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyRollLengthUpgrade(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
   }).join("");
   const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
   const gloveBonus = glove ? glove.bonus : 0;
 
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${getMaxXPBalance().toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" data-dr-action="giftXP">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
     <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to 10.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
     <div class="drShopSection"><h2>🔢 Number Charms</h2><p style="color:#aab5ca">Number Charms are <b>one-time-use</b>. Each one guarantees one copy of its digit on your next roll, then disappears. You can queue up to your current roll length in total. Digits that appear more often across badge references cost more XP.</p><div class="drShopGrid">${getNumberCharmHTML(balance)}</div></div>
     <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
       (item) => {
         const affordable = balance >= item.cost;
-        return `<div class="drShopItem"><h3>${item.name}</h3><p>Next roll only: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${!affordable ? "disabled" : ""} data-dr-action="luckyCharm" data-level="${item.level}" data-cost="${item.cost}" data-bonus="${item.bonus}">${affordable ? "Buy & Activate" : "Not enough XP"}</button></div>`;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Next roll only: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${!affordable ? "disabled" : ""} onclick="buyDigitRollCharm(${item.level},${item.cost},${item.bonus})">${affordable ? "Buy & Activate" : "Not enough XP"}</button></div>`;
       },
     ).join("")}</div></div>
     <div class="drShopSection"><h2>🧤 Lucky Gloves</h2><p style="color:#aab5ca">Lucky Gloves are permanent upgrades. They are intentionally VERY expensive and add badges to every roll.</p><div class="drShopGrid">${LUCKY_GLOVE_ITEMS.map(
@@ -1194,72 +1048,9 @@ function updateShopUI() {
         const owned = luckyGlovesLevel >= item.level;
         const affordable = balance >= item.cost;
         const next = item.level === luckyGlovesLevel + 1;
-        return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} data-dr-action="luckyGloves" data-level="${item.level}" data-cost="${item.cost}">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
-      },
-    ).join("")}</div></div>
-    <div class="drShopSection"><h2>📈 XP Rebirth</h2><p style="color:#aab5ca">Your current XP balance cap is <b>${getMaxXPBalance().toLocaleString()} XP</b>. Each Rebirth raises your maximum XP balance by 10,000, up to 100,000. <b>Roll XP is a separate upgrade system.</b></p><div class="drShopGrid">${Array.from(
-      { length: 9 },
-      (_, i) => {
-        const level = i + 1;
-        const newCap = STARTING_XP_CAP + level * XP_CAP_STEP;
-        const cost = STARTING_XP_CAP + i * XP_CAP_STEP;
-        const owned = xpCapLevel >= level;
-        const next = level === xpCapLevel + 1;
-        const maxed = getMaxXPBalance() >= MAX_XP_CAP;
-        const affordable = balance >= cost;
-        return `<div class="drShopItem"><h3 style="color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,.45)">👑 XP Rebirth ${level}</h3><p>Raises your XP balance cap to <b style="color:#ffd700">${newCap.toLocaleString()} XP</b>.</p><p>Cost: <b>${cost.toLocaleString()} XP</b> — exactly your current maximum XP balance.</p><button class="drBuy" ${owned || !next || !affordable || maxed ? "disabled" : ""} data-dr-action="xpRebirth" data-level="${level}" data-cost="${cost}">${owned ? "✓ Owned" : maxed ? "✓ Maximum Reached" : !next ? "Locked" : affordable ? `Buy for ${cost.toLocaleString()} XP` : "Not enough XP"}</button></div>`;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyDigitRollGloves(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
       },
     ).join("")}</div></div>`;
-}
-
-function handleDigitRollShopClick(e) {
-  const button = e.target.closest("button[data-dr-action]");
-  if (!button) return;
-  e.preventDefault();
-  e.stopPropagation();
-
-  const action = button.dataset.drAction;
-  const level = Number(button.dataset.level);
-  const cost = Number(button.dataset.cost);
-  const bonus = Number(button.dataset.bonus);
-  const digit = Number(button.dataset.digit);
-
-  try {
-    if (action === "giftXP") return giftDigitRollXP();
-    if (action === "numberCharm") return buyNumberCharm(digit, cost);
-    if (action === "rollLength") return buyRollLengthUpgrade(level, cost);
-    if (action === "luckyCharm") return buyDigitRollCharm(level, cost, bonus);
-    if (action === "luckyGloves") return buyDigitRollGloves(level, cost);
-    if (action === "xpRebirth") return buyXPCapUpgrade(level, cost);
-  } catch (error) {
-    console.error("Digit Roll shop UI action failed:", error);
-    toast(
-      "The shop could not complete that action. Check the browser console for details.",
-    );
-  }
-}
-
-function buyXPCapUpgrade(level, cost) {
-  level = Number(level);
-  cost = Number(cost);
-  if (!Number.isInteger(level) || level !== xpCapLevel + 1) return;
-  if (getMaxXPBalance() >= MAX_XP_CAP) {
-    toast("Your XP cap is already 100,000.");
-    return;
-  }
-  const expectedCost = getMaxXPBalance();
-  if (cost !== expectedCost) return;
-  if (getXPBalance() < expectedCost) {
-    toast(`You need ${expectedCost.toLocaleString()} XP to buy this upgrade.`);
-    return;
-  }
-  xpBalance = clampXP(getXPBalance() - expectedCost);
-  xpSpent += expectedCost;
-  xpCapLevel = Math.min(9, xpCapLevel + 1);
-  saveXPCapState();
-  saveShopState();
-  toast(`📈 XP cap increased to ${getMaxXPBalance().toLocaleString()} XP!`);
-  updateShopUI();
 }
 
 function buyNumberCharm(digit, cost) {
@@ -1371,7 +1162,6 @@ window.buyDigitRollCharm = buyDigitRollCharm;
 window.buyDigitRollGloves = buyDigitRollGloves;
 window.buyRollLengthUpgrade = buyRollLengthUpgrade;
 window.buyNumberCharm = buyNumberCharm;
-window.buyXPCapUpgrade = buyXPCapUpgrade;
 window.giftDigitRollXP = giftDigitRollXP;
 
 function toast(message) {
@@ -2512,8 +2302,8 @@ function analyze(chars) {
      ========================================================== */
   const rarityBase = Math.max(1, Number(totalChance) || 1);
   const xp = Math.min(
-    getMaxXPBalance(),
-    Math.max(5, Math.round(5 * Math.sqrt(rarityBase))),
+    100000,
+    Math.max(1, Math.round(5 * Math.sqrt(Math.max(1, totalChance)))),
   );
 
   return {
@@ -2931,7 +2721,7 @@ async function loadPersonalStats() {
   const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
 
   if (!Number.isFinite(xpBalance)) {
-    xpBalance = clampXP(totalXP - xpSpent);
+    xpBalance = Math.max(0, totalXP - xpSpent);
     localStorage.setItem("digitRollXPBalance", String(xpBalance));
   }
 
@@ -3555,7 +3345,7 @@ async function performRoll() {
   const usedCharmBonus = consumeCharm();
   const usedNumberCharms = consumeNumberCharms();
   if (usedCharmBonus) saveShopState();
-  xpBalance = clampXP(getXPBalance() + Number(analysis.xp || 0));
+  xpBalance = getXPBalance() + Number(analysis.xp || 0);
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
   await syncXPWallet();
 
