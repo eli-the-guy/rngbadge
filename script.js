@@ -2419,47 +2419,47 @@ function analyze(chars) {
     rarity = "EPIC";
   }
 
-  if (totalChance >= 1000000000) {
+  if (totalChance >= 10000000) {
     rarity = "LEGENDARY";
   }
 
-  if (totalChance >= 1000000000000) {
+  if (totalChance >= 10000000000) {
     rarity = "MYTHIC";
   }
 
-  if (totalChance >= 1000000000000000) {
+  if (totalChance >= 10000000000000) {
     rarity = "DIVINE";
   }
 
-  if (totalChance >= 1000000000000000000) {
+  if (totalChance >= 1000000000000000) {
     rarity = "TRANSCENDENT";
   }
 
-  if (totalChance >= 1e21) {
+  if (totalChance >= 1e11) {
     rarity = "CELESTIAL";
   }
 
-  if (totalChance >= 1e24) {
+  if (totalChance >= 1e14) {
     rarity = "ASCENDED";
   }
 
-  if (totalChance >= 1e27) {
+  if (totalChance >= 1e17) {
     rarity = "OMNIPOTENT";
   }
 
-  if (totalChance >= 1e30) {
+  if (totalChance >= 1e20) {
     rarity = "INFINITE";
   }
 
-  if (totalChance >= 1e33) {
+  if (totalChance >= 1e23) {
     rarity = "BEYOND";
   }
 
-  if (totalChance >= 1e36) {
+  if (totalChance >= 1e26) {
     rarity = "ABSOLUTE";
   }
 
-  if (totalChance >= 1e40) {
+  if (totalChance >= 1e30) {
     rarity = "???";
   }
 
