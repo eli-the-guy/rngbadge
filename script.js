@@ -74,6 +74,12 @@ const references = {
 
   55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
 
+  41: [
+    "🔥 41 Meme",
+    "A reference to the viral 41 number meme associated with Blizzi Boi and the 41 trend.",
+    25000,
+  ],
+
   1985: [
     "🍄 Super Mario Bros.",
     "The release year of the original Super Mario Bros. on the NES.",
@@ -544,6 +550,72 @@ const ROLL_LENGTH_ITEMS = [
   { level: 5, cost: 500000, name: "🔢 Number Upgrade V" },
 ];
 
+// Number Charms are ONE-TIME-USE. They are stored only until the next roll.
+localStorage.removeItem("digitRollNumberCharmCounts");
+let numberCharmPending = JSON.parse(
+  localStorage.getItem("digitRollNumberCharmPending") || "{}",
+);
+
+function saveNumberCharmState() {
+  localStorage.setItem(
+    "digitRollNumberCharmPending",
+    JSON.stringify(numberCharmPending),
+  );
+}
+
+function getNumberCharmCount(digit) {
+  return Math.max(0, Number(numberCharmPending[String(digit)] || 0));
+}
+
+function getTotalNumberCharmsPending() {
+  return Object.values(numberCharmPending).reduce(
+    (sum, n) => sum + Math.max(0, Number(n) || 0),
+    0,
+  );
+}
+
+function consumeNumberCharms() {
+  const used = { ...numberCharmPending };
+  numberCharmPending = {};
+  saveNumberCharmState();
+  return used;
+}
+
+function getDigitBadgeFrequency(digit) {
+  const d = String(digit);
+  let frequency = 0;
+  for (const [key, value] of Object.entries(references)) {
+    if (String(key).includes(d)) frequency += 5;
+    if (String(value[0]).includes(d)) frequency += 2;
+    if (String(value[1]).includes(d)) frequency += 1;
+  }
+  for (const [name, explanation] of commonBadgeDefinitions || []) {
+    if (String(name).includes(d)) frequency += 2;
+    if (String(explanation).includes(d)) frequency += 1;
+  }
+  return Math.max(1, frequency);
+}
+
+function getNumberCharmCost(digit) {
+  const frequency = getDigitBadgeFrequency(digit);
+  return Math.round((250 + frequency * 175) / 50) * 50;
+}
+
+function getNumberCharmCap(digit) {
+  return getRollLength();
+}
+
+function getNumberCharmHTML(balance) {
+  return Array.from({ length: 10 }, (_, digit) => {
+    const count = getNumberCharmCount(digit);
+    const cap = getNumberCharmCap(digit);
+    const cost = getNumberCharmCost(digit);
+    const full = getTotalNumberCharmsPending() >= cap;
+    const affordable = balance >= cost;
+    return `<div class="drShopItem"><h3>🔢 Number Charm ${digit}</h3><p>Next roll only: guarantees <b>+1 ${digit}</b>.</p><p>Ready: <b>${count}/${cap}</b> • Cost: <b>${cost.toLocaleString()} XP</b></p><button class="drBuy" ${full || !affordable ? "disabled" : ""} onclick="buyNumberCharm(${digit},${cost})">${full ? "✓ At Current Cap" : affordable ? "Buy +1 ${digit}" : "Not enough XP"}</button></div>`;
+  }).join("");
+}
+
 function getRollLength() {
   return Math.min(MAX_ROLL_LENGTH, BASE_ROLL_LENGTH + rollLengthLevel);
 }
@@ -744,11 +816,45 @@ function getXPBalance() {
   return Math.max(0, Number(ensureXPBalance()));
 }
 
+async function loadXPWallet() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from("xp_wallets")
+      .select("xp_balance")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      xpBalance = Math.max(0, Number(data.xp_balance) || 0);
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+      return true;
+    }
+    await syncXPWallet();
+    return false;
+  } catch (e) {
+    console.warn("Could not load XP wallet:", e);
+    return false;
+  }
+}
+
+async function syncXPWallet() {
+  if (!currentUser) return;
+  try {
+    await supabaseClient.rpc("sync_xp_wallet", {
+      p_balance: Math.floor(getXPBalance()),
+    });
+  } catch (e) {
+    console.warn("Could not sync XP wallet:", e);
+  }
+}
+
 function saveShopState() {
   localStorage.setItem("digitRollCharmBonus", String(charmBonus));
   localStorage.setItem("digitRollLuckyGlovesLevel", String(luckyGlovesLevel));
   localStorage.setItem("digitRollRollLengthLevel", String(rollLengthLevel));
   localStorage.setItem("digitRollXPSpent", String(xpSpent));
+  saveNumberCharmState();
 }
 
 function getUnlockedBadgeNames() {
@@ -802,6 +908,45 @@ function consumeCharm() {
   return 0;
 }
 
+async function giftDigitRollXP() {
+  if (!currentUser) {
+    toast("You need to be logged in to gift XP.");
+    return;
+  }
+  const recipientInput = prompt("Enter the player's exact username:");
+  if (!recipientInput) return;
+  const amount = Number(prompt("How much XP do you want to gift?"));
+  if (!Number.isInteger(amount) || amount <= 0) {
+    toast("Enter a valid whole XP amount.");
+    return;
+  }
+  if (amount > getXPBalance()) {
+    toast("You don't have enough XP.");
+    return;
+  }
+  try {
+    const { data, error } = await supabaseClient.rpc("gift_xp", {
+      p_recipient_username: recipientInput.trim(),
+      p_amount: amount,
+    });
+    if (error) throw error;
+    xpBalance = Math.max(0, getXPBalance() - amount);
+    xpSpent += amount;
+    localStorage.setItem("digitRollXPBalance", String(xpBalance));
+    localStorage.setItem("digitRollXPSpent", String(xpSpent));
+    toast(
+      `🎁 Gifted ${amount.toLocaleString()} XP to ${recipientInput.trim()}!`,
+    );
+    updateShopUI();
+  } catch (error) {
+    console.error("XP gift failed:", error);
+    toast(
+      error.message ||
+        "XP gift failed. Make sure the XP wallet SQL is installed.",
+    );
+  }
+}
+
 function ensureShopUI() {
   if ($("digitRollShopOverlay")) {
     updateShopUI();
@@ -835,7 +980,7 @@ function ensureShopUI() {
 
   const nav = document.createElement("div");
   nav.id = "digitRollNav";
-  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button>`;
+  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button>`;
   document.body.appendChild(nav);
 
   const overlay = document.createElement("div");
@@ -889,8 +1034,9 @@ function updateShopUI() {
   const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
   const gloveBonus = glove ? glove.bonus : 0;
 
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} numbers<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
     <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to 10.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
+    <div class="drShopSection"><h2>🔢 Number Charms</h2><p style="color:#aab5ca">Number Charms are <b>one-time-use</b>. Each one guarantees one copy of its digit on your next roll, then disappears. You can queue up to your current roll length in total. Digits that appear more often across badge references cost more XP.</p><div class="drShopGrid">${getNumberCharmHTML(balance)}</div></div>
     <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
       (item) => {
         const affordable = balance >= item.cost;
@@ -905,6 +1051,32 @@ function updateShopUI() {
         return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyDigitRollGloves(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
       },
     ).join("")}</div></div>`;
+}
+
+function buyNumberCharm(digit, cost) {
+  digit = Number(digit);
+  if (!Number.isInteger(digit) || digit < 0 || digit > 9) return;
+  const expected = getNumberCharmCost(digit);
+  if (Number(cost) !== expected) return;
+  const current = getNumberCharmCount(digit);
+  if (getTotalNumberCharmsPending() >= getNumberCharmCap(digit)) {
+    toast(
+      `You can only queue ${getNumberCharmCap(digit)} Number Charms for this roll.`,
+    );
+    return;
+  }
+  if (getXPBalance() < expected) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - expected;
+  xpSpent += expected;
+  numberCharmPending[String(digit)] = current + 1;
+  saveShopState();
+  toast(
+    `🔢 Number Charm ${digit} activated! Your next roll guarantees ${current + 1} ${digit}${current + 1 === 1 ? "" : "s"}.`,
+  );
+  updateShopUI();
 }
 
 function buyRollLengthUpgrade(level, cost) {
@@ -989,6 +1161,8 @@ window.closeDigitRollPages = closeDigitRollPages;
 window.buyDigitRollCharm = buyDigitRollCharm;
 window.buyDigitRollGloves = buyDigitRollGloves;
 window.buyRollLengthUpgrade = buyRollLengthUpgrade;
+window.buyNumberCharm = buyNumberCharm;
+window.giftDigitRollXP = giftDigitRollXP;
 
 function toast(message) {
   if (!$("toast")) return;
@@ -1085,12 +1259,22 @@ function applyRarityColor(element, rarity) {
    ============================================================ */
 
 function randomRoll() {
+  const rollLength = getRollLength();
+  const forcedDigits = [];
+  for (let digit = 0; digit <= 9; digit++) {
+    for (let i = 0; i < Math.min(getNumberCharmCount(digit), rollLength); i++)
+      forcedDigits.push(String(digit));
+  }
   const chars = [];
-
   let blanks = 0;
 
-  const rollLength = getRollLength();
-  for (let i = 0; i < rollLength; i++) {
+  // Number Charms take priority. Their guaranteed digits are inserted first.
+  while (forcedDigits.length && chars.length < rollLength) {
+    const index = Math.floor(Math.random() * forcedDigits.length);
+    chars.push(forcedDigits.splice(index, 1)[0]);
+  }
+
+  while (chars.length < rollLength) {
     if (Math.random() < 0.055) {
       chars.push("_");
       blanks++;
@@ -1099,12 +1283,17 @@ function randomRoll() {
     }
   }
 
-  if (blanks === rollLength) {
-    const index = Math.floor(Math.random() * rollLength);
-
-    chars[index] = String(Math.floor(Math.random() * 10));
+  // Shuffle so Number Charms do not always appear at the beginning.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
   }
 
+  // If every slot became a blank, preserve the old safety behavior.
+  if (blanks === rollLength && forcedDigits.length === 0) {
+    const index = Math.floor(Math.random() * rollLength);
+    chars[index] = String(Math.floor(Math.random() * 10));
+  }
   return chars;
 }
 
@@ -1197,6 +1386,15 @@ function analyze(chars) {
     if (compact.includes(key)) {
       addBadge(name, explanation, oneIn);
     }
+  }
+
+  /* 41 meme bonus badge */
+  if (compact.includes("41")) {
+    addBadge(
+      "🧓 Did Unc Snap?",
+      "A playful badge for hitting the viral 41 meme number.",
+      40000,
+    );
   }
 
   /* ==========================================================
@@ -3112,7 +3310,7 @@ async function performRoll() {
 
   const finalChars = randomRoll();
 
-  const visible = Array(10).fill("?");
+  const visible = Array(finalChars.length).fill("?");
 
   let i = 0;
 
@@ -3124,7 +3322,7 @@ async function performRoll() {
 
       i++;
 
-      if (i >= 10) {
+      if (i >= finalChars.length) {
         clearInterval(timer);
 
         resolve();
@@ -3138,9 +3336,11 @@ async function performRoll() {
 
   applyGuaranteedBadges(analysis);
   const usedCharmBonus = consumeCharm();
+  const usedNumberCharms = consumeNumberCharms();
   if (usedCharmBonus) saveShopState();
   xpBalance = getXPBalance() + Number(analysis.xp || 0);
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
+  await syncXPWallet();
 
   const roll = finalChars.join("");
 
