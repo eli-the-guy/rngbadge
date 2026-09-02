@@ -2302,7 +2302,7 @@ function analyze(chars) {
      ========================================================== */
   const rarityBase = Math.max(1, Number(totalChance) || 1);
   const xp = Math.min(
-    100000,
+    10000,
     Math.max(1, Math.round(5 * Math.sqrt(Math.max(1, totalChance)))),
   );
 
