@@ -2284,20 +2284,26 @@ function analyze(chars) {
      XP
      ========================================================== */
 
+  // XP is now based more directly on what you actually rolled.
+  // It is intentionally a little easier to earn than the previous formula.
   const badgeXP = badges.reduce(
     (sum, badge) =>
-      sum + Math.max(1, Math.round(Math.log10(badge.oneIn + 1) * 20)),
+      sum +
+      Math.max(3, Math.round(Math.sqrt(Math.log10(badge.oneIn + 1)) * 14)),
     0,
   );
 
-  const blankXP = blanks * 100;
+  // Longer rolls naturally give slightly more XP, while blanks give a useful bonus.
+  const rollLengthXP = Math.max(0, (chars.length - 5) * 4);
+  const blankXP = blanks * 125;
 
+  // Rarity still matters, but no longer dominates XP earnings.
   const rarityXP = Math.max(
     0,
-    Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
+    Math.floor(Math.log10(Math.max(1, totalChance)) * 7),
   );
 
-  const xp = Math.max(5, badgeXP + blankXP + rarityXP);
+  const xp = Math.max(10, badgeXP + rollLengthXP + blankXP + rarityXP);
 
   return {
     badges,
