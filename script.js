@@ -1539,72 +1539,71 @@ function analyze(chars) {
   let rarity = "NOVICE";
 
   // More granular tiers below the old COMMON range.
-  if (totalChance >= 2) {
+  if (totalChance >= 10) {
     rarity = "PLAIN";
   }
 
-  if (totalChance >= 5) {
+  if (totalChance >= 100) {
     rarity = "BASIC";
   }
 
-  if (totalChance >= 10) {
+  if (totalChance >= 1000) {
     rarity = "COMMON";
   }
 
   if (badges.length || blanks >= 1) {
-    rarity = totalChance >= 10 ? "UNCOMMON" : rarity;
+    rarity = totalChance >= 10000 ? "UNCOMMON" : rarity;
   }
 
-  if (totalChance >= 100) {
+  if (totalChance >= 100000) {
     rarity = "RARE";
   }
 
-  if (totalChance >= 1000) {
+  if (totalChance >= 10000000) {
     rarity = "EPIC";
   }
 
-  if (totalChance >= 10000) {
+  if (totalChance >= 1000000000) {
     rarity = "LEGENDARY";
   }
 
-  if (totalChance >= 1000000) {
+  if (totalChance >= 1000000000000) {
     rarity = "MYTHIC";
   }
 
-  if (totalChance >= 100000000) {
+  if (totalChance >= 1000000000000000) {
     rarity = "DIVINE";
   }
 
-  if (totalChance >= 10000000000) {
+  if (totalChance >= 1000000000000000000) {
     rarity = "TRANSCENDENT";
   }
 
-  // New ultra-high tiers.
-  if (totalChance >= 1000000000000) {
+  if (totalChance >= 1e21) {
     rarity = "CELESTIAL";
   }
 
-  if (totalChance >= 100000000000000) {
+  if (totalChance >= 1e24) {
     rarity = "ASCENDED";
   }
 
-  if (totalChance >= 10000000000000000) {
+  if (totalChance >= 1e27) {
     rarity = "OMNIPOTENT";
   }
 
-  if (totalChance >= 1000000000000000000) {
+  if (totalChance >= 1e30) {
     rarity = "INFINITE";
   }
 
-  if (totalChance >= 100000000000000000000) {
+  if (totalChance >= 1e33) {
     rarity = "BEYOND";
   }
 
-  if (totalChance >= 10000000000000000000000) {
+  if (totalChance >= 1e36) {
     rarity = "ABSOLUTE";
   }
 
-  if (totalChance >= 1000000000000000000000000) {
+  if (totalChance >= 1e40) {
     rarity = "???";
   }
 
