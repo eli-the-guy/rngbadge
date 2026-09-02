@@ -517,6 +517,367 @@ let profile = null;
 let rolling = false;
 let realtimeChannel = null;
 
+/* ============================================================
+   SHOP / BADGE COLLECTION
+   ============================================================ */
+
+let shopLuckLevel = Number(localStorage.getItem("digitRollLuckLevel") || 0);
+let xpSpent = Number(localStorage.getItem("digitRollXPSpent") || 0);
+let xpBalance =
+  localStorage.getItem("digitRollXPBalance") !== null
+    ? Number(localStorage.getItem("digitRollXPBalance"))
+    : null;
+
+const LUCK_SHOP_ITEMS = [
+  { level: 1, cost: 250, bonus: 1, name: "🍀 Lucky Charm I" },
+  { level: 2, cost: 750, bonus: 1, name: "🍀 Lucky Charm II" },
+  { level: 3, cost: 2000, bonus: 1, name: "✨ Lucky Charm III" },
+  { level: 4, cost: 5000, bonus: 1, name: "✨ Lucky Charm IV" },
+  { level: 5, cost: 12000, bonus: 1, name: "💎 Lucky Charm V" },
+  { level: 6, cost: 30000, bonus: 1, name: "💎 Lucky Charm VI" },
+  { level: 7, cost: 75000, bonus: 1, name: "🌟 Lucky Charm VII" },
+  { level: 8, cost: 200000, bonus: 1, name: "🌟 Lucky Charm VIII" },
+  { level: 9, cost: 500000, bonus: 1, name: "👑 Lucky Charm IX" },
+  { level: 10, cost: 1500000, bonus: 1, name: "👑 Lucky Charm X" },
+];
+
+const staticBadgeCatalog = {};
+
+function registerBadgeCatalog(name, explanation, oneIn) {
+  if (!name) return;
+  if (!staticBadgeCatalog[name]) {
+    staticBadgeCatalog[name] = { name, explanation, oneIn: Number(oneIn) || 1 };
+  }
+}
+
+for (const [key, [name, explanation, oneIn]] of Object.entries(references)) {
+  registerBadgeCatalog(name, explanation, oneIn);
+}
+
+const commonBadgeDefinitions = [
+  ["🔁 Repeater", "At least one visible digit appears more than once.", 5],
+  ["🔥 Triple Digit", "A visible digit appears three or more times.", 100],
+  ["💥 Quad Digit", "A visible digit appears four or more times.", 1000],
+  [
+    "☢️ Quint Digit",
+    "The same visible digit appears at least five times.",
+    10000,
+  ],
+  [
+    "👹 Hex Digit",
+    "One digit dominates the roll with six or more appearances.",
+    100000,
+  ],
+  ["💀 Sept Digit", "Seven copies of the same digit appear.", 1000000],
+  ["👑 Oct Digit", "Eight copies of one digit appear.", 10000000],
+  ["👑 Monochrome", "Every visible digit is identical.", 1000000],
+  [
+    "🌈 All Ten Digits",
+    "Every digit from 0 through 9 appears exactly once.",
+    3628800,
+  ],
+  ["👯 Double", "Two identical digits appear directly beside each other.", 100],
+  ["🔥 Triple Stack", "Three identical digits appear consecutively.", 1000],
+  ["💥 Quad Stack", "Four identical digits appear consecutively.", 10000],
+  [
+    "📈 Rising Sequence",
+    "Three consecutive digits appear in ascending order.",
+    100,
+  ],
+  ["🪜 Staircase", "Four consecutive digits climb steadily upward.", 1000],
+  ["🚀 Mega Staircase", "Five consecutive digits rise steadily upward.", 10000],
+  [
+    "🌟 Ultra Staircase",
+    "Six consecutive digits climb in perfect order.",
+    100000,
+  ],
+  [
+    "📉 Falling Sequence",
+    "Three consecutive digits appear in descending order.",
+    100,
+  ],
+  ["🪜 Reverse Staircase", "Four consecutive digits descend steadily.", 1000],
+  [
+    "🚀 Mega Reverse Staircase",
+    "Five consecutive digits fall steadily downward.",
+    10000,
+  ],
+  [
+    "⛰️ Mountain",
+    "Numbers rise to a peak in order, then fall back down.",
+    10000,
+  ],
+  [
+    "🏞️ Valley",
+    "Numbers fall to a low point in order, then rise again.",
+    10000,
+  ],
+  [
+    "🌊 Wave",
+    "The digits repeatedly rise and fall, creating a wave-like pattern.",
+    15000,
+  ],
+  ["🪞 Mirror", "A sequence reads the same forward and backward.", 1000],
+  [
+    "🪞 Perfect Mirror",
+    "The entire visible number reads identically forward and backward.",
+    100000,
+  ],
+  ["⚡ Alternator", "Two digits repeatedly alternate back and forth.", 5000],
+  ["🔄 Digit Loop", "The digits travel through a long numeric cycle.", 100000],
+  [
+    "🔺 Pyramid",
+    "Digits expand toward a center and then contract, creating a pyramid-like pattern.",
+    20000,
+  ],
+  ["🎯 Centered", "Matching outer digits surround a centered pair.", 10000],
+  [
+    "🚀 Long Climb",
+    "At least six digits form a continuous ascending sequence.",
+    100000,
+  ],
+  [
+    "🛰️ Long Descent",
+    "At least six digits form a continuous descending sequence.",
+    100000,
+  ],
+  ["🔁 Looping Block", "A block of digits repeats three times in a row.", 1000],
+  [
+    "📐 Arithmetic Pattern",
+    "The visible digits change by the same amount each step.",
+    20000,
+  ],
+  [
+    "📊 Quadratic Pattern",
+    "The changes themselves follow a consistent arithmetic pattern.",
+    50000,
+  ],
+  [
+    "✖️ Multiplication Chain",
+    "Each digit follows a repeating multiplication relationship.",
+    50000,
+  ],
+  [
+    "⚫⚪ Parity Chain",
+    "Every visible digit has the same odd/even parity.",
+    32,
+  ],
+  [
+    "⚡ Odd/Even Alternator",
+    "Odd and even digits alternate throughout the visible sequence.",
+    100,
+  ],
+  ["🌌 Sum of 42", "The visible digits add up to the famous number 42.", 5000],
+  ["⚔️ Sum of 55", "The visible digits add up to 55.", 6000],
+  ["🔢 Sum of 67", "The visible digits add up to 67.", 7000],
+  ["🍀 Lucky Root", "The visible digits have a digital root of 7.", 1000],
+  [
+    "🧮 Math Pattern",
+    "A recognizable mathematical square pattern appears inside the roll.",
+    12000,
+  ],
+  [
+    "🔬 Prime Chain",
+    "Every visible digit is a prime digit: 2, 3, 5, or 7.",
+    5000,
+  ],
+  ["🟦 Even Storm", "Every visible digit is even.", 32],
+  ["🟥 Odd Storm", "Every visible digit is odd.", 32],
+  [
+    "🎰 JACKPOT 777",
+    "Three consecutive 7s create the ultimate lucky slot pattern.",
+    1000000,
+  ],
+  ["💎 SUPER JACKPOT", "Four consecutive 7s appear in the roll.", 10000000],
+  [
+    "🔥 Double 67",
+    "The 67 reference appears twice in a repeating pattern.",
+    100000,
+  ],
+  ["⚔️ Kingsammelot MAX", "Four 5s appear together.", 100000],
+];
+
+commonBadgeDefinitions.forEach((b) => registerBadgeCatalog(...b));
+
+function getEarnedXP() {
+  return history.reduce((sum, row) => sum + Number(row.xp || 0), 0);
+}
+
+function ensureXPBalance() {
+  if (!Number.isFinite(xpBalance)) {
+    xpBalance = Math.max(0, getEarnedXP() - xpSpent);
+    localStorage.setItem("digitRollXPBalance", String(xpBalance));
+  }
+  return xpBalance;
+}
+
+function getXPBalance() {
+  return Math.max(0, Number(ensureXPBalance()));
+}
+
+function saveShopState() {
+  localStorage.setItem("digitRollLuckLevel", String(shopLuckLevel));
+  localStorage.setItem("digitRollXPSpent", String(xpSpent));
+}
+
+function getUnlockedBadgeNames() {
+  const unlocked = new Set();
+  history.forEach((row) => {
+    if (Array.isArray(row.badges)) {
+      row.badges.forEach((b) =>
+        unlocked.add(typeof b === "string" ? b : b.name),
+      );
+    }
+  });
+  return unlocked;
+}
+
+function applyGuaranteedBadges(result) {
+  const count = Math.max(0, shopLuckLevel);
+  if (!count) return result;
+
+  Object.values(result.badges || {}).forEach((b) =>
+    registerBadgeCatalog(b.name, b.explanation, b.oneIn),
+  );
+
+  const existing = new Set(result.badges.map((b) => b.name));
+  const pool = Object.values(staticBadgeCatalog).filter(
+    (b) => Number(b.oneIn) <= 10000 && !existing.has(b.name),
+  );
+
+  for (let i = 0; i < count && pool.length; i++) {
+    const index = Math.floor(Math.random() * pool.length);
+    const picked = pool.splice(index, 1)[0];
+    result.badges.push({ ...picked, guaranteed: true });
+    existing.add(picked.name);
+  }
+
+  result.badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
+
+  return result;
+}
+
+function ensureShopUI() {
+  if ($("digitRollShopOverlay")) {
+    updateShopUI();
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = "digitRollShopStyles";
+  style.textContent = `
+    #digitRollNav { position:fixed; top:18px; right:18px; z-index:10000; display:flex; gap:8px; }
+    .drNavBtn { border:1px solid rgba(255,255,255,.12); background:rgba(18,23,34,.88); color:#fff; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:800; backdrop-filter:blur(10px); }
+    .drOverlay { position:fixed; inset:0; z-index:9998; display:none; padding:30px 18px; overflow:auto; background:rgba(0,0,0,.76); backdrop-filter:blur(12px); }
+    .drOverlay.open { display:block; }
+    .drPage { width:min(1000px,100%); margin:50px auto; background:rgba(18,23,34,.97); border:1px solid rgba(255,255,255,.12); border-radius:24px; padding:26px; box-shadow:0 30px 100px rgba(0,0,0,.55); }
+    .drPageHead { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-bottom:20px; }
+    .drPageTitle { font-size:28px; font-weight:900; }
+    .drClose { border:0; background:rgba(255,255,255,.08); color:#fff; width:40px; height:40px; border-radius:12px; cursor:pointer; font-size:22px; }
+    .drBalance { padding:16px; border-radius:16px; background:rgba(142,230,173,.08); border:1px solid rgba(142,230,173,.18); margin-bottom:18px; font-size:18px; font-weight:800; }
+    .drShopGrid, .drBadgeGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+    .drShopItem, .drBadgeCard { padding:16px; border-radius:16px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.08); }
+    .drShopItem h3, .drBadgeCard h3 { margin:0 0 7px; font-size:17px; }
+    .drShopItem p, .drBadgeCard p { color:#aab5ca; line-height:1.45; margin:6px 0; }
+    .drBuy { width:100%; border:0; border-radius:11px; padding:11px; cursor:pointer; font-weight:850; background:rgba(142,230,173,.16); color:#fff; margin-top:10px; }
+    .drBuy:disabled { opacity:.45; cursor:not-allowed; }
+    .drLocked { text-align:center; padding:26px 12px; }
+    .drRarity { font-weight:850; margin-top:8px; }
+    @media(max-width:650px){ #digitRollNav{top:auto;bottom:14px;right:14px;} .drPage{margin:20px auto;padding:18px;} }
+  `;
+  document.head.appendChild(style);
+
+  const nav = document.createElement("div");
+  nav.id = "digitRollNav";
+  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button>`;
+  document.body.appendChild(nav);
+
+  const overlay = document.createElement("div");
+  overlay.id = "digitRollShopOverlay";
+  overlay.className = "drOverlay";
+  overlay.innerHTML = `
+    <div class="drPage" role="dialog" aria-modal="true">
+      <div class="drPageHead"><div id="drPageTitle" class="drPageTitle">Shop</div><button class="drClose" onclick="closeDigitRollPages()">×</button></div>
+      <div id="drPageContent"></div>
+    </div>`;
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeDigitRollPages();
+  });
+  document.body.appendChild(overlay);
+  updateShopUI();
+}
+
+function updateShopUI() {
+  if (!$("digitRollShopOverlay")) return;
+  const balance = getXPBalance();
+  const content = $("drPageContent");
+  if (!content) return;
+  if ($("drPageTitle"))
+    $("drPageTitle").textContent =
+      window.digitRollPage === "badges" ? "Badge Collection" : "XP Shop";
+  if (window.digitRollPage === "badges") {
+    const unlocked = getUnlockedBadgeNames();
+    const catalog = Object.values(staticBadgeCatalog).sort(
+      (a, b) => Number(a.oneIn) - Number(b.oneIn),
+    );
+    content.innerHTML = `<div class="drBalance">🏅 Unlocked: ${unlocked.size} / ${catalog.length}</div><div class="drBadgeGrid">${catalog
+      .map((b) => {
+        const isUnlocked = unlocked.has(b.name);
+        return `<div class="drBadgeCard"><h3>${isUnlocked ? escapeHTML(b.name) : "🔒 Locked Badge"}</h3><div class="drRarity">${fmt(b.oneIn)}</div><p>${isUnlocked ? escapeHTML(b.explanation) : "Unlock this badge to reveal its name and description."}</p></div>`;
+      })
+      .join("")}</div>`;
+    return;
+  }
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🍀 Guaranteed badges per roll: ${shopLuckLevel}</div><div class="drShopGrid">${LUCK_SHOP_ITEMS.map(
+    (item) => {
+      const owned = shopLuckLevel >= item.level;
+      const affordable = balance >= item.cost;
+      return `<div class="drShopItem"><h3>${item.name}</h3><p>Guarantees <b>+${item.bonus}</b> extra badge on every roll.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !affordable ? "disabled" : ""} onclick="buyDigitRollLuck(${item.level},${item.cost})">${owned ? "✓ Purchased" : affordable ? "Buy" : "Not enough XP"}</button></div>`;
+    },
+  ).join("")}</div>`;
+}
+
+function openDigitRollShop() {
+  ensureShopUI();
+  window.digitRollPage = "shop";
+  $("digitRollShopOverlay").classList.add("open");
+  updateShopUI();
+}
+function openDigitRollBadges() {
+  ensureShopUI();
+  window.digitRollPage = "badges";
+  $("digitRollShopOverlay").classList.add("open");
+  updateShopUI();
+}
+function closeDigitRollPages() {
+  if ($("digitRollShopOverlay"))
+    $("digitRollShopOverlay").classList.remove("open");
+}
+
+function buyDigitRollLuck(level, cost) {
+  if (level !== shopLuckLevel + 1) {
+    toast("Buy the previous luck bonus first.");
+    return;
+  }
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  shopLuckLevel = level;
+  saveShopState();
+  toast(
+    `🍀 Luck upgraded! +${shopLuckLevel} guaranteed badge${shopLuckLevel === 1 ? "" : "s"} per roll.`,
+  );
+  updateShopUI();
+}
+
+window.openDigitRollShop = openDigitRollShop;
+window.openDigitRollBadges = openDigitRollBadges;
+window.closeDigitRollPages = closeDigitRollPages;
+window.buyDigitRollLuck = buyDigitRollLuck;
+
 function toast(message) {
   if (!$("toast")) return;
 
@@ -707,6 +1068,7 @@ function analyze(chars) {
   const badges = [];
 
   const addBadge = (name, explanation, oneIn) => {
+    registerBadgeCatalog(name, explanation, oneIn);
     badges.push({
       name,
       explanation,
@@ -1656,6 +2018,11 @@ function saveLocal() {
     localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
 
     localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
+
+    saveShopState();
+    if (Number.isFinite(xpBalance)) {
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+    }
   } catch (e) {
     console.warn("Local save unavailable", e);
   }
@@ -2034,6 +2401,11 @@ async function loadPersonalStats() {
   window.currentLeaderboardRows = rows;
 
   const totalXP = rows.reduce((sum, row) => sum + Number(row.xp || 0), 0);
+
+  if (!Number.isFinite(xpBalance)) {
+    xpBalance = Math.max(0, totalXP - xpSpent);
+    localStorage.setItem("digitRollXPBalance", String(xpBalance));
+  }
 
   const best = rows.length ? rows[0] : null;
 
@@ -2651,6 +3023,10 @@ async function performRoll() {
 
   const analysis = analyze(finalChars);
 
+  applyGuaranteedBadges(analysis);
+  xpBalance = getXPBalance() + Number(analysis.xp || 0);
+  localStorage.setItem("digitRollXPBalance", String(xpBalance));
+
   const roll = finalChars.join("");
 
   const result = {
@@ -2778,6 +3154,8 @@ async function performRoll() {
   $("blankBonus").textContent = "×" + analysis.blankMultiplier.toLocaleString();
 
   $("xp").textContent = "+" + analysis.xp;
+
+  updateShopUI();
 
   applyRarityColor($("liveRarity"), analysis.rarity);
 
@@ -2912,6 +3290,8 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 
 async function init() {
   loadLocal();
+
+  ensureShopUI();
 
   updateAccountUI();
 
