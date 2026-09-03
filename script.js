@@ -12,6 +12,22 @@ const supabaseClient = window.supabase.createClient(
 );
 
 /* ============================================================
+   ADMIN CONFIG
+   ============================================================ */
+const ADMIN_CONFIG = {
+  email: "elicole613@gmail.com",
+  // Add future admin features here. Each feature should call a protected
+  // Supabase RPC; the client-side email check is only for UI visibility.
+  features: {
+    clearLeaderboard: true,
+    resetPlayer: true,
+    banPlayer: true,
+  },
+};
+let isAdmin = false;
+let activeBanUntil = null;
+
+/* ============================================================
    REFERENCES
    ============================================================ */
 
@@ -1159,13 +1175,14 @@ function ensureShopUI() {
       animation:drRainbowName 4s linear infinite;
     }
     @keyframes drRainbowName { from { background-position:0% 50%; } to { background-position:400% 50%; } }
+.drAdminPanel{display:grid;gap:16px}.drAdminWarning{padding:14px;border:1px solid rgba(239,68,68,.35);border-radius:14px;background:rgba(239,68,68,.08);color:#fecaca}.drAdminCard{padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.035)}.drAdminCard h2{margin:0 0 8px}.drAdminCard p{color:#aab5ca;line-height:1.5}.drAdminInput{width:100%;padding:12px 14px;margin:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:inherit}.drAdminAction,.drAdminDanger{width:100%;padding:13px;margin-top:8px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.drAdminAction{background:rgba(59,130,246,.2);color:#bfdbfe}.drAdminDanger{background:rgba(239,68,68,.18);color:#fecaca}.drAdminStatus{min-height:24px;text-align:center;color:#dbeafe}.drAdminNavBtn{border-color:rgba(239,68,68,.35)!important} 
     @media(max-width:650px){ #digitRollNav{top:auto;bottom:14px;right:14px;} .drPage{margin:20px auto;padding:18px;} }
   `;
   document.head.appendChild(style);
 
   const nav = document.createElement("div");
   nav.id = "digitRollNav";
-  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button>`;
+  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button><button id="drAdminNavBtn" class="drNavBtn drAdminNavBtn" type="button" onclick="openAdminPanel()" style="display:none">🛡️ Admin</button>`;
   document.body.appendChild(nav);
 
   const overlay = document.createElement("div");
@@ -1398,6 +1415,10 @@ window.buyDigitRollGloves = buyDigitRollGloves;
 window.buyRollLengthUpgrade = buyRollLengthUpgrade;
 window.buyNumberCharm = buyNumberCharm;
 window.giftDigitRollXP = giftDigitRollXP;
+window.openAdminPanel = openAdminPanel;
+window.adminClearLeaderboard = adminClearLeaderboard;
+window.adminResetPlayer = adminResetPlayer;
+window.adminBanPlayer = adminBanPlayer;
 window.buyXPCapacityUpgrade = buyXPCapacityUpgrade;
 window.performXPCapacityRebirth = performXPCapacityRebirth;
 window.performTrueRebirth = performTrueRebirth;
@@ -2893,6 +2914,218 @@ async function ensureProfile(user, suppliedUsername = "") {
 }
 
 /* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+function checkAdminIdentity(user) {
+  return (
+    !!user && String(user.email || "").toLowerCase() === ADMIN_CONFIG.email
+  );
+}
+
+async function applyAdminResetIfNeeded() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_reset_version");
+    if (error) throw error;
+    const serverVersion = Number(data || 0);
+    const localVersion = Number(
+      localStorage.getItem("digitRollAdminResetVersion") || 0,
+    );
+    if (serverVersion > localVersion) {
+      // Reset gameplay-only local data. Account, username and auth session stay.
+      [
+        "digitRollHistory",
+        "digitRollPersonal",
+        "digitRollAll",
+        "digitRollXPBalance",
+        "digitRollXPSpent",
+        "digitRollCharmBonus",
+        "digitRollXPCharmLevel",
+        "digitRollLuckyGlovesLevel",
+        "digitRollRollLengthLevel",
+        "digitRollXPCapacity",
+        "digitRollXPRebirths",
+        "digitRollNumberCharmPending",
+        "digitRollTrueRebirths",
+      ].forEach((key) => localStorage.removeItem(key));
+      history = [];
+      personalBest = null;
+      allTimeBest = null;
+      xpBalance = 0;
+      xpSpent = 0;
+      charmBonus = 0;
+      xpCharmLevel = 0;
+      luckyGlovesLevel = 0;
+      rollLengthLevel = 0;
+      xpCapacity = BASE_XP_CAPACITY;
+      xpCapacityRebirths = 0;
+      trueRebirths = 0;
+      numberCharmPending = {};
+      localStorage.setItem("digitRollAdminResetVersion", String(serverVersion));
+      saveShopState();
+      renderHistory();
+      renderBest();
+      updateShopUI();
+      toast(
+        "♻️ An admin reset your gameplay stats. Your account and username were kept.",
+      );
+      return true;
+    }
+    localStorage.setItem("digitRollAdminResetVersion", String(serverVersion));
+  } catch (e) {
+    console.warn("Admin reset version check unavailable:", e);
+  }
+  return false;
+}
+
+async function loadAdminState() {
+  isAdmin = checkAdminIdentity(currentUser);
+  const btn = $("drAdminNavBtn");
+  if (btn) btn.style.display = isAdmin ? "inline-block" : "none";
+  if (currentUser) {
+    await applyAdminResetIfNeeded();
+    await checkPlayerBan();
+  }
+}
+
+async function checkPlayerBan() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_ban_status");
+    if (error) throw error;
+    activeBanUntil = data?.banned_until || null;
+    const banned =
+      activeBanUntil && new Date(activeBanUntil).getTime() > Date.now();
+    const btn = $("rollBtn");
+    if (btn) {
+      btn.disabled = !!banned;
+      if (banned)
+        btn.title = `Banned until ${new Date(activeBanUntil).toLocaleString()}`;
+    }
+    if (banned)
+      toast(
+        `🚫 You are banned until ${new Date(activeBanUntil).toLocaleString()}.`,
+      );
+    return !!banned;
+  } catch (e) {
+    console.warn("Ban status unavailable:", e);
+    return false;
+  }
+}
+
+function openAdminPanel() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const overlay = $("digitRollShopOverlay");
+  if (!overlay) return;
+  $("drPageTitle").textContent = "🛡️ Admin Panel";
+  $("drPageContent").innerHTML = `
+    <div class="drAdminPanel">
+      <div class="drAdminWarning">⚠️ Admin actions are permanent. The database verifies your admin identity server-side.</div>
+      <section class="drAdminCard">
+        <h2>🧹 Clear Leaderboard</h2>
+        <p>Deletes every roll from the global leaderboard. Player names/accounts are not deleted.</p>
+        <button class="drAdminDanger" onclick="adminClearLeaderboard()">🧹 CLEAR LEADERBOARD</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>♻️ Reset Player Stats</h2>
+        <p>Enter an exact username. This resets gameplay stats and XP while keeping the player's account and username.</p>
+        <input id="drAdminResetUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <button class="drAdminAction" onclick="adminResetPlayer()">♻️ RESET PLAYER</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>🚫 Ban Player</h2>
+        <p>Enter an exact username and choose a duration.</p>
+        <input id="drAdminBanUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <select id="drAdminBanDuration" class="drAdminInput">
+          <option value="1 minute">1 minute</option>
+          <option value="5 minutes">5 minutes</option>
+          <option value="30 minutes">30 minutes</option>
+          <option value="1 hour">1 hour</option>
+          <option value="1 day">1 day</option>
+          <option value="1 week">1 week</option>
+          <option value="1 month">1 month</option>
+        </select>
+        <button class="drAdminDanger" onclick="adminBanPlayer()">🚫 BAN PLAYER</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>🧩 Easy to Extend</h2>
+        <p>Future admin buttons can be added to <code>ADMIN_CONFIG.features</code> and wired to a protected Supabase RPC.</p>
+      </section>
+      <div id="drAdminStatus" class="drAdminStatus"></div>
+    </div>`;
+  overlay.classList.add("open");
+}
+
+function adminStatus(message, good = false) {
+  const el = $("drAdminStatus");
+  if (el) el.textContent = message;
+  if (good) toast(message);
+}
+
+async function adminClearLeaderboard() {
+  if (!isAdmin) return toast("Admin access denied.");
+  if (!confirm("Clear EVERY roll from the leaderboard? This cannot be undone."))
+    return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_clear_leaderboard");
+    if (error) throw error;
+    adminStatus(
+      `🧹 Cleared ${Number(data || 0).toLocaleString()} leaderboard rolls.`,
+      true,
+    );
+    await loadLeaderboard();
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not clear leaderboard."}`);
+  }
+}
+
+async function adminResetPlayer() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const username = $("drAdminResetUsername")?.value.trim();
+  if (!username) return toast("Enter a username.");
+  if (
+    !confirm(
+      `Reset ALL gameplay stats for ${username}? Their account and username will stay.`,
+    )
+  )
+    return;
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "admin_reset_player_stats",
+      { p_username: username },
+    );
+    if (error) throw error;
+    adminStatus(`♻️ Reset ${data?.username || username}'s stats.`, true);
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not reset player."}`);
+  }
+}
+
+async function adminBanPlayer() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const username = $("drAdminBanUsername")?.value.trim();
+  const duration = $("drAdminBanDuration")?.value;
+  if (!username) return toast("Enter a username.");
+  if (!confirm(`Ban ${username} for ${duration}?`)) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_ban_player", {
+      p_username: username,
+      p_duration: duration,
+    });
+    if (error) throw error;
+    adminStatus(
+      `🚫 ${data?.username || username} banned until ${new Date(data.banned_until).toLocaleString()}.`,
+      true,
+    );
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not ban player."}`);
+  }
+}
+
+/* ============================================================
    ACCOUNT UI
    ============================================================ */
 
@@ -3521,6 +3754,7 @@ function setupRealtime() {
 
 async function performRoll() {
   if (rolling) return;
+  if (await checkPlayerBan()) return;
 
   rolling = true;
 
