@@ -528,6 +528,10 @@ let realtimeChannel = null;
    ============================================================ */
 
 let charmBonus = Number(localStorage.getItem("digitRollCharmBonus") || 0);
+let xpCharmLevel = Math.max(
+  0,
+  Math.floor(Number(localStorage.getItem("digitRollXPCharmLevel") || 0)),
+);
 let luckyGlovesLevel = Number(
   localStorage.getItem("digitRollLuckyGlovesLevel") || 0,
 );
@@ -660,6 +664,19 @@ const LUCK_CHARM_ITEMS = [
   { level: 8, cost: 10000000, bonus: 8, name: "🌟 Lucky Charm VIII" },
   { level: 9, cost: 50000000, bonus: 9, name: "👑 Lucky Charm IX" },
   { level: 10, cost: 250000000, bonus: 10, name: "👑 Lucky Charm X" },
+];
+
+const XP_CHARM_ITEMS = [
+  { level: 1, cost: 1000, multiplier: 1.25, name: "✨ XP Charm I" },
+  { level: 2, cost: 5000, multiplier: 1.5, name: "✨ XP Charm II" },
+  { level: 3, cost: 25000, multiplier: 2, name: "💫 XP Charm III" },
+  { level: 4, cost: 100000, multiplier: 3, name: "💫 XP Charm IV" },
+  { level: 5, cost: 500000, multiplier: 4, name: "🔥 XP Charm V" },
+  { level: 6, cost: 2500000, multiplier: 5, name: "🔥 XP Charm VI" },
+  { level: 7, cost: 10000000, multiplier: 7.5, name: "💎 XP Charm VII" },
+  { level: 8, cost: 50000000, multiplier: 10, name: "💎 XP Charm VIII" },
+  { level: 9, cost: 250000000, multiplier: 15, name: "👑 XP Charm IX" },
+  { level: 10, cost: 1000000000, multiplier: 25, name: "👑 XP Charm X" },
 ];
 
 const LUCKY_GLOVE_ITEMS = [
@@ -866,6 +883,7 @@ function resetNormalProgressionForTrueRebirth() {
   xpBalance = 0;
   xpSpent = 0;
   charmBonus = 0;
+  xpCharmLevel = 0;
   luckyGlovesLevel = 0;
   rollLengthLevel = 0;
   numberCharmPending = {};
@@ -878,6 +896,7 @@ function resetNormalProgressionForTrueRebirth() {
   localStorage.setItem("digitRollXPBalance", "0");
   localStorage.setItem("digitRollXPSpent", "0");
   localStorage.setItem("digitRollCharmBonus", "0");
+  localStorage.setItem("digitRollXPCharmLevel", "0");
   localStorage.setItem("digitRollLuckyGlovesLevel", "0");
   localStorage.setItem("digitRollRollLengthLevel", "0");
   localStorage.removeItem("digitRollNumberCharmPending");
@@ -1006,6 +1025,7 @@ async function syncXPWallet() {
 
 function saveShopState() {
   localStorage.setItem("digitRollCharmBonus", String(charmBonus));
+  localStorage.setItem("digitRollXPCharmLevel", String(xpCharmLevel));
   localStorage.setItem("digitRollLuckyGlovesLevel", String(luckyGlovesLevel));
   localStorage.setItem("digitRollRollLengthLevel", String(rollLengthLevel));
   localStorage.setItem("digitRollXPSpent", String(xpSpent));
@@ -1212,9 +1232,17 @@ function updateShopUI() {
   const trueCost = getTrueRebirthCost();
   const trueHTML = `<div class="drShopItem" style="border:1px solid rgba(255,215,0,.28);background:rgba(255,215,0,.06)"><h3>🌈 TRUE REBIRTH</h3><p>Resets all normal progression, including roll upgrades, XP capacity/rebirths, shop upgrades, charms, gloves, badges, history and bests.</p><p>Your account, username, and True Rebirth progress stay. Maximum roll length becomes <b>${MAX_ROLL_LENGTH + 1} digits</b> after this rebirth.</p><p>Cost: <b>${trueCost.toLocaleString()} XP</b></p><button class="drBuy" ${balance < trueCost ? "disabled" : ""} onclick="performTrueRebirth()">${balance >= trueCost ? "🌈 TRUE REBIRTH" : "Not enough XP"}</button></div>`;
 
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${cap.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} / ${MAX_ROLL_LENGTH} numbers<br>🌈 True Rebirths: ${trueRebirths}<br>${activeCharm}<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${cap.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} / ${MAX_ROLL_LENGTH} numbers<br>🌈 True Rebirths: ${trueRebirths}<br>${activeCharm}<br>✨ XP Charm: ×${getXPCharmMultiplier()} XP<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
     <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to your current maximum of ${MAX_ROLL_LENGTH}.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
     <div class="drShopSection"><h2>🔢 Number Charms</h2><p style="color:#aab5ca">Number Charms are <b>one-time-use</b>. Each one guarantees one copy of its digit on your next roll, then disappears. You can queue up to your current roll length in total. Digits that appear more often across badge references cost more XP.</p><div class="drShopGrid">${getNumberCharmHTML(balance)}</div></div>
+    <div class="drShopSection"><h2>✨ XP Charms</h2><p style="color:#aab5ca">XP Charms are permanent upgrades. Each level multiplies the XP earned from every roll. Higher levels stack by replacing your current multiplier with the stronger one.</p><div class="drShopGrid">${XP_CHARM_ITEMS.map(
+      (item) => {
+        const owned = xpCharmLevel >= item.level;
+        const next = item.level === xpCharmLevel + 1;
+        const affordable = balance >= item.cost;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>XP multiplier: <b>×${item.multiplier}</b></p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyXPCharm(${item.level},${item.cost},${item.multiplier})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>
     <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
       (item) => {
         const affordable = balance >= item.cost;
@@ -1231,6 +1259,32 @@ function updateShopUI() {
     ).join("")}</div></div>
     <div class="drShopSection"><h2>💰 XP Capacity</h2><p style="color:#aab5ca">Your XP wallet is capped at its current capacity. Normal upgrades go to 100,000 XP; after that, XP Capacity Rebirth adds +10,000 XP each time.</p><div class="drShopGrid">${capacityHTML}</div></div>
     <div class="drShopSection"><h2>🌈 True Rebirth</h2><p style="color:#aab5ca">True Rebirth is the permanent prestige system. Each True Rebirth raises your maximum possible roll length by +1, while your actual roll length resets to 5.</p><div class="drShopGrid">${trueHTML}</div></div>`;
+}
+
+function getXPCharmMultiplier() {
+  const item = XP_CHARM_ITEMS[xpCharmLevel - 1];
+  return item ? item.multiplier : 1;
+}
+
+function buyXPCharm(level, cost, multiplier) {
+  const item = XP_CHARM_ITEMS[level - 1];
+  if (!item || item.cost !== cost || item.multiplier !== multiplier) return;
+  if (level !== xpCharmLevel + 1) {
+    toast("Buy the previous XP Charm first.");
+    return;
+  }
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  xpCharmLevel = level;
+  saveShopState();
+  toast(
+    `✨ ${item.name} purchased! XP gain is now ×${item.multiplier} per roll.`,
+  );
+  updateShopUI();
 }
 
 function buyNumberCharm(digit, cost) {
@@ -1339,6 +1393,7 @@ window.openDigitRollShop = openDigitRollShop;
 window.openDigitRollBadges = openDigitRollBadges;
 window.closeDigitRollPages = closeDigitRollPages;
 window.buyDigitRollCharm = buyDigitRollCharm;
+window.buyXPCharm = buyXPCharm;
 window.buyDigitRollGloves = buyDigitRollGloves;
 window.buyRollLengthUpgrade = buyRollLengthUpgrade;
 window.buyNumberCharm = buyNumberCharm;
@@ -2419,47 +2474,47 @@ function analyze(chars) {
     rarity = "EPIC";
   }
 
-  if (totalChance >= 10000000) {
+  if (totalChance >= 1000000000) {
     rarity = "LEGENDARY";
   }
 
-  if (totalChance >= 10000000000) {
+  if (totalChance >= 1000000000000) {
     rarity = "MYTHIC";
   }
 
-  if (totalChance >= 10000000000000) {
+  if (totalChance >= 1000000000000000) {
     rarity = "DIVINE";
   }
 
-  if (totalChance >= 1000000000000000) {
+  if (totalChance >= 1000000000000000000) {
     rarity = "TRANSCENDENT";
   }
 
-  if (totalChance >= 1e11) {
+  if (totalChance >= 1e21) {
     rarity = "CELESTIAL";
   }
 
-  if (totalChance >= 1e14) {
+  if (totalChance >= 1e24) {
     rarity = "ASCENDED";
   }
 
-  if (totalChance >= 1e17) {
+  if (totalChance >= 1e27) {
     rarity = "OMNIPOTENT";
   }
 
-  if (totalChance >= 1e20) {
+  if (totalChance >= 1e30) {
     rarity = "INFINITE";
   }
 
-  if (totalChance >= 1e23) {
+  if (totalChance >= 1e33) {
     rarity = "BEYOND";
   }
 
-  if (totalChance >= 1e26) {
+  if (totalChance >= 1e36) {
     rarity = "ABSOLUTE";
   }
 
-  if (totalChance >= 1e30) {
+  if (totalChance >= 1e40) {
     rarity = "???";
   }
 
@@ -2480,7 +2535,11 @@ function analyze(chars) {
     Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
   );
 
-  const xp = Math.max(5, badgeXP + blankXP + rarityXP);
+  const baseXP = Math.max(5, badgeXP + blankXP + rarityXP);
+  const xp = Math.min(
+    getXPCapacity(),
+    Math.max(5, Math.floor(baseXP * getXPCharmMultiplier())),
+  );
 
   return {
     badges,
