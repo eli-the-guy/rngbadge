@@ -4065,6 +4065,7 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
       await ensureProfile(currentUser);
 
       updateAccountUI();
+      await loadAdminState();
 
       await loadPersonalStats();
 
@@ -4103,6 +4104,7 @@ async function init() {
       await ensureProfile(currentUser);
 
       updateAccountUI();
+      await loadAdminState();
 
       await loadPersonalStats();
     }
