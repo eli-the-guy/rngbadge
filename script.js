@@ -3064,18 +3064,40 @@ function adminStatus(message, good = false) {
 
 async function adminClearLeaderboard() {
   if (!isAdmin) return toast("Admin access denied.");
-  if (!confirm("Clear EVERY roll from the leaderboard? This cannot be undone."))
+  if (
+    !confirm(
+      "Clear EVERY roll from the leaderboard, Top Rolls, and Best Roll All Time? This cannot be undone.",
+    )
+  )
     return;
+
+  // Clear the UI immediately so old cached bests cannot remain visible.
+  const global = $("globalRows");
+  if (global)
+    global.innerHTML = '<span class="empty">Clearing leaderboard...</span>';
+  if ($("todayBest")) $("todayBest").textContent = "—";
+  if ($("todayBestMeta")) $("todayBestMeta").textContent = "No rolls today";
+  if ($("allBest")) $("allBest").textContent = "—";
+  if ($("allBestMeta")) $("allBestMeta").textContent = "No rolls yet";
+  window.currentLeaderboardRows = [];
+
   try {
+    // Supabase does not allow arbitrary SQL from browser JavaScript.
+    // This protected RPC executes: DELETE FROM public.rolls;
     const { data, error } = await supabaseClient.rpc("admin_clear_leaderboard");
     if (error) throw error;
+
+    // Reload from the database. With zero rolls this keeps all three
+    // leaderboard displays empty.
+    await loadLeaderboard();
     adminStatus(
       `🧹 Cleared ${Number(data || 0).toLocaleString()} leaderboard rolls.`,
       true,
     );
-    await loadLeaderboard();
   } catch (e) {
     console.error(e);
+    // Keep the UI consistent only if the deletion actually succeeded.
+    await loadLeaderboard();
     adminStatus(`❌ ${e.message || "Could not clear leaderboard."}`);
   }
 }
