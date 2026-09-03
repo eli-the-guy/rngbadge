@@ -3378,18 +3378,13 @@ async function loadLeaderboard() {
   const rows = data || [];
 
   if (!rows.length) {
-    // The database leaderboard was cleared. Explicitly clear every
-    // leaderboard/best-roll display and cached leaderboard rows too.
     $("globalRows").innerHTML =
       '<span class="empty">No global rolls yet.</span>';
 
     $("todayBest").textContent = "—";
-    if ($("todayBestMeta")) $("todayBestMeta").textContent = "No rolls today";
 
     $("allBest").textContent = "—";
-    if ($("allBestMeta")) $("allBestMeta").textContent = "No rolls yet";
 
-    window.currentLeaderboardRows = [];
     return;
   }
 
