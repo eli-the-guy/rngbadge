@@ -22,7 +22,6 @@ const ADMIN_CONFIG = {
     clearLeaderboard: true,
     resetPlayer: true,
     banPlayer: true,
-    grantXP: true,
   },
 };
 let isAdmin = false;
@@ -354,7 +353,11 @@ const references = {
     "A repeating 1010 pattern that looks like a tiny binary joke.",
     100000,
   ],
-
+  010101: [
+    "💾 Reverse Binary Vibes",
+    "A repeating 0101 pattern with unmistakable binary aesthetics.",
+    120000,
+  ],
   2001: [
     "🚀 Space Meme",
     "A recognizable science-fiction number reference.",
@@ -904,7 +907,6 @@ function resetNormalProgressionForTrueRebirth() {
   xpCapacityRebirths = 0;
 
   localStorage.removeItem("digitRollHistory");
-  localStorage.removeItem("digitRollUnlockedBadges");
   localStorage.removeItem("digitRollPersonal");
   localStorage.removeItem("digitRollAll");
   localStorage.setItem("digitRollXPBalance", "0");
@@ -1015,13 +1017,6 @@ async function loadXPWallet() {
     if (error) throw error;
     if (data) {
       xpBalance = Math.max(0, Number(data.xp_balance) || 0);
-      // Admin grants intentionally bypass the normal XP capacity. If the
-      // wallet is above the player's old capacity, preserve that granted
-      // balance by raising the local capacity to match it.
-      if (xpBalance > getXPCapacity()) {
-        xpCapacity = xpBalance;
-        saveProgressionState();
-      }
       localStorage.setItem("digitRollXPBalance", String(xpBalance));
       return true;
     }
@@ -1056,85 +1051,14 @@ function saveShopState() {
 
 function getUnlockedBadgeNames() {
   const unlocked = new Set();
-
-  // Badge collection is permanent and MUST NOT depend on the 30-roll
-  // history window. Older versions derived this menu directly from
-  // `history`, which is intentionally trimmed to 30 rolls. After a player
-  // made enough rolls, older badges therefore disappeared from the menu.
-  try {
-    const saved = JSON.parse(
-      localStorage.getItem("digitRollUnlockedBadges") || "[]",
-    );
-    if (Array.isArray(saved)) {
-      saved.forEach((name) => {
-        if (typeof name === "string" && name.trim()) unlocked.add(name);
-      });
-    }
-  } catch (e) {
-    console.warn("Could not load persistent badge collection:", e);
-  }
-
-  // Backfill the permanent collection from any rolls still present locally.
   history.forEach((row) => {
     if (Array.isArray(row.badges)) {
-      row.badges.forEach((b) => {
-        const name = typeof b === "string" ? b : b?.name;
-        if (name) unlocked.add(name);
-      });
+      row.badges.forEach((b) =>
+        unlocked.add(typeof b === "string" ? b : b.name),
+      );
     }
   });
-
   return unlocked;
-}
-
-function saveUnlockedBadgeNames(unlocked) {
-  try {
-    localStorage.setItem(
-      "digitRollUnlockedBadges",
-      JSON.stringify([...unlocked]),
-    );
-  } catch (e) {
-    console.warn("Could not save persistent badge collection:", e);
-  }
-}
-
-function registerUnlockedBadges(badges) {
-  if (!Array.isArray(badges) || !badges.length) return;
-  const unlocked = getUnlockedBadgeNames();
-  badges.forEach((b) => {
-    const name = typeof b === "string" ? b : b?.name;
-    if (name) unlocked.add(name);
-  });
-  saveUnlockedBadgeNames(unlocked);
-}
-
-async function loadPersistentBadgeCollection() {
-  if (!currentUser) return;
-
-  // Recover the collection from ALL of this player's cloud rolls. This is
-  // intentionally separate from the leaderboard's 10-row query and the
-  // local history's 30-row display.
-  try {
-    const { data, error } = await supabaseClient
-      .from("rolls")
-      .select("badges")
-      .eq("player_id", currentUser.id);
-
-    if (error) throw error;
-
-    const unlocked = getUnlockedBadgeNames();
-    (data || []).forEach((row) => {
-      if (Array.isArray(row.badges)) {
-        row.badges.forEach((name) => {
-          if (typeof name === "string" && name.trim()) unlocked.add(name);
-        });
-      }
-    });
-
-    saveUnlockedBadgeNames(unlocked);
-  } catch (e) {
-    console.warn("Could not restore cloud badge collection:", e);
-  }
 }
 
 function getGuaranteedBadgeCount() {
@@ -1495,7 +1419,6 @@ window.openAdminPanel = openAdminPanel;
 window.adminClearLeaderboard = adminClearLeaderboard;
 window.adminResetPlayer = adminResetPlayer;
 window.adminBanPlayer = adminBanPlayer;
-window.adminGrantXP = adminGrantXP;
 window.buyXPCapacityUpgrade = buyXPCapacityUpgrade;
 window.performXPCapacityRebirth = performXPCapacityRebirth;
 window.performTrueRebirth = performTrueRebirth;
@@ -2693,11 +2616,6 @@ function loadLocal() {
     allTimeBest = null;
   }
 
-  // Migrate badges from the old 30-roll history into the permanent collection.
-  registerUnlockedBadges(
-    history.flatMap((row) => (Array.isArray(row.badges) ? row.badges : [])),
-  );
-
   renderHistory();
 }
 
@@ -3026,7 +2944,6 @@ async function applyAdminResetIfNeeded() {
         "digitRollLuckyGlovesLevel",
         "digitRollRollLengthLevel",
         "digitRollXPCapacity",
-        "digitRollUnlockedBadges",
         "digitRollXPRebirths",
         "digitRollNumberCharmPending",
         "digitRollTrueRebirths",
@@ -3131,13 +3048,6 @@ function openAdminPanel() {
         <button class="drAdminDanger" onclick="adminBanPlayer()">🚫 BAN PLAYER</button>
       </section>
       <section class="drAdminCard">
-        <h2>✨ Grant XP</h2>
-        <p>Give any whole-number amount of XP to a player. This uses a protected server-side admin RPC.</p>
-        <input id="drAdminXPUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
-        <input id="drAdminXPAmount" class="drAdminInput" type="number" min="1" step="1" placeholder="XP amount">
-        <button class="drAdminAction" onclick="adminGrantXP()">✨ GIVE XP</button>
-      </section>
-      <section class="drAdminCard">
         <h2>🧩 Easy to Extend</h2>
         <p>Future admin buttons can be added to <code>ADMIN_CONFIG.features</code> and wired to a protected Supabase RPC.</p>
       </section>
@@ -3154,40 +3064,18 @@ function adminStatus(message, good = false) {
 
 async function adminClearLeaderboard() {
   if (!isAdmin) return toast("Admin access denied.");
-  if (
-    !confirm(
-      "Clear EVERY roll from the leaderboard, Top Rolls, and Best Roll All Time? This cannot be undone.",
-    )
-  )
+  if (!confirm("Clear EVERY roll from the leaderboard? This cannot be undone."))
     return;
-
-  // Clear the UI immediately so old cached bests cannot remain visible.
-  const global = $("globalRows");
-  if (global)
-    global.innerHTML = '<span class="empty">Clearing leaderboard...</span>';
-  if ($("todayBest")) $("todayBest").textContent = "—";
-  if ($("todayBestMeta")) $("todayBestMeta").textContent = "No rolls today";
-  if ($("allBest")) $("allBest").textContent = "—";
-  if ($("allBestMeta")) $("allBestMeta").textContent = "No rolls yet";
-  window.currentLeaderboardRows = [];
-
   try {
-    // Supabase does not allow arbitrary SQL from browser JavaScript.
-    // This protected RPC executes: DELETE FROM public.rolls;
     const { data, error } = await supabaseClient.rpc("admin_clear_leaderboard");
     if (error) throw error;
-
-    // Reload from the database. With zero rolls this keeps all three
-    // leaderboard displays empty.
-    await loadLeaderboard();
     adminStatus(
       `🧹 Cleared ${Number(data || 0).toLocaleString()} leaderboard rolls.`,
       true,
     );
+    await loadLeaderboard();
   } catch (e) {
     console.error(e);
-    // Keep the UI consistent only if the deletion actually succeeded.
-    await loadLeaderboard();
     adminStatus(`❌ ${e.message || "Could not clear leaderboard."}`);
   }
 }
@@ -3212,47 +3100,6 @@ async function adminResetPlayer() {
   } catch (e) {
     console.error(e);
     adminStatus(`❌ ${e.message || "Could not reset player."}`);
-  }
-}
-
-async function adminGrantXP() {
-  if (!isAdmin) return toast("Admin access denied.");
-
-  const username = $("drAdminXPUsername")?.value.trim();
-  const amount = Number($("drAdminXPAmount")?.value);
-
-  if (!username) return toast("Enter a username.");
-  if (!Number.isSafeInteger(amount) || amount <= 0) {
-    return toast("Enter a valid whole XP amount.");
-  }
-
-  if (!confirm(`Give ${amount.toLocaleString()} XP to ${username}?`)) return;
-
-  try {
-    const { data, error } = await supabaseClient.rpc("admin_grant_xp", {
-      p_username: username,
-      p_amount: amount,
-    });
-    if (error) throw error;
-
-    // The admin RPC may grant more XP than the player's current normal
-    // capacity, so keep the local capacity at least as large as the new balance.
-    if (data?.user_id === currentUser?.id) {
-      xpBalance = Math.max(0, Number(data.new_balance) || 0);
-      xpCapacity = Math.max(getXPCapacity(), xpBalance);
-      localStorage.setItem("digitRollXPBalance", String(xpBalance));
-      saveProgressionState();
-      saveShopState();
-      updateShopUI();
-    }
-
-    adminStatus(
-      `✨ Gave ${Number(data?.amount || amount).toLocaleString()} XP to ${data?.username || username}. New balance: ${Number(data?.new_balance || 0).toLocaleString()} XP.`,
-      true,
-    );
-  } catch (e) {
-    console.error(e);
-    adminStatus(`❌ ${e.message || "Could not grant XP."}`);
   }
 }
 
@@ -3473,8 +3320,6 @@ async function saveCloudRoll(result) {
     xp: result.xp,
 
     player_id: currentUser.id,
-
-    user_id: currentUser.id,
 
     player_name: username,
 
@@ -4144,14 +3989,6 @@ async function performRoll() {
   }
 
   /* ==========================================================
-     PERMANENT BADGE COLLECTION
-     ========================================================== */
-
-  // Do this BEFORE trimming history so a badge can never disappear just
-  // because its original roll fell out of the 30-roll history window.
-  registerUnlockedBadges(result.badges);
-
-  /* ==========================================================
      LOCAL HISTORY
      ========================================================== */
 
@@ -4237,8 +4074,6 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 
       await loadPersonalStats();
 
-      await loadPersistentBadgeCollection();
-
       await loadLeaderboard();
     }, 0);
   } else {
@@ -4277,8 +4112,6 @@ async function init() {
       await loadAdminState();
 
       await loadPersonalStats();
-
-      await loadPersistentBadgeCollection();
     }
   } catch (error) {
     console.warn("Initial auth check failed:", error);
