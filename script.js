@@ -22,6 +22,7 @@ const ADMIN_CONFIG = {
     clearLeaderboard: true,
     resetPlayer: true,
     banPlayer: true,
+    grantXP: true,
   },
 };
 let isAdmin = false;
@@ -538,6 +539,8 @@ let currentUser = null;
 let profile = null;
 let rolling = false;
 let realtimeChannel = null;
+let badgeCollection = new Set();
+let badgeCollectionLoadedForUser = null;
 
 /* ============================================================
    SHOP / BADGE COLLECTION
@@ -560,6 +563,7 @@ let rollLengthLevel = Number(
   localStorage.getItem("digitRollRollLengthLevel") || 0,
 );
 const BASE_ROLL_LENGTH = 5;
+const BASE_XP_CAPACITY = 10000;
 const NORMAL_MAX_ROLL_LENGTH = 10;
 let MAX_ROLL_LENGTH =
   NORMAL_MAX_ROLL_LENGTH +
@@ -1049,16 +1053,108 @@ function saveShopState() {
   saveNumberCharmState();
 }
 
-function getUnlockedBadgeNames() {
+function getBadgeCollectionStorageKey() {
+  return currentUser
+    ? `digitRollBadgeCollection:${currentUser.id}`
+    : "digitRollBadgeCollection:guest";
+}
+
+function loadLocalBadgeCollection() {
   const unlocked = new Set();
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(getBadgeCollectionStorageKey()) || "[]",
+    );
+    if (Array.isArray(saved)) {
+      saved.forEach((name) => {
+        if (typeof name === "string" && name.trim()) unlocked.add(name);
+      });
+    }
+  } catch (e) {
+    console.warn("Badge collection local save unavailable:", e);
+  }
+
+  // Migrate any badges already present in local history into the collection.
   history.forEach((row) => {
     if (Array.isArray(row.badges)) {
-      row.badges.forEach((b) =>
-        unlocked.add(typeof b === "string" ? b : b.name),
-      );
+      row.badges.forEach((b) => {
+        const name = typeof b === "string" ? b : b?.name;
+        if (name) unlocked.add(name);
+      });
     }
   });
-  return unlocked;
+
+  badgeCollection = unlocked;
+  saveLocalBadgeCollection();
+  return badgeCollection;
+}
+
+function saveLocalBadgeCollection() {
+  try {
+    localStorage.setItem(
+      getBadgeCollectionStorageKey(),
+      JSON.stringify([...badgeCollection]),
+    );
+  } catch (e) {
+    console.warn("Badge collection local save unavailable:", e);
+  }
+}
+
+function addBadgesToCollection(badges) {
+  let changed = false;
+  for (const badge of Array.isArray(badges) ? badges : []) {
+    const name = typeof badge === "string" ? badge : badge?.name;
+    if (name && !badgeCollection.has(name)) {
+      badgeCollection.add(name);
+      changed = true;
+    }
+  }
+  if (changed) saveLocalBadgeCollection();
+  return changed;
+}
+
+function getUnlockedBadgeNames() {
+  return new Set(badgeCollection);
+}
+
+async function loadBadgeCollection() {
+  if (!currentUser) return false;
+  loadLocalBadgeCollection();
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_badge_collection");
+    if (error) throw error;
+
+    const cloudNames = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.badges)
+        ? data.badges
+        : [];
+
+    addBadgesToCollection(cloudNames);
+    badgeCollectionLoadedForUser = currentUser.id;
+
+    // Send the merged collection back so older local-only unlocks are not lost.
+    await syncBadgeCollection();
+    return true;
+  } catch (e) {
+    console.warn("Could not load badge collection:", e);
+    return false;
+  }
+}
+
+async function syncBadgeCollection() {
+  if (!currentUser || badgeCollectionLoadedForUser !== currentUser.id)
+    return false;
+  try {
+    const { error } = await supabaseClient.rpc("sync_badge_collection", {
+      p_badges: [...badgeCollection],
+    });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.warn("Could not sync badge collection:", e);
+    return false;
+  }
 }
 
 function getGuaranteedBadgeCount() {
@@ -1247,7 +1343,7 @@ function updateShopUI() {
     : `<div class="drShopItem"><h3>💰 XP Capacity Rebirth</h3><p>Your normal capacity has reached <b>100,000 XP</b>. Rebirth increases it by <b>+10,000 XP</b> permanently until a True Rebirth.</p><p>Cost: <b>${cap.toLocaleString()} XP</b></p><button class="drBuy" ${balance < cap ? "disabled" : ""} onclick="performXPCapacityRebirth()">${balance >= cap ? "💰 XP Capacity Rebirth" : "Not enough XP"}</button></div>`;
 
   const trueCost = getTrueRebirthCost();
-  const trueHTML = `<div class="drShopItem" style="border:1px solid rgba(255,215,0,.28);background:rgba(255,215,0,.06)"><h3>🌈 TRUE REBIRTH</h3><p>Resets all normal progression, including roll upgrades, XP capacity/rebirths, shop upgrades, charms, gloves, badges, history and bests.</p><p>Your account, username, and True Rebirth progress stay. Maximum roll length becomes <b>${MAX_ROLL_LENGTH + 1} digits</b> after this rebirth.</p><p>Cost: <b>${trueCost.toLocaleString()} XP</b></p><button class="drBuy" ${balance < trueCost ? "disabled" : ""} onclick="performTrueRebirth()">${balance >= trueCost ? "🌈 TRUE REBIRTH" : "Not enough XP"}</button></div>`;
+  const trueHTML = `<div class="drShopItem" style="border:1px solid rgba(255,215,0,.28);background:rgba(255,215,0,.06)"><h3>🌈 TRUE REBIRTH</h3><p>Resets normal gameplay progression, including roll upgrades, XP capacity/rebirths, shop upgrades, charms, gloves, history and bests. Your unlocked badge collection is permanently kept.</p><p>Your account, username, and True Rebirth progress stay. Maximum roll length becomes <b>${MAX_ROLL_LENGTH + 1} digits</b> after this rebirth.</p><p>Cost: <b>${trueCost.toLocaleString()} XP</b></p><button class="drBuy" ${balance < trueCost ? "disabled" : ""} onclick="performTrueRebirth()">${balance >= trueCost ? "🌈 TRUE REBIRTH" : "Not enough XP"}</button></div>`;
 
   content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${cap.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} / ${MAX_ROLL_LENGTH} numbers<br>🌈 True Rebirths: ${trueRebirths}<br>${activeCharm}<br>✨ XP Charm: ×${getXPCharmMultiplier()} XP<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
     <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to your current maximum of ${MAX_ROLL_LENGTH}.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
@@ -1419,6 +1515,7 @@ window.openAdminPanel = openAdminPanel;
 window.adminClearLeaderboard = adminClearLeaderboard;
 window.adminResetPlayer = adminResetPlayer;
 window.adminBanPlayer = adminBanPlayer;
+window.adminGrantXP = adminGrantXP;
 window.buyXPCapacityUpgrade = buyXPCapacityUpgrade;
 window.performXPCapacityRebirth = performXPCapacityRebirth;
 window.performTrueRebirth = performTrueRebirth;
@@ -2617,6 +2714,7 @@ function loadLocal() {
   }
 
   renderHistory();
+  loadLocalBadgeCollection();
 }
 
 /* ============================================================
@@ -3048,6 +3146,13 @@ function openAdminPanel() {
         <button class="drAdminDanger" onclick="adminBanPlayer()">🚫 BAN PLAYER</button>
       </section>
       <section class="drAdminCard">
+        <h2>💰 Give XP</h2>
+        <p>Enter an exact username and any positive whole-number XP amount. The server updates the player's cloud XP wallet.</p>
+        <input id="drAdminXPUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <input id="drAdminXPAmount" class="drAdminInput" type="number" min="1" step="1" placeholder="XP amount">
+        <button class="drAdminAction" onclick="adminGrantXP()">💰 GIVE XP</button>
+      </section>
+      <section class="drAdminCard">
         <h2>🧩 Easy to Extend</h2>
         <p>Future admin buttons can be added to <code>ADMIN_CONFIG.features</code> and wired to a protected Supabase RPC.</p>
       </section>
@@ -3125,9 +3230,43 @@ async function adminBanPlayer() {
   }
 }
 
+async function adminGrantXP() {
+  if (!isAdmin) return toast("Admin access denied.");
+
+  const username = $("drAdminXPUsername")?.value.trim();
+  const rawAmount = $("drAdminXPAmount")?.value.trim();
+  const amount = Number(rawAmount);
+
+  if (!username) return toast("Enter a username.");
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return toast("Enter a valid whole XP amount.");
+  }
+  if (amount > 9007199254740991) {
+    return toast("That XP amount is too large.");
+  }
+  if (!confirm(`Give ${amount.toLocaleString()} XP to ${username}?`)) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_grant_xp", {
+      p_username: username,
+      p_amount: amount,
+    });
+    if (error) throw error;
+
+    adminStatus(
+      `💰 Gave ${Number(data?.amount ?? amount).toLocaleString()} XP to ${data?.username || username}. New balance: ${Number(data?.new_balance ?? 0).toLocaleString()} XP.`,
+      true,
+    );
+  } catch (e) {
+    console.error("Admin XP grant failed:", e);
+    adminStatus(`❌ ${e.message || "Could not give XP."}`);
+  }
+}
+
 /* ============================================================
    ACCOUNT UI
-   ============================================================ */
+   ============================================================
+*/
 
 function updateAccountUI() {
   if (currentUser) {
@@ -3173,7 +3312,7 @@ async function loadPersonalStats() {
   const { data, error } = await supabaseClient
     .from("rolls")
     .select("roll,one_in,xp,badges,rarity,shown,blanks,created_at")
-    .eq("player_id", currentUser.id)
+    .eq("user_id", currentUser.id)
     .order("one_in", {
       ascending: false,
     });
@@ -3286,7 +3425,7 @@ async function updateExistingRollNames(newUsername) {
       .update({
         player_name: newUsername,
       })
-      .eq("player_id", currentUser.id);
+      .eq("user_id", currentUser.id);
 
     if (error) {
       console.warn("Could not update old roll names:", error);
@@ -3320,6 +3459,8 @@ async function saveCloudRoll(result) {
     xp: result.xp,
 
     player_id: currentUser.id,
+
+    user_id: currentUser.id,
 
     player_name: username,
 
@@ -3996,6 +4137,8 @@ async function performRoll() {
 
   history = history.slice(0, 30);
 
+  addBadgesToCollection(result.badges);
+
   if (better(result, personalBest)) {
     personalBest = result;
   }
@@ -4014,6 +4157,7 @@ async function performRoll() {
 
   if (currentUser) {
     await saveCloudRoll(result);
+    await syncBadgeCollection();
 
     await loadPersonalStats();
 
@@ -4069,8 +4213,11 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     setTimeout(async () => {
       await ensureProfile(currentUser);
 
+      loadLocalBadgeCollection();
       updateAccountUI();
       await loadAdminState();
+      await loadXPWallet();
+      await loadBadgeCollection();
 
       await loadPersonalStats();
 
@@ -4080,6 +4227,8 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     currentUser = null;
 
     profile = null;
+    badgeCollection = new Set();
+    badgeCollectionLoadedForUser = null;
 
     updateAccountUI();
   }
@@ -4108,8 +4257,11 @@ async function init() {
 
       await ensureProfile(currentUser);
 
+      loadLocalBadgeCollection();
       updateAccountUI();
       await loadAdminState();
+      await loadXPWallet();
+      await loadBadgeCollection();
 
       await loadPersonalStats();
     }
