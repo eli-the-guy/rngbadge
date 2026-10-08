@@ -354,11 +354,7 @@ const references = {
     "A repeating 1010 pattern that looks like a tiny binary joke.",
     100000,
   ],
-  010101: [
-    "💾 Reverse Binary Vibes",
-    "A repeating 0101 pattern with unmistakable binary aesthetics.",
-    120000,
-  ],
+
   2001: [
     "🚀 Space Meme",
     "A recognizable science-fiction number reference.",
