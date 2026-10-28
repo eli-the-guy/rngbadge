@@ -834,9 +834,18 @@ function updateShopUI() {
       const affordable = balance >= item.cost;
       return `<div class="drShopItem"><h3>${item.name}</h3><p>Guarantees <b>+${item.bonus}</b> extra badge on every roll.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !affordable ? "disabled" : ""} onclick="buyDigitRollLuck(${item.level},${item.cost})">${owned ? "✓ Purchased" : affordable ? "Buy" : "Not enough XP"}</button></div>`;
     },
-  ).join(
-    "",
-  )}</div><div class="drShopItem" style="margin-top:16px;border:1px solid rgba(130,160,255,.35);background:linear-gradient(135deg,rgba(70,100,255,.12),rgba(160,70,255,.12))"><h3>⏭ Skip Roll</h3><p>Unlock a button that skips the rolling animation and badge-by-badge reveal while preserving the roll result and rewards.</p><p>Cost: <b>5,000 XP</b></p><button class="drBuy" ${digitRollSkipUnlocked || balance < 5000 ? "disabled" : ""} onclick="buySkipRollUpgrade()">${digitRollSkipUnlocked ? "✓ Permanently Unlocked" : balance >= 5000 ? "Buy Upgrade" : "Not enough XP"}</button></div>`;
+  ).join("")}</div>
+  <div class="drShopItem drUpgradeCard" style="margin-top:16px;border:1px solid rgba(130,160,255,.35);background:linear-gradient(135deg,rgba(70,100,255,.14),rgba(190,70,255,.13))">
+    <h3>⏭ Skip Roll</h3>
+    <p>Unlocks a button during rolling that skips the animation and badge-by-badge reveal while keeping the same roll, badges, XP, history and cloud-save flow.</p>
+    <p>Cost: <b>5,000 XP</b> · Permanent unlock</p>
+    <button class="drBuy" ${digitRollSkipUnlocked || balance < DIGIT_ROLL_SKIP_COST ? "disabled" : ""} onclick="buySkipRollUpgrade()">${digitRollSkipUnlocked ? "✓ Permanently Unlocked" : balance >= DIGIT_ROLL_SKIP_COST ? "Unlock Skip Roll" : "Not enough XP"}</button>
+  </div>
+  <div class="drShopGrid" style="margin-top:12px">
+    <div class="drShopItem drUpgradeCard"><h3>⚡ Quick Spin</h3><p>Permanent faster number cycling. Keeps the full result and reward calculation.</p><p>Cost: <b>2,500 XP</b></p><button class="drBuy" ${digitRollFastAnimation || balance < 2500 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('fast')">${digitRollFastAnimation ? "✓ Purchased" : balance >= 2500 ? "Buy Upgrade" : "Not enough XP"}</button></div>
+    <div class="drShopItem drUpgradeCard"><h3>✨ XP Surge</h3><p>Permanently increases XP earned from each roll by 25%.</p><p>Cost: <b>15,000 XP</b></p><button class="drBuy" ${digitRollXPBoost || balance < 15000 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('xp')">${digitRollXPBoost ? "✓ Purchased" : balance >= 15000 ? "Buy Upgrade" : "Not enough XP"}</button></div>
+    <div class="drShopItem drUpgradeCard"><h3>🏅 Badge Magnet</h3><p>Permanently adds one extra eligible badge to each roll.</p><p>Cost: <b>25,000 XP</b></p><button class="drBuy" ${digitRollBonusBadge || balance < 25000 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('badge')">${digitRollBonusBadge ? "✓ Purchased" : balance >= 25000 ? "Buy Upgrade" : "Not enough XP"}</button></div>
+  </div>`;
 }
 
 function openDigitRollShop() {
@@ -2028,6 +2037,7 @@ function saveLocal() {
   } catch (e) {
     console.warn("Local save unavailable", e);
   }
+  scheduleDigitRollCloudSave();
 }
 
 function loadLocal() {
@@ -2968,111 +2978,410 @@ function setupRealtime() {
    ============================================================ */
 
 /* ============================================================
-   SKIP ROLL UPGRADE + CINEMATIC ROLL EFFECTS
-   Additive patch: preserves the original game systems.
+   ADDITIVE OVERHAUL — CINEMATIC FX, SKIP UPGRADE, CLOUD PROGRESS
+   Original systems remain in place; these hooks extend them.
    ============================================================ */
+const DIGIT_ROLL_SKIP_COST = 5000;
 let digitRollSkipUnlocked = false;
 let digitRollSkipRequested = false;
+let digitRollRevealResolve = null;
+let digitRollCloudSaveTimer = null;
+let digitRollCloudHydrated = false;
+let digitRollFastAnimation = false;
+let digitRollXPBoost = false;
+let digitRollBonusBadge = false;
 
-function loadSkipRollUpgrade() {
-  try {
-    digitRollSkipUnlocked =
-      localStorage.getItem("digitRollSkipRollUnlocked") === "true";
-  } catch (_) {}
-  installRollFX();
-  updateSkipRollButton();
-}
-
-function installRollFX() {
-  if (document.getElementById("digitRollCinematicFX")) return;
+function installDigitRollOverhaulFX() {
+  if (document.getElementById("digitRollOverhaulFX")) return;
   const style = document.createElement("style");
-  style.id = "digitRollCinematicFX";
+  style.id = "digitRollOverhaulFX";
   style.textContent = `
-    #number.rolling { position:relative; isolation:isolate; animation:dr-number-pulse .65s ease-in-out infinite alternate; text-shadow:0 0 12px rgba(111,185,255,.75),0 0 34px rgba(154,94,255,.5); }
-    #number.dr-locking { animation:dr-number-lock .42s cubic-bezier(.2,.9,.2,1) both; }
-    .drSkipRollBtn { display:none; margin:10px auto 0; padding:11px 18px; border-radius:13px; border:1px solid rgba(130,190,255,.55); background:linear-gradient(135deg,rgba(67,112,255,.28),rgba(164,76,255,.28)); color:#fff; font-weight:900; letter-spacing:.04em; cursor:pointer; box-shadow:0 0 22px rgba(100,120,255,.16); transition:transform .18s,box-shadow .18s,opacity .18s; }
-    .drSkipRollBtn:hover { transform:translateY(-2px); box-shadow:0 0 28px rgba(100,120,255,.42); }
-    .drSkipRollBtn:disabled { opacity:.45; cursor:not-allowed; }
-    .drSkipRollBtn.drVisible { display:block; animation:dr-skip-in .3s ease-out both; }
-    .drDigitBurst { animation:dr-digit-pop .34s cubic-bezier(.2,1.4,.4,1) both; }
-    #number.drFinalReveal { animation:dr-final-burst .8s cubic-bezier(.2,.9,.2,1) both; }
-    .badgeFocus { animation:dr-badge-entrance .45s cubic-bezier(.2,.9,.2,1) both; }
-    @keyframes dr-number-pulse { from {transform:scale(1);filter:brightness(1)} to {transform:scale(1.035);filter:brightness(1.45)} }
-    @keyframes dr-number-lock { 0%{transform:scale(1.08);filter:blur(2px)} 65%{transform:scale(.97);filter:blur(0)} 100%{transform:scale(1);filter:brightness(1.2)} }
-    @keyframes dr-skip-in { from{opacity:0;transform:translateY(8px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
-    @keyframes dr-digit-pop { from{opacity:.35;transform:translateY(-8px) scale(1.2);filter:blur(3px)} to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)} }
-    @keyframes dr-final-burst { 0%{transform:scale(.92);filter:brightness(1)} 40%{transform:scale(1.09);filter:brightness(1.8)} 100%{transform:scale(1);filter:brightness(1.15)} }
-    @keyframes dr-badge-entrance { from{opacity:0;transform:translateY(14px) scale(.96);filter:blur(5px)} to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)} }
-    @media(prefers-reduced-motion:reduce) { #number.rolling,#number.dr-locking,#number.drFinalReveal,.badgeFocus,.drSkipRollBtn.drVisible { animation:none!important; } }
+    #number { transform-origin:center; transition:filter .2s ease,text-shadow .25s ease; }
+    #number.drRollingDigits { animation:drDigitsPulse .55s ease-in-out infinite alternate; filter:brightness(1.25); text-shadow:0 0 12px #73caff,0 0 32px #7c4dff; }
+    #number.drDigitLock { animation:drDigitLock .48s cubic-bezier(.16,1,.3,1) both; }
+    #number.drRarityBurst { position:relative; animation:drRarityBurst 1.15s cubic-bezier(.16,1,.3,1) both; }
+    .drSkipRollBtn { display:none; margin:12px auto; padding:12px 20px; border:1px solid rgba(150,190,255,.65); border-radius:14px; color:#fff; font-weight:900; letter-spacing:.08em; background:linear-gradient(120deg,rgba(35,102,255,.4),rgba(157,56,255,.42)); box-shadow:0 0 24px rgba(100,110,255,.24); cursor:pointer; }
+    .drSkipRollBtn.drOn { display:block; animation:drSkipIn .25s ease-out both; }
+    .drSkipRollBtn:disabled { opacity:.5; cursor:wait; }
+    .drRarityFX { position:fixed; inset:0; z-index:9990; pointer-events:none; overflow:hidden; opacity:0; animation:drFxFade 3.4s ease-out forwards; }
+    .drRarityFX .drParticle { position:absolute; left:var(--x); top:var(--y); width:var(--s); height:var(--s); border-radius:50%; background:var(--c); box-shadow:0 0 12px var(--c),0 0 26px var(--c); animation:drParticleFly var(--d) cubic-bezier(.1,.7,.2,1) forwards; }
+    .drRarityFX.drTranscendent { background:radial-gradient(ellipse at center,rgba(65,20,130,.25),transparent 65%); }
+    .drRarityFX.drDivine { background:radial-gradient(ellipse at center,rgba(255,195,65,.18),transparent 65%); }
+    .drRarityFX.drMythic { background:radial-gradient(ellipse at center,rgba(255,40,120,.16),transparent 65%); }
+    .drRarityFX.drLegendary { background:radial-gradient(ellipse at center,rgba(255,135,30,.12),transparent 65%); }
+    .drRarityFX.drTranscendent:after { content:""; position:absolute; inset:-50%; background:conic-gradient(from 0deg,transparent,rgba(130,90,255,.22),transparent,rgba(65,230,255,.2),transparent); animation:drCosmicSpin 3s linear infinite; }
+    .drRarityFX.drTranscendent .drParticle { width:var(--s); height:var(--s); }
+    .drRarityFX.drTranscendent .drParticle:nth-child(3n) { border-radius:0; transform:rotate(45deg); }
+    .drSkipNotice { text-align:center; color:#bcd3ff; font-weight:800; font-size:12px; margin-top:5px; }
+    @keyframes drDigitsPulse { from{transform:scale(1);filter:brightness(1)} to{transform:scale(1.035);filter:brightness(1.7)} }
+    @keyframes drDigitLock { 0%{transform:scale(1.12);filter:blur(3px) brightness(2)} 60%{transform:scale(.96);filter:blur(0) brightness(1.7)} 100%{transform:scale(1);filter:brightness(1.15)} }
+    @keyframes drRarityBurst { 0%{transform:scale(.88);filter:brightness(1)} 32%{transform:scale(1.12);filter:brightness(2.2)} 60%{transform:scale(.98)} 100%{transform:scale(1);filter:brightness(1.3)} }
+    @keyframes drSkipIn { from{opacity:0;transform:translateY(8px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes drFxFade { 0%{opacity:0} 12%{opacity:1} 72%{opacity:.9} 100%{opacity:0} }
+    @keyframes drParticleFly { from{transform:translate3d(0,0,0) scale(.25);opacity:0} 12%{opacity:1} to{transform:translate3d(var(--dx),var(--dy),0) rotate(540deg) scale(0);opacity:0} }
+    @keyframes drCosmicSpin { to{transform:rotate(360deg)} }
+    @media(prefers-reduced-motion:reduce){#number.drRollingDigits,#number.drDigitLock,#number.drRarityBurst,.drSkipRollBtn.drOn,.drRarityFX,.drParticle{animation-duration:.01ms!important;animation-iteration-count:1!important}}
   `;
   document.head.appendChild(style);
-}
-
-function updateSkipRollButton() {
   const rollBtn = $("rollBtn");
-  if (!rollBtn || !rollBtn.parentElement) return;
-  let btn = $("digitRollSkipButton");
-  if (!btn) {
-    btn = document.createElement("button");
+  if (rollBtn && !$("digitRollSkipButton")) {
+    const btn = document.createElement("button");
     btn.id = "digitRollSkipButton";
     btn.className = "drSkipRollBtn";
     btn.type = "button";
     btn.textContent = "⏭ SKIP ROLL";
-    btn.onclick = skipCurrentDigitRoll;
+    btn.addEventListener("click", skipCurrentDigitRoll);
     rollBtn.insertAdjacentElement("afterend", btn);
   }
-  btn.classList.toggle("drVisible", digitRollSkipUnlocked && rolling);
-  btn.disabled = !rolling || digitRollSkipRequested;
+  try {
+    digitRollSkipUnlocked =
+      localStorage.getItem("digitRollSkipRollUnlocked") === "true";
+    digitRollFastAnimation =
+      localStorage.getItem("digitRollFastAnimation") === "true";
+    digitRollXPBoost = localStorage.getItem("digitRollXPBoost") === "true";
+    digitRollBonusBadge =
+      localStorage.getItem("digitRollBonusBadge") === "true";
+  } catch (_) {}
+  updateDigitRollSkipButton();
+  setupDigitRollAdminPanel();
+}
+
+function updateDigitRollSkipButton() {
+  const btn = $("digitRollSkipButton");
+  if (!btn) return;
+  btn.classList.toggle("drOn", digitRollSkipUnlocked && rolling);
+  btn.disabled = digitRollSkipRequested;
+  btn.textContent = digitRollSkipRequested ? "⏭ SKIPPING…" : "⏭ SKIP ROLL";
 }
 
 function skipCurrentDigitRoll() {
-  if (!digitRollSkipUnlocked || !rolling) return;
+  if (!digitRollSkipUnlocked || !rolling || digitRollSkipRequested) return;
   digitRollSkipRequested = true;
-  if (typeof window.digitRollResolveReveal === "function") {
-    window.digitRollResolveReveal();
-    window.digitRollResolveReveal = null;
-  }
-  const btn = $("digitRollSkipButton");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "⏭ SKIPPING…";
-  }
+  updateDigitRollSkipButton();
+  if (typeof digitRollRevealResolve === "function") digitRollRevealResolve();
 }
+window.skipCurrentDigitRoll = skipCurrentDigitRoll;
 
 function buySkipRollUpgrade() {
-  const cost = 5000;
-  if (digitRollSkipUnlocked) {
-    toast("⏭ Skip Roll is already unlocked.");
-    return;
-  }
-  if (getXPBalance() < cost) {
-    toast("Not enough XP. Skip Roll costs 5,000 XP.");
-    return;
-  }
-  xpBalance = getXPBalance() - cost;
-  xpSpent += cost;
+  if (digitRollSkipUnlocked) return toast("Skip Roll is already unlocked.");
+  if (getXPBalance() < DIGIT_ROLL_SKIP_COST)
+    return toast("Not enough XP. Skip Roll costs 5,000 XP.");
+  xpBalance = getXPBalance() - DIGIT_ROLL_SKIP_COST;
+  xpSpent += DIGIT_ROLL_SKIP_COST;
   digitRollSkipUnlocked = true;
   try {
     localStorage.setItem("digitRollSkipRollUnlocked", "true");
   } catch (_) {}
   saveLocal();
-  toast(
-    "⏭ Skip Roll unlocked! You can now skip the animation and badge reveal.",
-  );
+  scheduleDigitRollCloudSave();
+  toast("⏭ Skip Roll unlocked permanently!");
   updateShopUI();
-  updateSkipRollButton();
+  updateDigitRollSkipButton();
 }
 window.buySkipRollUpgrade = buySkipRollUpgrade;
-window.skipCurrentDigitRoll = skipCurrentDigitRoll;
+
+function buyDigitRollExtraUpgrade(kind) {
+  const upgrades = {
+    fast: { cost: 2500, key: "digitRollFastAnimation", label: "⚡ Quick Spin" },
+    xp: { cost: 15000, key: "digitRollXPBoost", label: "✨ XP Surge" },
+    badge: {
+      cost: 25000,
+      key: "digitRollBonusBadge",
+      label: "🏅 Badge Magnet",
+    },
+  };
+  const item = upgrades[kind];
+  if (!item) return;
+  if (window[item.key]) return toast("That upgrade is already purchased.");
+  if (getXPBalance() < item.cost) return toast("Not enough XP.");
+  xpBalance = getXPBalance() - item.cost;
+  xpSpent += item.cost;
+  window[item.key] = true;
+  if (kind === "fast") digitRollFastAnimation = true;
+  if (kind === "xp") digitRollXPBoost = true;
+  if (kind === "badge") digitRollBonusBadge = true;
+  try {
+    localStorage.setItem(item.key, "true");
+  } catch (_) {}
+  saveLocal();
+  scheduleDigitRollCloudSave();
+  toast(item.label + " unlocked!");
+  updateShopUI();
+}
+window.buyDigitRollExtraUpgrade = buyDigitRollExtraUpgrade;
+
+function triggerDigitRollRarityFX(rarity) {
+  const normalized = String(rarity || "").toUpperCase();
+  const ranks = {
+    COMMON: 0,
+    UNCOMMON: 1,
+    RARE: 2,
+    EPIC: 3,
+    LEGENDARY: 4,
+    MYTHIC: 5,
+    DIVINE: 6,
+    TRANSCENDENT: 7,
+  };
+  const rank = ranks[normalized] ?? (normalized === "???" ? 8 : -1);
+  if (rank < 4) return;
+  const fx = document.createElement("div");
+  fx.className =
+    "drRarityFX " +
+    (rank >= 7
+      ? "drTranscendent"
+      : rank === 6
+        ? "drDivine"
+        : rank === 5
+          ? "drMythic"
+          : "drLegendary");
+  const count = rank >= 7 ? 150 : rank === 6 ? 100 : rank === 5 ? 65 : 34;
+  const colors =
+    rank >= 7
+      ? ["#b58aff", "#5ef5ff", "#ffffff", "#ff71d8"]
+      : rank === 6
+        ? ["#ffe27a", "#fff7d1", "#ffad42"]
+        : rank === 5
+          ? ["#ff4b9b", "#b15cff", "#ffffff"]
+          : ["#ffb45b", "#fff0b0"];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement("i");
+    p.className = "drParticle";
+    p.style.setProperty("--x", Math.random() * 100 + "%");
+    p.style.setProperty("--y", 35 + Math.random() * 65 + "%");
+    p.style.setProperty(
+      "--s",
+      (rank >= 7 ? 3 + Math.random() * 7 : 2 + Math.random() * 5) + "px",
+    );
+    p.style.setProperty(
+      "--c",
+      colors[Math.floor(Math.random() * colors.length)],
+    );
+    p.style.setProperty(
+      "--dx",
+      (Math.random() * 2 - 1) * window.innerWidth * 0.65 + "px",
+    );
+    p.style.setProperty(
+      "--dy",
+      -80 - Math.random() * window.innerHeight * 0.85 + "px",
+    );
+    p.style.setProperty("--d", 1.1 + Math.random() * 2.1 + "s");
+    fx.appendChild(p);
+  }
+  document.body.appendChild(fx);
+  setTimeout(() => fx.remove(), 3700);
+}
+
+function getDigitRollCloudSnapshot() {
+  return {
+    version: 2,
+    savedAt: Date.now(),
+    history: Array.isArray(history) ? history.slice(0, 30) : [],
+    personalBest: personalBest || null,
+    allTimeBest: allTimeBest || null,
+    xpBalance: Number.isFinite(Number(xpBalance)) ? Number(xpBalance) : null,
+    xpSpent: Number(xpSpent || 0),
+    shopLuckLevel: Number(shopLuckLevel || 0),
+    skipRollUnlocked: !!digitRollSkipUnlocked,
+    fastAnimation: !!digitRollFastAnimation,
+    xpBoost: !!digitRollXPBoost,
+    bonusBadge: !!digitRollBonusBadge,
+  };
+}
+
+function applyDigitRollCloudSnapshot(snapshot) {
+  if (!snapshot || snapshot.version !== 2) return false;
+  if (Array.isArray(snapshot.history)) history = snapshot.history.slice(0, 30);
+  personalBest = snapshot.personalBest || null;
+  allTimeBest = snapshot.allTimeBest || null;
+  if (Number.isFinite(Number(snapshot.xpBalance)))
+    xpBalance = Math.max(0, Number(snapshot.xpBalance));
+  if (Number.isFinite(Number(snapshot.xpSpent)))
+    xpSpent = Math.max(0, Number(snapshot.xpSpent));
+  if (Number.isFinite(Number(snapshot.shopLuckLevel)))
+    shopLuckLevel = Math.max(0, Number(snapshot.shopLuckLevel));
+  digitRollSkipUnlocked = !!snapshot.skipRollUnlocked;
+  digitRollFastAnimation = !!snapshot.fastAnimation;
+  digitRollXPBoost = !!snapshot.xpBoost;
+  digitRollBonusBadge = !!snapshot.bonusBadge;
+  try {
+    localStorage.setItem("digitRollHistory", JSON.stringify(history));
+    localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
+    localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
+    if (xpBalance !== null)
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+    localStorage.setItem("digitRollXPSpent", String(xpSpent));
+    localStorage.setItem("digitRollLuckLevel", String(shopLuckLevel));
+    localStorage.setItem(
+      "digitRollSkipRollUnlocked",
+      String(digitRollSkipUnlocked),
+    );
+    localStorage.setItem(
+      "digitRollFastAnimation",
+      String(digitRollFastAnimation),
+    );
+    localStorage.setItem("digitRollXPBoost", String(digitRollXPBoost));
+    localStorage.setItem("digitRollBonusBadge", String(digitRollBonusBadge));
+  } catch (_) {}
+  renderHistory();
+  updateShopUI();
+  updateDigitRollSkipButton();
+  return true;
+}
+
+function scheduleDigitRollCloudSave() {
+  if (!currentUser || !digitRollCloudHydrated) return;
+  clearTimeout(digitRollCloudSaveTimer);
+  digitRollCloudSaveTimer = setTimeout(async () => {
+    try {
+      const { error } = await supabaseClient.auth.updateUser({
+        data: { digit_roll_progress_v2: getDigitRollCloudSnapshot() },
+      });
+      if (error) console.warn("Progress cloud sync failed:", error.message);
+    } catch (error) {
+      console.warn("Progress cloud sync failed:", error);
+    }
+  }, 900);
+}
+
+async function hydrateDigitRollCloudProgress(user) {
+  if (!user) return;
+  digitRollCloudHydrated = false;
+  try {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error) throw error;
+    const cloud = data?.user?.user_metadata?.digit_roll_progress_v2;
+    if (cloud && cloud.version === 2 && Number(cloud.savedAt) > 0) {
+      applyDigitRollCloudSnapshot(cloud);
+    } else {
+      // First migration only: upload the current local save if it has real content.
+      const hasLocalProgress =
+        history.length > 0 ||
+        Number(xpSpent) > 0 ||
+        Number(shopLuckLevel) > 0 ||
+        Number(xpBalance) > 0 ||
+        !!personalBest ||
+        !!allTimeBest;
+      digitRollCloudHydrated = true;
+      if (hasLocalProgress) scheduleDigitRollCloudSave();
+    }
+    digitRollCloudHydrated = true;
+    saveLocal();
+  } catch (error) {
+    console.warn("Cloud progress hydration failed; local save kept:", error);
+    digitRollCloudHydrated = false;
+  }
+}
+
+function setupDigitRollAdminPanel() {
+  const authorized =
+    String(currentUser?.email || "").toLowerCase() === "elicole613@gmail.com";
+  let button = document.getElementById("digitRollAdminButton");
+  if (!authorized) {
+    if (button) button.remove();
+    return;
+  }
+  if (!button) {
+    button = document.createElement("button");
+    button.id = "digitRollAdminButton";
+    button.type = "button";
+    button.className = "drNavBtn";
+    button.textContent = "🛡 Admin";
+    button.style.cssText =
+      "position:fixed;left:18px;bottom:18px;z-index:10001;border-color:rgba(255,190,90,.55);background:linear-gradient(135deg,rgba(90,55,10,.92),rgba(40,24,8,.94))";
+    button.addEventListener("click", openDigitRollAdminPanel);
+    document.body.appendChild(button);
+  }
+}
+function openDigitRollAdminPanel() {
+  if (
+    String(currentUser?.email || "").toLowerCase() !== "elicole613@gmail.com"
+  ) {
+    toast("Admin access denied.");
+    return;
+  }
+  let panel = document.getElementById("digitRollAdminPanel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "digitRollAdminPanel";
+    panel.style.cssText =
+      "position:fixed;inset:0;z-index:10020;display:none;overflow:auto;padding:22px;background:rgba(3,5,13,.86);backdrop-filter:blur(14px)";
+    panel.innerHTML = `<section style="max-width:780px;margin:5vh auto;padding:24px;border-radius:22px;background:#101726;color:#eef3ff;border:1px solid rgba(255,190,90,.4);box-shadow:0 25px 100px #000">
+      <header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">🛡 Digit Roll Admin Hub</h2><button id="drAdminClose" class="drClose" type="button">×</button></header>
+      <p style="color:#aab5ca">Diagnostic controls for this build. Destructive actions require server-side authorization and are intentionally not simulated in the browser.</p>
+      <div id="drAdminStatus" style="padding:14px;border-radius:12px;background:#080d17;margin:14px 0">Ready.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="drAdminCheck" class="drBuy" type="button">🔎 Check Cloud</button><button id="drAdminCopy" class="drBuy" type="button">📋 Copy Diagnostics</button><button id="drAdminRefresh" class="drBuy" type="button">↻ Refresh Leaderboard</button></div>
+      <pre id="drAdminOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;color:#a9c7ff;background:#080d17;padding:14px;border-radius:12px;max-height:42vh;overflow:auto"></pre>
+    </section>`;
+    panel.addEventListener("click", (e) => {
+      if (e.target === panel) panel.style.display = "none";
+    });
+    document.body.appendChild(panel);
+    panel.querySelector("#drAdminClose").onclick = () =>
+      (panel.style.display = "none");
+    panel.querySelector("#drAdminCheck").onclick = async () => {
+      const status = panel.querySelector("#drAdminStatus"),
+        output = panel.querySelector("#drAdminOutput");
+      status.textContent = "Checking Supabase…";
+      const report = {
+        checkedAt: new Date().toISOString(),
+        user: currentUser?.email || null,
+        authUserId: currentUser?.id || null,
+        cloudProgressHydrated: digitRollCloudHydrated,
+        localHistoryRows: history.length,
+        xpBalance: getXPBalance(),
+        xpSpent,
+        shopLuckLevel,
+        skipRollUnlocked: digitRollSkipUnlocked,
+      };
+      try {
+        const { count, error } = await supabaseClient
+          .from("rolls")
+          .select("id", { count: "exact", head: true });
+        report.rollsTable = error
+          ? { ok: false, message: error.message, code: error.code }
+          : { ok: true, count };
+        const { data: userData, error: userError } =
+          await supabaseClient.auth.getUser();
+        report.authSession = userError
+          ? { ok: false, message: userError.message }
+          : { ok: !!userData?.user };
+      } catch (e) {
+        report.checkError = String(e?.message || e);
+      }
+      output.textContent = JSON.stringify(report, null, 2);
+      status.textContent = "Diagnostics complete. Review the report below.";
+      window.digitRollAdminDiagnostics = report;
+    };
+    panel.querySelector("#drAdminCopy").onclick = async () => {
+      const output =
+        panel.querySelector("#drAdminOutput").textContent ||
+        "Run Check Cloud first.";
+      try {
+        await navigator.clipboard.writeText(output);
+        panel.querySelector("#drAdminStatus").textContent =
+          "Diagnostics copied.";
+      } catch (_) {
+        panel.querySelector("#drAdminStatus").textContent =
+          "Clipboard blocked. Select and copy the report manually.";
+      }
+    };
+    panel.querySelector("#drAdminRefresh").onclick = async () => {
+      await loadLeaderboard();
+      panel.querySelector("#drAdminStatus").textContent =
+        "Leaderboard refresh requested.";
+    };
+  }
+  panel.style.display = "block";
+}
 
 async function performRoll() {
   if (rolling) return;
 
   rolling = true;
   digitRollSkipRequested = false;
+  updateDigitRollSkipButton();
 
   $("rollBtn").disabled = true;
-  updateSkipRollButton();
 
   $("rollLabel").textContent = "ROLLING...";
 
@@ -3091,7 +3400,7 @@ async function performRoll() {
   $("badges").innerHTML =
     '<span class="empty">The number is being generated...</span>';
 
-  $("number").classList.add("rolling");
+  $("number").classList.add("rolling", "drRollingDigits");
 
   applyRarityColor($("liveRarity"), "COMMON");
 
@@ -3106,47 +3415,59 @@ async function performRoll() {
   let i = 0;
 
   await new Promise((resolve) => {
-    const timer = setInterval(() => {
-      if (digitRollSkipRequested) {
-        visible.splice(0, visible.length, ...finalChars);
-        $("number").textContent = visible.join("");
-        clearInterval(timer);
-        resolve();
-        return;
-      }
-
-      // Fast cycling creates a slot-machine style roll before each digit locks.
-      const cycling = finalChars.map((digit, index) => {
-        if (index < i) return digit;
-        return Math.floor(Math.random() * 10).toString();
-      });
-      $("number").textContent = cycling.join("");
-      $("number").classList.add("drDigitBurst");
-      requestAnimationFrame(() =>
-        $("number")?.classList.remove("drDigitBurst"),
-      );
-      if (i < 10) {
-        visible[i] = finalChars[i];
-        i++;
-      }
-      if (i >= 10) {
-        $("number").textContent = finalChars.join("");
-        clearInterval(timer);
-        resolve();
-      }
-    }, 95);
+    const timer = setInterval(
+      () => {
+        if (digitRollSkipRequested) {
+          $("number").textContent = finalChars.join("");
+          clearInterval(timer);
+          resolve();
+          return;
+        }
+        const cycling = finalChars.map((digit, index) =>
+          index < i ? digit : String(Math.floor(Math.random() * 10)),
+        );
+        $("number").textContent = cycling.join("");
+        if (i < finalChars.length) {
+          visible[i] = finalChars[i];
+          i++;
+          $("number").classList.remove("drDigitLock");
+          void $("number").offsetWidth;
+          $("number").classList.add("drDigitLock");
+        }
+        if (i >= finalChars.length) {
+          $("number").textContent = finalChars.join("");
+          clearInterval(timer);
+          resolve();
+        }
+      },
+      digitRollFastAnimation ? 75 : 160,
+    );
   });
 
-  $("number").classList.remove("rolling");
-  $("number").classList.add("dr-locking");
-  if (digitRollSkipRequested) {
-    $("number").textContent = finalChars.join("");
-  }
-  setTimeout(() => $("number")?.classList.remove("dr-locking"), 450);
+  $("number").classList.remove("rolling", "drRollingDigits");
+  $("number").classList.add("drDigitLock");
+  setTimeout(() => $("number")?.classList.remove("drDigitLock"), 500);
 
   const analysis = analyze(finalChars);
+  triggerDigitRollRarityFX(analysis.rarity);
 
   applyGuaranteedBadges(analysis);
+  if (digitRollBonusBadge && Array.isArray(analysis.badges)) {
+    const already = new Set(analysis.badges.map((b) => b.name));
+    const pool = Object.values(staticBadgeCatalog).filter(
+      (b) => !already.has(b.name) && Number(b.oneIn) <= 10000,
+    );
+    if (pool.length) {
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      analysis.badges.push({
+        ...picked,
+        guaranteed: true,
+        upgradeGranted: true,
+      });
+    }
+  }
+  if (digitRollXPBoost)
+    analysis.xp = Math.floor(Number(analysis.xp || 0) * 1.25);
   xpBalance = getXPBalance() + Number(analysis.xp || 0);
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
 
@@ -3179,7 +3500,7 @@ async function performRoll() {
   let bIndex = 0;
 
   await new Promise((resolve) => {
-    window.digitRollResolveReveal = () => resolve();
+    digitRollRevealResolve = resolve;
     const revealBadge = () => {
       if (digitRollSkipRequested) {
         resolve();
@@ -3264,17 +3585,17 @@ async function performRoll() {
 
     setTimeout(revealBadge, 450);
   });
-  window.digitRollResolveReveal = null;
+  digitRollRevealResolve = null;
 
   /* ==========================================================
      FINAL RESULT
      ========================================================== */
 
   $("rollLabel").textContent = "FINAL RESULT";
-  $("number").classList.add("drFinalReveal");
-  setTimeout(() => $("number")?.classList.remove("drFinalReveal"), 850);
 
   $("liveRarity").textContent = "RARITY: " + analysis.rarity;
+  $("number").classList.add("drRarityBurst");
+  setTimeout(() => $("number")?.classList.remove("drRarityBurst"), 1200);
 
   $("rarity").textContent = analysis.rarity;
 
@@ -3355,10 +3676,7 @@ async function performRoll() {
 
   rolling = false;
   digitRollSkipRequested = false;
-  if ($("digitRollSkipButton")) {
-    $("digitRollSkipButton").textContent = "⏭ SKIP ROLL";
-    $("digitRollSkipButton").classList.remove("drVisible");
-  }
+  updateDigitRollSkipButton();
 }
 
 /* ============================================================
@@ -3406,6 +3724,8 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
       await ensureProfile(currentUser);
 
       updateAccountUI();
+      setupDigitRollAdminPanel();
+      await hydrateDigitRollCloudProgress(currentUser);
 
       await loadPersonalStats();
 
@@ -3413,10 +3733,11 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     }, 0);
   } else {
     currentUser = null;
-
     profile = null;
+    digitRollCloudHydrated = false;
 
     updateAccountUI();
+    setupDigitRollAdminPanel();
   }
 });
 
@@ -3426,7 +3747,7 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 
 async function init() {
   loadLocal();
-  loadSkipRollUpgrade();
+  installDigitRollOverhaulFX();
 
   ensureShopUI();
 
