@@ -12,6 +12,23 @@ const supabaseClient = window.supabase.createClient(
 );
 
 /* ============================================================
+   ADMIN CONFIG
+   ============================================================ */
+const ADMIN_CONFIG = {
+  email: "elicole613@gmail.com",
+  // Add future admin features here. Each feature should call a protected
+  // Supabase RPC; the client-side email check is only for UI visibility.
+  features: {
+    clearLeaderboard: true,
+    resetPlayer: true,
+    banPlayer: true,
+    grantXP: true,
+  },
+};
+let isAdmin = false;
+let activeBanUntil = null;
+
+/* ============================================================
    REFERENCES
    ============================================================ */
 
@@ -73,6 +90,12 @@ const references = {
   67: ["🔢 67", "A special 67 reference hidden inside the roll.", 25000],
 
   55: ["⚔️ 55 — Kingsammelot", "A Kingsammelot reference.", 25000],
+
+  41: [
+    "🔥 41 Meme",
+    "A reference to the viral 41 number meme associated with Blizzi Boi and the 41 trend.",
+    25000,
+  ],
 
   1985: [
     "🍄 Super Mario Bros.",
@@ -516,29 +539,173 @@ let currentUser = null;
 let profile = null;
 let rolling = false;
 let realtimeChannel = null;
+let badgeCollection = new Set();
+let badgeCollectionLoadedForUser = null;
 
 /* ============================================================
    SHOP / BADGE COLLECTION
    ============================================================ */
 
-let shopLuckLevel = Number(localStorage.getItem("digitRollLuckLevel") || 0);
+let charmBonus = Number(localStorage.getItem("digitRollCharmBonus") || 0);
+let xpCharmLevel = Math.max(
+  0,
+  Math.floor(Number(localStorage.getItem("digitRollXPCharmLevel") || 0)),
+);
+let luckyGlovesLevel = Number(
+  localStorage.getItem("digitRollLuckyGlovesLevel") || 0,
+);
 let xpSpent = Number(localStorage.getItem("digitRollXPSpent") || 0);
 let xpBalance =
   localStorage.getItem("digitRollXPBalance") !== null
     ? Number(localStorage.getItem("digitRollXPBalance"))
     : null;
+let rollLengthLevel = Number(
+  localStorage.getItem("digitRollRollLengthLevel") || 0,
+);
+const BASE_ROLL_LENGTH = 5;
+const BASE_XP_CAPACITY = 10000;
+const NORMAL_MAX_ROLL_LENGTH = 10;
+let MAX_ROLL_LENGTH =
+  NORMAL_MAX_ROLL_LENGTH +
+  Math.max(0, Number(localStorage.getItem("digitRollTrueRebirths") || 0));
 
-const LUCK_SHOP_ITEMS = [
+let trueRebirths = Math.max(
+  0,
+  Number(localStorage.getItem("digitRollTrueRebirths") || 0),
+);
+let xpCapacity = Math.max(
+  10000,
+  Number(localStorage.getItem("digitRollXPCapacity") || 10000),
+);
+let xpCapacityRebirths = Math.max(
+  0,
+  Number(localStorage.getItem("digitRollXPCapacityRebirths") || 0),
+);
+
+const ROLL_LENGTH_BASE_ITEMS = [
+  { level: 1, cost: 1000, name: "🔢 Number Upgrade I" },
+  { level: 2, cost: 5000, name: "🔢 Number Upgrade II" },
+  { level: 3, cost: 25000, name: "🔢 Number Upgrade III" },
+  { level: 4, cost: 100000, name: "🔢 Number Upgrade IV" },
+  { level: 5, cost: 500000, name: "🔢 Number Upgrade V" },
+];
+
+function getRollLengthItems() {
+  const items = [...ROLL_LENGTH_BASE_ITEMS];
+  const maxLevel = Math.max(0, MAX_ROLL_LENGTH - BASE_ROLL_LENGTH);
+  for (let level = 6; level <= maxLevel; level++) {
+    items.push({
+      level,
+      cost: Math.floor(500000 * Math.pow(5, level - 5)),
+      name: `🔢 Number Upgrade ${level}`,
+    });
+  }
+  return items;
+}
+
+// Number Charms are ONE-TIME-USE. They are stored only until the next roll.
+localStorage.removeItem("digitRollNumberCharmCounts");
+let numberCharmPending = JSON.parse(
+  localStorage.getItem("digitRollNumberCharmPending") || "{}",
+);
+
+function saveNumberCharmState() {
+  localStorage.setItem(
+    "digitRollNumberCharmPending",
+    JSON.stringify(numberCharmPending),
+  );
+}
+
+function getNumberCharmCount(digit) {
+  return Math.max(0, Number(numberCharmPending[String(digit)] || 0));
+}
+
+function getTotalNumberCharmsPending() {
+  return Object.values(numberCharmPending).reduce(
+    (sum, n) => sum + Math.max(0, Number(n) || 0),
+    0,
+  );
+}
+
+function consumeNumberCharms() {
+  const used = { ...numberCharmPending };
+  numberCharmPending = {};
+  saveNumberCharmState();
+  return used;
+}
+
+function getDigitBadgeFrequency(digit) {
+  const d = String(digit);
+  let frequency = 0;
+  for (const [key, value] of Object.entries(references)) {
+    if (String(key).includes(d)) frequency += 5;
+    if (String(value[0]).includes(d)) frequency += 2;
+    if (String(value[1]).includes(d)) frequency += 1;
+  }
+  for (const [name, explanation] of commonBadgeDefinitions || []) {
+    if (String(name).includes(d)) frequency += 2;
+    if (String(explanation).includes(d)) frequency += 1;
+  }
+  return Math.max(1, frequency);
+}
+
+function getNumberCharmCost(digit) {
+  const frequency = getDigitBadgeFrequency(digit);
+  return Math.round((250 + frequency * 175) / 50) * 50;
+}
+
+function getNumberCharmCap(digit) {
+  return getRollLength();
+}
+
+function getNumberCharmHTML(balance) {
+  return Array.from({ length: 10 }, (_, digit) => {
+    const count = getNumberCharmCount(digit);
+    const cap = getNumberCharmCap(digit);
+    const cost = getNumberCharmCost(digit);
+    const full = getTotalNumberCharmsPending() >= cap;
+    const affordable = balance >= cost;
+    return `<div class="drShopItem"><h3>🔢 Number Charm ${digit}</h3><p>Next roll only: guarantees <b>+1 ${digit}</b>.</p><p>Ready: <b>${count}/${cap}</b> • Cost: <b>${cost.toLocaleString()} XP</b></p><button class="drBuy" ${full || !affordable ? "disabled" : ""} onclick="buyNumberCharm(${digit},${cost})">${full ? "✓ At Current Cap" : affordable ? "Buy +1 ${digit}" : "Not enough XP"}</button></div>`;
+  }).join("");
+}
+
+function getRollLength() {
+  return Math.min(MAX_ROLL_LENGTH, BASE_ROLL_LENGTH + rollLengthLevel);
+}
+
+const LUCK_CHARM_ITEMS = [
   { level: 1, cost: 250, bonus: 1, name: "🍀 Lucky Charm I" },
-  { level: 2, cost: 750, bonus: 1, name: "🍀 Lucky Charm II" },
-  { level: 3, cost: 2000, bonus: 1, name: "✨ Lucky Charm III" },
-  { level: 4, cost: 5000, bonus: 1, name: "✨ Lucky Charm IV" },
-  { level: 5, cost: 12000, bonus: 1, name: "💎 Lucky Charm V" },
-  { level: 6, cost: 30000, bonus: 1, name: "💎 Lucky Charm VI" },
-  { level: 7, cost: 75000, bonus: 1, name: "🌟 Lucky Charm VII" },
-  { level: 8, cost: 200000, bonus: 1, name: "🌟 Lucky Charm VIII" },
-  { level: 9, cost: 500000, bonus: 1, name: "👑 Lucky Charm IX" },
-  { level: 10, cost: 1500000, bonus: 1, name: "👑 Lucky Charm X" },
+  { level: 2, cost: 1000, bonus: 2, name: "🍀 Lucky Charm II" },
+  { level: 3, cost: 5000, bonus: 3, name: "✨ Lucky Charm III" },
+  { level: 4, cost: 25000, bonus: 4, name: "✨ Lucky Charm IV" },
+  { level: 5, cost: 100000, bonus: 5, name: "💎 Lucky Charm V" },
+  { level: 6, cost: 500000, bonus: 6, name: "💎 Lucky Charm VI" },
+  { level: 7, cost: 2500000, bonus: 7, name: "🌟 Lucky Charm VII" },
+  { level: 8, cost: 10000000, bonus: 8, name: "🌟 Lucky Charm VIII" },
+  { level: 9, cost: 50000000, bonus: 9, name: "👑 Lucky Charm IX" },
+  { level: 10, cost: 250000000, bonus: 10, name: "👑 Lucky Charm X" },
+];
+
+const XP_CHARM_ITEMS = [
+  { level: 1, cost: 1000, multiplier: 1.25, name: "✨ XP Charm I" },
+  { level: 2, cost: 5000, multiplier: 1.5, name: "✨ XP Charm II" },
+  { level: 3, cost: 25000, multiplier: 2, name: "💫 XP Charm III" },
+  { level: 4, cost: 100000, multiplier: 3, name: "💫 XP Charm IV" },
+  { level: 5, cost: 500000, multiplier: 4, name: "🔥 XP Charm V" },
+  { level: 6, cost: 2500000, multiplier: 5, name: "🔥 XP Charm VI" },
+  { level: 7, cost: 10000000, multiplier: 7.5, name: "💎 XP Charm VII" },
+  { level: 8, cost: 50000000, multiplier: 10, name: "💎 XP Charm VIII" },
+  { level: 9, cost: 250000000, multiplier: 15, name: "👑 XP Charm IX" },
+  { level: 10, cost: 1000000000, multiplier: 25, name: "👑 XP Charm X" },
+];
+
+const LUCKY_GLOVE_ITEMS = [
+  { level: 1, cost: 5000000, bonus: 1, name: "🧤 Lucky Gloves I" },
+  { level: 2, cost: 25000000, bonus: 2, name: "🧤 Lucky Gloves II" },
+  { level: 3, cost: 100000000, bonus: 3, name: "🧤 Lucky Gloves III" },
+  { level: 4, cost: 500000000, bonus: 4, name: "🧤 Lucky Gloves IV" },
+  { level: 5, cost: 2500000000, bonus: 5, name: "🧤 Lucky Gloves V" },
+  { level: 6, cost: 10000000000, bonus: 6, name: "🧤 Lucky Gloves VI" },
 ];
 
 const staticBadgeCatalog = {};
@@ -699,6 +866,134 @@ const commonBadgeDefinitions = [
 
 commonBadgeDefinitions.forEach((b) => registerBadgeCatalog(...b));
 
+function getXPCapacity() {
+  return Math.max(10000, Number(xpCapacity) || 10000);
+}
+
+function saveProgressionState() {
+  localStorage.setItem("digitRollTrueRebirths", String(trueRebirths));
+  localStorage.setItem("digitRollXPCapacity", String(getXPCapacity()));
+  localStorage.setItem(
+    "digitRollXPCapacityRebirths",
+    String(xpCapacityRebirths),
+  );
+}
+
+function rainbowRebirthClass() {
+  return trueRebirths > 0 ? "drTrueRebirthName" : "";
+}
+
+function updateRainbowNames() {
+  const selectors = ["#userPill", "#profileUsername"];
+  document.querySelectorAll(selectors.join(",")).forEach((el) => {
+    el.classList.toggle("drTrueRebirthName", trueRebirths > 0);
+  });
+}
+
+function capXPBalance() {
+  xpBalance = Math.min(getXPCapacity(), Math.max(0, Number(xpBalance) || 0));
+  localStorage.setItem("digitRollXPBalance", String(xpBalance));
+  return xpBalance;
+}
+
+function resetNormalProgressionForTrueRebirth() {
+  history = [];
+  personalBest = null;
+  allTimeBest = null;
+  xpBalance = 0;
+  xpSpent = 0;
+  charmBonus = 0;
+  xpCharmLevel = 0;
+  luckyGlovesLevel = 0;
+  rollLengthLevel = 0;
+  numberCharmPending = {};
+  xpCapacity = 10000;
+  xpCapacityRebirths = 0;
+
+  localStorage.removeItem("digitRollHistory");
+  localStorage.removeItem("digitRollPersonal");
+  localStorage.removeItem("digitRollAll");
+  localStorage.setItem("digitRollXPBalance", "0");
+  localStorage.setItem("digitRollXPSpent", "0");
+  localStorage.setItem("digitRollCharmBonus", "0");
+  localStorage.setItem("digitRollXPCharmLevel", "0");
+  localStorage.setItem("digitRollLuckyGlovesLevel", "0");
+  localStorage.setItem("digitRollRollLengthLevel", "0");
+  localStorage.removeItem("digitRollNumberCharmPending");
+  saveProgressionState();
+  saveShopState();
+  updateRainbowNames();
+  renderHistory();
+  updateShopUI();
+}
+
+function getTrueRebirthCost() {
+  return (trueRebirths + 1) * 1000000;
+}
+
+function performTrueRebirth() {
+  const cost = getTrueRebirthCost();
+  if (getXPBalance() < cost) {
+    toast(`You need ${cost.toLocaleString()} XP for True Rebirth.`);
+    return;
+  }
+  if (
+    !confirm(
+      `True Rebirth costs ${cost.toLocaleString()} XP and resets all normal progression. Your account and username will stay. Continue?`,
+    )
+  )
+    return;
+
+  trueRebirths += 1;
+  MAX_ROLL_LENGTH = NORMAL_MAX_ROLL_LENGTH + trueRebirths;
+  resetNormalProgressionForTrueRebirth();
+  saveProgressionState();
+  updateRainbowNames();
+  syncXPWallet();
+  toast(
+    `🌈 TRUE REBIRTH ${trueRebirths}! Your maximum roll length is now ${MAX_ROLL_LENGTH} digits.`,
+  );
+}
+
+function buyXPCapacityUpgrade(level, cost, newCapacity) {
+  if (getXPCapacity() >= 100000) {
+    toast(
+      "Normal XP Capacity upgrades stop at 100,000 XP. Use XP Capacity Rebirth.",
+    );
+    return;
+  }
+  if (level !== Math.floor((getXPCapacity() - 10000) / 10000) + 1) return;
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance -= cost;
+  xpSpent += cost;
+  xpCapacity = Math.min(100000, newCapacity);
+  capXPBalance();
+  saveProgressionState();
+  saveShopState();
+  updateShopUI();
+}
+
+function performXPCapacityRebirth() {
+  const cost = getXPCapacity();
+  if (getXPBalance() < cost) {
+    toast(`You need ${cost.toLocaleString()} XP for XP Capacity Rebirth.`);
+    return;
+  }
+  xpBalance -= cost;
+  xpSpent += cost;
+  xpCapacity += 10000;
+  xpCapacityRebirths += 1;
+  saveProgressionState();
+  saveShopState();
+  toast(
+    `💰 XP Capacity Rebirth! Your capacity is now ${xpCapacity.toLocaleString()} XP.`,
+  );
+  updateShopUI();
+}
+
 function getEarnedXP() {
   return history.reduce((sum, row) => sum + Number(row.xp || 0), 0);
 }
@@ -708,32 +1003,167 @@ function ensureXPBalance() {
     xpBalance = Math.max(0, getEarnedXP() - xpSpent);
     localStorage.setItem("digitRollXPBalance", String(xpBalance));
   }
-  return xpBalance;
+  return capXPBalance();
 }
 
 function getXPBalance() {
-  return Math.max(0, Number(ensureXPBalance()));
+  return Math.min(getXPCapacity(), Math.max(0, Number(ensureXPBalance())));
+}
+
+async function loadXPWallet() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from("xp_wallets")
+      .select("xp_balance")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      xpBalance = Math.max(0, Number(data.xp_balance) || 0);
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+      return true;
+    }
+    await syncXPWallet();
+    return false;
+  } catch (e) {
+    console.warn("Could not load XP wallet:", e);
+    return false;
+  }
+}
+
+async function syncXPWallet() {
+  if (!currentUser) return;
+  try {
+    await supabaseClient.rpc("sync_xp_wallet", {
+      p_balance: Math.floor(getXPBalance()),
+    });
+  } catch (e) {
+    console.warn("Could not sync XP wallet:", e);
+  }
 }
 
 function saveShopState() {
-  localStorage.setItem("digitRollLuckLevel", String(shopLuckLevel));
+  localStorage.setItem("digitRollCharmBonus", String(charmBonus));
+  localStorage.setItem("digitRollXPCharmLevel", String(xpCharmLevel));
+  localStorage.setItem("digitRollLuckyGlovesLevel", String(luckyGlovesLevel));
+  localStorage.setItem("digitRollRollLengthLevel", String(rollLengthLevel));
   localStorage.setItem("digitRollXPSpent", String(xpSpent));
+  saveProgressionState();
+  saveNumberCharmState();
+}
+
+function getBadgeCollectionStorageKey() {
+  return currentUser
+    ? `digitRollBadgeCollection:${currentUser.id}`
+    : "digitRollBadgeCollection:guest";
+}
+
+function loadLocalBadgeCollection() {
+  const unlocked = new Set();
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(getBadgeCollectionStorageKey()) || "[]",
+    );
+    if (Array.isArray(saved)) {
+      saved.forEach((name) => {
+        if (typeof name === "string" && name.trim()) unlocked.add(name);
+      });
+    }
+  } catch (e) {
+    console.warn("Badge collection local save unavailable:", e);
+  }
+
+  // Migrate any badges already present in local history into the collection.
+  history.forEach((row) => {
+    if (Array.isArray(row.badges)) {
+      row.badges.forEach((b) => {
+        const name = typeof b === "string" ? b : b?.name;
+        if (name) unlocked.add(name);
+      });
+    }
+  });
+
+  badgeCollection = unlocked;
+  saveLocalBadgeCollection();
+  return badgeCollection;
+}
+
+function saveLocalBadgeCollection() {
+  try {
+    localStorage.setItem(
+      getBadgeCollectionStorageKey(),
+      JSON.stringify([...badgeCollection]),
+    );
+  } catch (e) {
+    console.warn("Badge collection local save unavailable:", e);
+  }
+}
+
+function addBadgesToCollection(badges) {
+  let changed = false;
+  for (const badge of Array.isArray(badges) ? badges : []) {
+    const name = typeof badge === "string" ? badge : badge?.name;
+    if (name && !badgeCollection.has(name)) {
+      badgeCollection.add(name);
+      changed = true;
+    }
+  }
+  if (changed) saveLocalBadgeCollection();
+  return changed;
 }
 
 function getUnlockedBadgeNames() {
-  const unlocked = new Set();
-  history.forEach((row) => {
-    if (Array.isArray(row.badges)) {
-      row.badges.forEach((b) =>
-        unlocked.add(typeof b === "string" ? b : b.name),
-      );
-    }
-  });
-  return unlocked;
+  return new Set(badgeCollection);
+}
+
+async function loadBadgeCollection() {
+  if (!currentUser) return false;
+  loadLocalBadgeCollection();
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_badge_collection");
+    if (error) throw error;
+
+    const cloudNames = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.badges)
+        ? data.badges
+        : [];
+
+    addBadgesToCollection(cloudNames);
+    badgeCollectionLoadedForUser = currentUser.id;
+
+    // Send the merged collection back so older local-only unlocks are not lost.
+    await syncBadgeCollection();
+    return true;
+  } catch (e) {
+    console.warn("Could not load badge collection:", e);
+    return false;
+  }
+}
+
+async function syncBadgeCollection() {
+  if (!currentUser || badgeCollectionLoadedForUser !== currentUser.id)
+    return false;
+  try {
+    const { error } = await supabaseClient.rpc("sync_badge_collection", {
+      p_badges: [...badgeCollection],
+    });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.warn("Could not sync badge collection:", e);
+    return false;
+  }
+}
+
+function getGuaranteedBadgeCount() {
+  const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
+  return Math.max(0, charmBonus + (glove ? glove.bonus : 0));
 }
 
 function applyGuaranteedBadges(result) {
-  const count = Math.max(0, shopLuckLevel);
+  const count = getGuaranteedBadgeCount();
   if (!count) return result;
 
   Object.values(result.badges || {}).forEach((b) =>
@@ -753,8 +1183,56 @@ function applyGuaranteedBadges(result) {
   }
 
   result.badges.sort((a, b) => Number(a.oneIn) - Number(b.oneIn));
-
   return result;
+}
+
+function consumeCharm() {
+  if (charmBonus > 0) {
+    const used = charmBonus;
+    charmBonus = 0;
+    localStorage.setItem("digitRollCharmBonus", "0");
+    return used;
+  }
+  return 0;
+}
+
+async function giftDigitRollXP() {
+  if (!currentUser) {
+    toast("You need to be logged in to gift XP.");
+    return;
+  }
+  const recipientInput = prompt("Enter the player's exact username:");
+  if (!recipientInput) return;
+  const amount = Number(prompt("How much XP do you want to gift?"));
+  if (!Number.isInteger(amount) || amount <= 0) {
+    toast("Enter a valid whole XP amount.");
+    return;
+  }
+  if (amount > getXPBalance()) {
+    toast("You don't have enough XP.");
+    return;
+  }
+  try {
+    const { data, error } = await supabaseClient.rpc("gift_xp", {
+      p_recipient_username: recipientInput.trim(),
+      p_amount: amount,
+    });
+    if (error) throw error;
+    xpBalance = Math.max(0, getXPBalance() - amount);
+    xpSpent += amount;
+    localStorage.setItem("digitRollXPBalance", String(xpBalance));
+    localStorage.setItem("digitRollXPSpent", String(xpSpent));
+    toast(
+      `🎁 Gifted ${amount.toLocaleString()} XP to ${recipientInput.trim()}!`,
+    );
+    updateShopUI();
+  } catch (error) {
+    console.error("XP gift failed:", error);
+    toast(
+      error.message ||
+        "XP gift failed. Make sure the XP wallet SQL is installed.",
+    );
+  }
 }
 
 function ensureShopUI() {
@@ -775,21 +1253,32 @@ function ensureShopUI() {
     .drPageTitle { font-size:28px; font-weight:900; }
     .drClose { border:0; background:rgba(255,255,255,.08); color:#fff; width:40px; height:40px; border-radius:12px; cursor:pointer; font-size:22px; }
     .drBalance { padding:16px; border-radius:16px; background:rgba(142,230,173,.08); border:1px solid rgba(142,230,173,.18); margin-bottom:18px; font-size:18px; font-weight:800; }
+    .drShopSection { margin-top:22px; }
+    .drShopSection h2 { margin:0 0 10px; }
     .drShopGrid, .drBadgeGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
     .drShopItem, .drBadgeCard { padding:16px; border-radius:16px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.08); }
     .drShopItem h3, .drBadgeCard h3 { margin:0 0 7px; font-size:17px; }
     .drShopItem p, .drBadgeCard p { color:#aab5ca; line-height:1.45; margin:6px 0; }
     .drBuy { width:100%; border:0; border-radius:11px; padding:11px; cursor:pointer; font-weight:850; background:rgba(142,230,173,.16); color:#fff; margin-top:10px; }
     .drBuy:disabled { opacity:.45; cursor:not-allowed; }
-    .drLocked { text-align:center; padding:26px 12px; }
     .drRarity { font-weight:850; margin-top:8px; }
+    .drTrueRebirthName {
+      background:linear-gradient(90deg,#8b5cf6,#6366f1,#3b82f6,#22c55e,#eab308,#f97316,#ef4444,#8b5cf6);
+      background-size:400% 100%;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent !important;
+      animation:drRainbowName 4s linear infinite;
+    }
+    @keyframes drRainbowName { from { background-position:0% 50%; } to { background-position:400% 50%; } }
+.drAdminPanel{display:grid;gap:16px}.drAdminWarning{padding:14px;border:1px solid rgba(239,68,68,.35);border-radius:14px;background:rgba(239,68,68,.08);color:#fecaca}.drAdminCard{padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.035)}.drAdminCard h2{margin:0 0 8px}.drAdminCard p{color:#aab5ca;line-height:1.5}.drAdminInput{width:100%;padding:12px 14px;margin:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:inherit}.drAdminAction,.drAdminDanger{width:100%;padding:13px;margin-top:8px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.drAdminAction{background:rgba(59,130,246,.2);color:#bfdbfe}.drAdminDanger{background:rgba(239,68,68,.18);color:#fecaca}.drAdminStatus{min-height:24px;text-align:center;color:#dbeafe}.drAdminNavBtn{border-color:rgba(239,68,68,.35)!important} 
     @media(max-width:650px){ #digitRollNav{top:auto;bottom:14px;right:14px;} .drPage{margin:20px auto;padding:18px;} }
   `;
   document.head.appendChild(style);
 
   const nav = document.createElement("div");
   nav.id = "digitRollNav";
-  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button>`;
+  nav.innerHTML = `<button class="drNavBtn" type="button" onclick="openDigitRollShop()">🛒 Shop</button><button class="drNavBtn" type="button" onclick="openDigitRollBadges()">🏅 Badges</button><button class="drNavBtn" type="button" onclick="giftDigitRollXP()">🎁 Gift XP</button><button id="drAdminNavBtn" class="drNavBtn drAdminNavBtn" type="button" onclick="openAdminPanel()" style="display:none">🛡️ Admin</button>`;
   document.body.appendChild(nav);
 
   const overlay = document.createElement("div");
@@ -828,24 +1317,134 @@ function updateShopUI() {
       .join("")}</div>`;
     return;
   }
-  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🍀 Guaranteed badges per roll: ${shopLuckLevel}</div><div class="drShopGrid">${LUCK_SHOP_ITEMS.map(
-    (item) => {
-      const owned = shopLuckLevel >= item.level;
+
+  const activeCharm = charmBonus
+    ? `🍀 Active charm: +${charmBonus} badge${charmBonus === 1 ? "" : "s"} on your next roll`
+    : "🍀 No charm active";
+  const rollLength = getRollLength();
+  const rollLengthItems = getRollLengthItems();
+  const numberUpgradeHTML = rollLengthItems
+    .map((item) => {
+      const owned = rollLengthLevel >= item.level;
+      const next = item.level === rollLengthLevel + 1;
       const affordable = balance >= item.cost;
-      return `<div class="drShopItem"><h3>${item.name}</h3><p>Guarantees <b>+${item.bonus}</b> extra badge on every roll.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !affordable ? "disabled" : ""} onclick="buyDigitRollLuck(${item.level},${item.cost})">${owned ? "✓ Purchased" : affordable ? "Buy" : "Not enough XP"}</button></div>`;
-    },
-  ).join("")}</div>
-  <div class="drShopItem drUpgradeCard" style="margin-top:16px;border:1px solid rgba(130,160,255,.35);background:linear-gradient(135deg,rgba(70,100,255,.14),rgba(190,70,255,.13))">
-    <h3>⏭ Skip Roll</h3>
-    <p>Unlocks a button during rolling that skips the animation and badge-by-badge reveal while keeping the same roll, badges, XP, history and cloud-save flow.</p>
-    <p>Cost: <b>5,000 XP</b> · Permanent unlock</p>
-    <button class="drBuy" ${digitRollSkipUnlocked || balance < DIGIT_ROLL_SKIP_COST ? "disabled" : ""} onclick="buySkipRollUpgrade()">${digitRollSkipUnlocked ? "✓ Permanently Unlocked" : balance >= DIGIT_ROLL_SKIP_COST ? "Unlock Skip Roll" : "Not enough XP"}</button>
-  </div>
-  <div class="drShopGrid" style="margin-top:12px">
-    <div class="drShopItem drUpgradeCard"><h3>⚡ Quick Spin</h3><p>Permanent faster number cycling. Keeps the full result and reward calculation.</p><p>Cost: <b>2,500 XP</b></p><button class="drBuy" ${digitRollFastAnimation || balance < 2500 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('fast')">${digitRollFastAnimation ? "✓ Purchased" : balance >= 2500 ? "Buy Upgrade" : "Not enough XP"}</button></div>
-    <div class="drShopItem drUpgradeCard"><h3>✨ XP Surge</h3><p>Permanently increases XP earned from each roll by 25%.</p><p>Cost: <b>15,000 XP</b></p><button class="drBuy" ${digitRollXPBoost || balance < 15000 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('xp')">${digitRollXPBoost ? "✓ Purchased" : balance >= 15000 ? "Buy Upgrade" : "Not enough XP"}</button></div>
-    <div class="drShopItem drUpgradeCard"><h3>🏅 Badge Magnet</h3><p>Permanently adds one extra eligible badge to each roll.</p><p>Cost: <b>25,000 XP</b></p><button class="drBuy" ${digitRollBonusBadge || balance < 25000 ? "disabled" : ""} onclick="buyDigitRollExtraUpgrade('badge')">${digitRollBonusBadge ? "✓ Purchased" : balance >= 25000 ? "Buy Upgrade" : "Not enough XP"}</button></div>
-  </div>`;
+      return `<div class="drShopItem"><h3>${item.name}</h3><p>Permanently adds <b>+1 number</b> to every roll.</p><p>Roll length after purchase: <b>${BASE_ROLL_LENGTH + item.level}</b></p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyRollLengthUpgrade(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+    })
+    .join("");
+  const glove = LUCKY_GLOVE_ITEMS[luckyGlovesLevel - 1];
+  const gloveBonus = glove ? glove.bonus : 0;
+
+  const cap = getXPCapacity();
+  const capacityCost = Math.max(500, Math.floor((cap + 10000) * 0.25));
+  const canNormalCapacity = cap < 100000;
+  const nextCapacity = Math.min(100000, cap + 10000);
+  const capacityHTML = canNormalCapacity
+    ? `<div class="drShopItem"><h3>💰 XP Capacity +10,000</h3><p>Raises your XP balance capacity to <b>${nextCapacity.toLocaleString()} XP</b>.</p><p>Cost: <b>${capacityCost.toLocaleString()} XP</b></p><button class="drBuy" ${balance < capacityCost ? "disabled" : ""} onclick="buyXPCapacityUpgrade(${Math.floor((cap - 10000) / 10000) + 1},${capacityCost},${nextCapacity})">${balance >= capacityCost ? "Increase Capacity" : "Not enough XP"}</button></div>`
+    : `<div class="drShopItem"><h3>💰 XP Capacity Rebirth</h3><p>Your normal capacity has reached <b>100,000 XP</b>. Rebirth increases it by <b>+10,000 XP</b> permanently until a True Rebirth.</p><p>Cost: <b>${cap.toLocaleString()} XP</b></p><button class="drBuy" ${balance < cap ? "disabled" : ""} onclick="performXPCapacityRebirth()">${balance >= cap ? "💰 XP Capacity Rebirth" : "Not enough XP"}</button></div>`;
+
+  const trueCost = getTrueRebirthCost();
+  const trueHTML = `<div class="drShopItem" style="border:1px solid rgba(255,215,0,.28);background:rgba(255,215,0,.06)"><h3>🌈 TRUE REBIRTH</h3><p>Resets normal gameplay progression, including roll upgrades, XP capacity/rebirths, shop upgrades, charms, gloves, history and bests. Your unlocked badge collection is permanently kept.</p><p>Your account, username, and True Rebirth progress stay. Maximum roll length becomes <b>${MAX_ROLL_LENGTH + 1} digits</b> after this rebirth.</p><p>Cost: <b>${trueCost.toLocaleString()} XP</b></p><button class="drBuy" ${balance < trueCost ? "disabled" : ""} onclick="performTrueRebirth()">${balance >= trueCost ? "🌈 TRUE REBIRTH" : "Not enough XP"}</button></div>`;
+
+  content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} / ${cap.toLocaleString()} XP<br>🎁 <button class="drBuy" style="max-width:180px;display:inline-block" onclick="giftDigitRollXP()">Gift XP to Player</button><br>🔢 Roll length: ${rollLength} / ${MAX_ROLL_LENGTH} numbers<br>🌈 True Rebirths: ${trueRebirths}<br>${activeCharm}<br>✨ XP Charm: ×${getXPCharmMultiplier()} XP<br>🧤 Lucky Gloves: +${gloveBonus} badge${gloveBonus === 1 ? "" : "s"} every roll</div>
+    <div class="drShopSection"><h2>🔢 Permanent Number Upgrades</h2><p style="color:#aab5ca">Start with 5 numbers. Each upgrade permanently adds one number, up to your current maximum of ${MAX_ROLL_LENGTH}.</p><div class="drShopGrid">${numberUpgradeHTML}</div></div>
+    <div class="drShopSection"><h2>🔢 Number Charms</h2><p style="color:#aab5ca">Number Charms are <b>one-time-use</b>. Each one guarantees one copy of its digit on your next roll, then disappears. You can queue up to your current roll length in total. Digits that appear more often across badge references cost more XP.</p><div class="drShopGrid">${getNumberCharmHTML(balance)}</div></div>
+    <div class="drShopSection"><h2>✨ XP Charms</h2><p style="color:#aab5ca">XP Charms are permanent upgrades. Each level multiplies the XP earned from every roll. Higher levels stack by replacing your current multiplier with the stronger one.</p><div class="drShopGrid">${XP_CHARM_ITEMS.map(
+      (item) => {
+        const owned = xpCharmLevel >= item.level;
+        const next = item.level === xpCharmLevel + 1;
+        const affordable = balance >= item.cost;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>XP multiplier: <b>×${item.multiplier}</b></p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyXPCharm(${item.level},${item.cost},${item.multiplier})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>
+    <div class="drShopSection"><h2>🍀 Lucky Charms</h2><p style="color:#aab5ca">Charms are consumed by your next roll. Higher-level charms guarantee more badges.</p><div class="drShopGrid">${LUCK_CHARM_ITEMS.map(
+      (item) => {
+        const affordable = balance >= item.cost;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Next roll only: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${!affordable ? "disabled" : ""} onclick="buyDigitRollCharm(${item.level},${item.cost},${item.bonus})">${affordable ? "Buy & Activate" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>
+    <div class="drShopSection"><h2>🧤 Lucky Gloves</h2><p style="color:#aab5ca">Lucky Gloves are permanent upgrades. They are intentionally VERY expensive and add badges to every roll.</p><div class="drShopGrid">${LUCKY_GLOVE_ITEMS.map(
+      (item) => {
+        const owned = luckyGlovesLevel >= item.level;
+        const affordable = balance >= item.cost;
+        const next = item.level === luckyGlovesLevel + 1;
+        return `<div class="drShopItem"><h3>${item.name}</h3><p>Every roll: <b>+${item.bonus}</b> guaranteed badge${item.bonus === 1 ? "" : "s"}.</p><p>Cost: <b>${item.cost.toLocaleString()} XP</b></p><button class="drBuy" ${owned || !next || !affordable ? "disabled" : ""} onclick="buyDigitRollGloves(${item.level},${item.cost})">${owned ? "✓ Owned" : !next ? "Locked" : affordable ? "Buy Permanently" : "Not enough XP"}</button></div>`;
+      },
+    ).join("")}</div></div>
+    <div class="drShopSection"><h2>💰 XP Capacity</h2><p style="color:#aab5ca">Your XP wallet is capped at its current capacity. Normal upgrades go to 100,000 XP; after that, XP Capacity Rebirth adds +10,000 XP each time.</p><div class="drShopGrid">${capacityHTML}</div></div>
+    <div class="drShopSection"><h2>🌈 True Rebirth</h2><p style="color:#aab5ca">True Rebirth is the permanent prestige system. Each True Rebirth raises your maximum possible roll length by +1, while your actual roll length resets to 5.</p><div class="drShopGrid">${trueHTML}</div></div>`;
+}
+
+function getXPCharmMultiplier() {
+  const item = XP_CHARM_ITEMS[xpCharmLevel - 1];
+  return item ? item.multiplier : 1;
+}
+
+function buyXPCharm(level, cost, multiplier) {
+  const item = XP_CHARM_ITEMS[level - 1];
+  if (!item || item.cost !== cost || item.multiplier !== multiplier) return;
+  if (level !== xpCharmLevel + 1) {
+    toast("Buy the previous XP Charm first.");
+    return;
+  }
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  xpCharmLevel = level;
+  saveShopState();
+  toast(
+    `✨ ${item.name} purchased! XP gain is now ×${item.multiplier} per roll.`,
+  );
+  updateShopUI();
+}
+
+function buyNumberCharm(digit, cost) {
+  digit = Number(digit);
+  if (!Number.isInteger(digit) || digit < 0 || digit > 9) return;
+  const expected = getNumberCharmCost(digit);
+  if (Number(cost) !== expected) return;
+  const current = getNumberCharmCount(digit);
+  if (getTotalNumberCharmsPending() >= getNumberCharmCap(digit)) {
+    toast(
+      `You can only queue ${getNumberCharmCap(digit)} Number Charms for this roll.`,
+    );
+    return;
+  }
+  if (getXPBalance() < expected) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - expected;
+  xpSpent += expected;
+  numberCharmPending[String(digit)] = current + 1;
+  saveShopState();
+  toast(
+    `🔢 Number Charm ${digit} activated! Your next roll guarantees ${current + 1} ${digit}${current + 1 === 1 ? "" : "s"}.`,
+  );
+  updateShopUI();
+}
+
+function buyRollLengthUpgrade(level, cost) {
+  if (level !== rollLengthLevel + 1) {
+    toast("Buy the previous number upgrade first.");
+    return;
+  }
+  if (getRollLength() >= MAX_ROLL_LENGTH) {
+    toast(`Your rolls are already ${MAX_ROLL_LENGTH} numbers long.`);
+    return;
+  }
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  rollLengthLevel = level;
+  saveShopState();
+  toast(`🔢 Roll length upgraded! You now roll ${getRollLength()} numbers.`);
+  updateShopUI();
 }
 
 function openDigitRollShop() {
@@ -865,9 +1464,28 @@ function closeDigitRollPages() {
     $("digitRollShopOverlay").classList.remove("open");
 }
 
-function buyDigitRollLuck(level, cost) {
-  if (level !== shopLuckLevel + 1) {
-    toast("Buy the previous luck bonus first.");
+function buyDigitRollCharm(level, cost, bonus) {
+  const item = LUCK_CHARM_ITEMS[level - 1];
+  if (!item || item.cost !== cost) return;
+  if (getXPBalance() < cost) {
+    toast("Not enough XP.");
+    return;
+  }
+  xpBalance = getXPBalance() - cost;
+  xpSpent += cost;
+  charmBonus = Math.max(charmBonus, Number(bonus) || item.bonus);
+  saveShopState();
+  toast(
+    `🍀 ${item.name} activated! +${charmBonus} guaranteed badges on your next roll.`,
+  );
+  updateShopUI();
+}
+
+function buyDigitRollGloves(level, cost) {
+  const item = LUCKY_GLOVE_ITEMS[level - 1];
+  if (!item || item.cost !== cost) return;
+  if (level !== luckyGlovesLevel + 1) {
+    toast("Buy the previous Lucky Gloves level first.");
     return;
   }
   if (getXPBalance() < cost) {
@@ -876,10 +1494,10 @@ function buyDigitRollLuck(level, cost) {
   }
   xpBalance = getXPBalance() - cost;
   xpSpent += cost;
-  shopLuckLevel = level;
+  luckyGlovesLevel = level;
   saveShopState();
   toast(
-    `🍀 Luck upgraded! +${shopLuckLevel} guaranteed badge${shopLuckLevel === 1 ? "" : "s"} per roll.`,
+    `🧤 Lucky Gloves upgraded! +${item.bonus} guaranteed badge${item.bonus === 1 ? "" : "s"} every roll.`,
   );
   updateShopUI();
 }
@@ -887,7 +1505,20 @@ function buyDigitRollLuck(level, cost) {
 window.openDigitRollShop = openDigitRollShop;
 window.openDigitRollBadges = openDigitRollBadges;
 window.closeDigitRollPages = closeDigitRollPages;
-window.buyDigitRollLuck = buyDigitRollLuck;
+window.buyDigitRollCharm = buyDigitRollCharm;
+window.buyXPCharm = buyXPCharm;
+window.buyDigitRollGloves = buyDigitRollGloves;
+window.buyRollLengthUpgrade = buyRollLengthUpgrade;
+window.buyNumberCharm = buyNumberCharm;
+window.giftDigitRollXP = giftDigitRollXP;
+window.openAdminPanel = openAdminPanel;
+window.adminClearLeaderboard = adminClearLeaderboard;
+window.adminResetPlayer = adminResetPlayer;
+window.adminBanPlayer = adminBanPlayer;
+window.adminGrantXP = adminGrantXP;
+window.buyXPCapacityUpgrade = buyXPCapacityUpgrade;
+window.performXPCapacityRebirth = performXPCapacityRebirth;
+window.performTrueRebirth = performTrueRebirth;
 
 function toast(message) {
   if (!$("toast")) return;
@@ -984,11 +1615,22 @@ function applyRarityColor(element, rarity) {
    ============================================================ */
 
 function randomRoll() {
+  const rollLength = getRollLength();
+  const forcedDigits = [];
+  for (let digit = 0; digit <= 9; digit++) {
+    for (let i = 0; i < Math.min(getNumberCharmCount(digit), rollLength); i++)
+      forcedDigits.push(String(digit));
+  }
   const chars = [];
-
   let blanks = 0;
 
-  for (let i = 0; i < 10; i++) {
+  // Number Charms take priority. Their guaranteed digits are inserted first.
+  while (forcedDigits.length && chars.length < rollLength) {
+    const index = Math.floor(Math.random() * forcedDigits.length);
+    chars.push(forcedDigits.splice(index, 1)[0]);
+  }
+
+  while (chars.length < rollLength) {
     if (Math.random() < 0.055) {
       chars.push("_");
       blanks++;
@@ -997,12 +1639,17 @@ function randomRoll() {
     }
   }
 
-  if (blanks === 10) {
-    const index = Math.floor(Math.random() * 10);
-
-    chars[index] = String(Math.floor(Math.random() * 10));
+  // Shuffle so Number Charms do not always appear at the beginning.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
   }
 
+  // If every slot became a blank, preserve the old safety behavior.
+  if (blanks === rollLength && forcedDigits.length === 0) {
+    const index = Math.floor(Math.random() * rollLength);
+    chars[index] = String(Math.floor(Math.random() * 10));
+  }
   return chars;
 }
 
@@ -1095,6 +1742,15 @@ function analyze(chars) {
     if (compact.includes(key)) {
       addBadge(name, explanation, oneIn);
     }
+  }
+
+  /* 41 meme bonus badge */
+  if (compact.includes("41")) {
+    addBadge(
+      "🧓 Did Unc Snap?",
+      "A playful badge for hitting the viral 41 meme number.",
+      40000,
+    );
   }
 
   /* ==========================================================
@@ -1997,7 +2653,11 @@ function analyze(chars) {
     Math.floor(Math.log10(Math.max(1, totalChance)) * 5),
   );
 
-  const xp = Math.max(5, badgeXP + blankXP + rarityXP);
+  const baseXP = Math.max(5, badgeXP + blankXP + rarityXP);
+  const xp = Math.min(
+    getXPCapacity(),
+    Math.max(5, Math.floor(baseXP * getXPCharmMultiplier())),
+  );
 
   return {
     badges,
@@ -2037,7 +2697,6 @@ function saveLocal() {
   } catch (e) {
     console.warn("Local save unavailable", e);
   }
-  scheduleDigitRollCloudSave();
 }
 
 function loadLocal() {
@@ -2055,6 +2714,7 @@ function loadLocal() {
   }
 
   renderHistory();
+  loadLocalBadgeCollection();
 }
 
 /* ============================================================
@@ -2352,8 +3012,261 @@ async function ensureProfile(user, suppliedUsername = "") {
 }
 
 /* ============================================================
-   ACCOUNT UI
+   ADMIN PANEL
    ============================================================ */
+function checkAdminIdentity(user) {
+  return (
+    !!user && String(user.email || "").toLowerCase() === ADMIN_CONFIG.email
+  );
+}
+
+async function applyAdminResetIfNeeded() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_reset_version");
+    if (error) throw error;
+    const serverVersion = Number(data || 0);
+    const localVersion = Number(
+      localStorage.getItem("digitRollAdminResetVersion") || 0,
+    );
+    if (serverVersion > localVersion) {
+      // Reset gameplay-only local data. Account, username and auth session stay.
+      [
+        "digitRollHistory",
+        "digitRollPersonal",
+        "digitRollAll",
+        "digitRollXPBalance",
+        "digitRollXPSpent",
+        "digitRollCharmBonus",
+        "digitRollXPCharmLevel",
+        "digitRollLuckyGlovesLevel",
+        "digitRollRollLengthLevel",
+        "digitRollXPCapacity",
+        "digitRollXPRebirths",
+        "digitRollNumberCharmPending",
+        "digitRollTrueRebirths",
+      ].forEach((key) => localStorage.removeItem(key));
+      history = [];
+      personalBest = null;
+      allTimeBest = null;
+      xpBalance = 0;
+      xpSpent = 0;
+      charmBonus = 0;
+      xpCharmLevel = 0;
+      luckyGlovesLevel = 0;
+      rollLengthLevel = 0;
+      xpCapacity = BASE_XP_CAPACITY;
+      xpCapacityRebirths = 0;
+      trueRebirths = 0;
+      numberCharmPending = {};
+      localStorage.setItem("digitRollAdminResetVersion", String(serverVersion));
+      saveShopState();
+      renderHistory();
+      renderBest();
+      updateShopUI();
+      toast(
+        "♻️ An admin reset your gameplay stats. Your account and username were kept.",
+      );
+      return true;
+    }
+    localStorage.setItem("digitRollAdminResetVersion", String(serverVersion));
+  } catch (e) {
+    console.warn("Admin reset version check unavailable:", e);
+  }
+  return false;
+}
+
+async function loadAdminState() {
+  isAdmin = checkAdminIdentity(currentUser);
+  const btn = $("drAdminNavBtn");
+  if (btn) btn.style.display = isAdmin ? "inline-block" : "none";
+  if (currentUser) {
+    await applyAdminResetIfNeeded();
+    await checkPlayerBan();
+  }
+}
+
+async function checkPlayerBan() {
+  if (!currentUser) return false;
+  try {
+    const { data, error } = await supabaseClient.rpc("get_my_ban_status");
+    if (error) throw error;
+    activeBanUntil = data?.banned_until || null;
+    const banned =
+      activeBanUntil && new Date(activeBanUntil).getTime() > Date.now();
+    const btn = $("rollBtn");
+    if (btn) {
+      btn.disabled = !!banned;
+      if (banned)
+        btn.title = `Banned until ${new Date(activeBanUntil).toLocaleString()}`;
+    }
+    if (banned)
+      toast(
+        `🚫 You are banned until ${new Date(activeBanUntil).toLocaleString()}.`,
+      );
+    return !!banned;
+  } catch (e) {
+    console.warn("Ban status unavailable:", e);
+    return false;
+  }
+}
+
+function openAdminPanel() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const overlay = $("digitRollShopOverlay");
+  if (!overlay) return;
+  $("drPageTitle").textContent = "🛡️ Admin Panel";
+  $("drPageContent").innerHTML = `
+    <div class="drAdminPanel">
+      <div class="drAdminWarning">⚠️ Admin actions are permanent. The database verifies your admin identity server-side.</div>
+      <section class="drAdminCard">
+        <h2>🧹 Clear Leaderboard</h2>
+        <p>Deletes every roll from the global leaderboard. Player names/accounts are not deleted.</p>
+        <button class="drAdminDanger" onclick="adminClearLeaderboard()">🧹 CLEAR LEADERBOARD</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>♻️ Reset Player Stats</h2>
+        <p>Enter an exact username. This resets gameplay stats and XP while keeping the player's account and username.</p>
+        <input id="drAdminResetUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <button class="drAdminAction" onclick="adminResetPlayer()">♻️ RESET PLAYER</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>🚫 Ban Player</h2>
+        <p>Enter an exact username and choose a duration.</p>
+        <input id="drAdminBanUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <select id="drAdminBanDuration" class="drAdminInput">
+          <option value="1 minute">1 minute</option>
+          <option value="5 minutes">5 minutes</option>
+          <option value="30 minutes">30 minutes</option>
+          <option value="1 hour">1 hour</option>
+          <option value="1 day">1 day</option>
+          <option value="1 week">1 week</option>
+          <option value="1 month">1 month</option>
+        </select>
+        <button class="drAdminDanger" onclick="adminBanPlayer()">🚫 BAN PLAYER</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>💰 Give XP</h2>
+        <p>Enter an exact username and any positive whole-number XP amount. The server updates the player's cloud XP wallet.</p>
+        <input id="drAdminXPUsername" class="drAdminInput" placeholder="Exact username" maxlength="24">
+        <input id="drAdminXPAmount" class="drAdminInput" type="number" min="1" step="1" placeholder="XP amount">
+        <button class="drAdminAction" onclick="adminGrantXP()">💰 GIVE XP</button>
+      </section>
+      <section class="drAdminCard">
+        <h2>🧩 Easy to Extend</h2>
+        <p>Future admin buttons can be added to <code>ADMIN_CONFIG.features</code> and wired to a protected Supabase RPC.</p>
+      </section>
+      <div id="drAdminStatus" class="drAdminStatus"></div>
+    </div>`;
+  overlay.classList.add("open");
+}
+
+function adminStatus(message, good = false) {
+  const el = $("drAdminStatus");
+  if (el) el.textContent = message;
+  if (good) toast(message);
+}
+
+async function adminClearLeaderboard() {
+  if (!isAdmin) return toast("Admin access denied.");
+  if (!confirm("Clear EVERY roll from the leaderboard? This cannot be undone."))
+    return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_clear_leaderboard");
+    if (error) throw error;
+    adminStatus(
+      `🧹 Cleared ${Number(data || 0).toLocaleString()} leaderboard rolls.`,
+      true,
+    );
+    await loadLeaderboard();
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not clear leaderboard."}`);
+  }
+}
+
+async function adminResetPlayer() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const username = $("drAdminResetUsername")?.value.trim();
+  if (!username) return toast("Enter a username.");
+  if (
+    !confirm(
+      `Reset ALL gameplay stats for ${username}? Their account and username will stay.`,
+    )
+  )
+    return;
+  try {
+    const { data, error } = await supabaseClient.rpc(
+      "admin_reset_player_stats",
+      { p_username: username },
+    );
+    if (error) throw error;
+    adminStatus(`♻️ Reset ${data?.username || username}'s stats.`, true);
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not reset player."}`);
+  }
+}
+
+async function adminBanPlayer() {
+  if (!isAdmin) return toast("Admin access denied.");
+  const username = $("drAdminBanUsername")?.value.trim();
+  const duration = $("drAdminBanDuration")?.value;
+  if (!username) return toast("Enter a username.");
+  if (!confirm(`Ban ${username} for ${duration}?`)) return;
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_ban_player", {
+      p_username: username,
+      p_duration: duration,
+    });
+    if (error) throw error;
+    adminStatus(
+      `🚫 ${data?.username || username} banned until ${new Date(data.banned_until).toLocaleString()}.`,
+      true,
+    );
+  } catch (e) {
+    console.error(e);
+    adminStatus(`❌ ${e.message || "Could not ban player."}`);
+  }
+}
+
+async function adminGrantXP() {
+  if (!isAdmin) return toast("Admin access denied.");
+
+  const username = $("drAdminXPUsername")?.value.trim();
+  const rawAmount = $("drAdminXPAmount")?.value.trim();
+  const amount = Number(rawAmount);
+
+  if (!username) return toast("Enter a username.");
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return toast("Enter a valid whole XP amount.");
+  }
+  if (amount > 9007199254740991) {
+    return toast("That XP amount is too large.");
+  }
+  if (!confirm(`Give ${amount.toLocaleString()} XP to ${username}?`)) return;
+
+  try {
+    const { data, error } = await supabaseClient.rpc("admin_grant_xp", {
+      p_username: username,
+      p_amount: amount,
+    });
+    if (error) throw error;
+
+    adminStatus(
+      `💰 Gave ${Number(data?.amount ?? amount).toLocaleString()} XP to ${data?.username || username}. New balance: ${Number(data?.new_balance ?? 0).toLocaleString()} XP.`,
+      true,
+    );
+  } catch (e) {
+    console.error("Admin XP grant failed:", e);
+    adminStatus(`❌ ${e.message || "Could not give XP."}`);
+  }
+}
+
+/* ============================================================
+   ACCOUNT UI
+   ============================================================
+*/
 
 function updateAccountUI() {
   if (currentUser) {
@@ -2375,6 +3288,7 @@ function updateAccountUI() {
     $("profileUsername").textContent = name;
 
     $("usernameInput").value = name;
+    updateRainbowNames();
   } else {
     $("userPill").textContent = "Guest";
 
@@ -2398,7 +3312,7 @@ async function loadPersonalStats() {
   const { data, error } = await supabaseClient
     .from("rolls")
     .select("roll,one_in,xp,badges,rarity,shown,blanks,created_at")
-    .eq("player_id", currentUser.id)
+    .eq("user_id", currentUser.id)
     .order("one_in", {
       ascending: false,
     });
@@ -2511,7 +3425,7 @@ async function updateExistingRollNames(newUsername) {
       .update({
         player_name: newUsername,
       })
-      .eq("player_id", currentUser.id);
+      .eq("user_id", currentUser.id);
 
     if (error) {
       console.warn("Could not update old roll names:", error);
@@ -2545,6 +3459,8 @@ async function saveCloudRoll(result) {
     xp: result.xp,
 
     player_id: currentUser.id,
+
+    user_id: currentUser.id,
 
     player_name: username,
 
@@ -2603,13 +3519,18 @@ async function loadLeaderboard() {
   const rows = data || [];
 
   if (!rows.length) {
+    // The database leaderboard was cleared. Explicitly clear every
+    // leaderboard/best-roll display and cached leaderboard rows too.
     $("globalRows").innerHTML =
       '<span class="empty">No global rolls yet.</span>';
 
     $("todayBest").textContent = "—";
+    if ($("todayBestMeta")) $("todayBestMeta").textContent = "No rolls today";
 
     $("allBest").textContent = "—";
+    if ($("allBestMeta")) $("allBestMeta").textContent = "No rolls yet";
 
+    window.currentLeaderboardRows = [];
     return;
   }
 
@@ -2660,7 +3581,7 @@ async function loadLeaderboard() {
 
           <div>
 
-            <div class="globalPlayer">
+            <div class="globalPlayer ${row.player_id === currentUser?.id && trueRebirths > 0 ? "drTrueRebirthName" : ""}">
               ${escapeHTML(row.player_name || "Player")}
             </div>
 
@@ -2977,409 +3898,11 @@ function setupRealtime() {
    ROLL DISPLAY
    ============================================================ */
 
-/* ============================================================
-   ADDITIVE OVERHAUL — CINEMATIC FX, SKIP UPGRADE, CLOUD PROGRESS
-   Original systems remain in place; these hooks extend them.
-   ============================================================ */
-const DIGIT_ROLL_SKIP_COST = 5000;
-let digitRollSkipUnlocked = false;
-let digitRollSkipRequested = false;
-let digitRollRevealResolve = null;
-let digitRollCloudSaveTimer = null;
-let digitRollCloudHydrated = false;
-let digitRollFastAnimation = false;
-let digitRollXPBoost = false;
-let digitRollBonusBadge = false;
-
-function installDigitRollOverhaulFX() {
-  if (document.getElementById("digitRollOverhaulFX")) return;
-  const style = document.createElement("style");
-  style.id = "digitRollOverhaulFX";
-  style.textContent = `
-    #number { transform-origin:center; transition:filter .2s ease,text-shadow .25s ease; }
-    #number.drRollingDigits { animation:drDigitsPulse .55s ease-in-out infinite alternate; filter:brightness(1.25); text-shadow:0 0 12px #73caff,0 0 32px #7c4dff; }
-    #number.drDigitLock { animation:drDigitLock .48s cubic-bezier(.16,1,.3,1) both; }
-    #number.drRarityBurst { position:relative; animation:drRarityBurst 1.15s cubic-bezier(.16,1,.3,1) both; }
-    .drSkipRollBtn { display:none; margin:12px auto; padding:12px 20px; border:1px solid rgba(150,190,255,.65); border-radius:14px; color:#fff; font-weight:900; letter-spacing:.08em; background:linear-gradient(120deg,rgba(35,102,255,.4),rgba(157,56,255,.42)); box-shadow:0 0 24px rgba(100,110,255,.24); cursor:pointer; }
-    .drSkipRollBtn.drOn { display:block; animation:drSkipIn .25s ease-out both; }
-    .drSkipRollBtn:disabled { opacity:.5; cursor:wait; }
-    .drRarityFX { position:fixed; inset:0; z-index:9990; pointer-events:none; overflow:hidden; opacity:0; animation:drFxFade 3.4s ease-out forwards; }
-    .drRarityFX .drParticle { position:absolute; left:var(--x); top:var(--y); width:var(--s); height:var(--s); border-radius:50%; background:var(--c); box-shadow:0 0 12px var(--c),0 0 26px var(--c); animation:drParticleFly var(--d) cubic-bezier(.1,.7,.2,1) forwards; }
-    .drRarityFX.drTranscendent { background:radial-gradient(ellipse at center,rgba(65,20,130,.25),transparent 65%); }
-    .drRarityFX.drDivine { background:radial-gradient(ellipse at center,rgba(255,195,65,.18),transparent 65%); }
-    .drRarityFX.drMythic { background:radial-gradient(ellipse at center,rgba(255,40,120,.16),transparent 65%); }
-    .drRarityFX.drLegendary { background:radial-gradient(ellipse at center,rgba(255,135,30,.12),transparent 65%); }
-    .drRarityFX.drTranscendent:after { content:""; position:absolute; inset:-50%; background:conic-gradient(from 0deg,transparent,rgba(130,90,255,.22),transparent,rgba(65,230,255,.2),transparent); animation:drCosmicSpin 3s linear infinite; }
-    .drRarityFX.drTranscendent .drParticle { width:var(--s); height:var(--s); }
-    .drRarityFX.drTranscendent .drParticle:nth-child(3n) { border-radius:0; transform:rotate(45deg); }
-    .drSkipNotice { text-align:center; color:#bcd3ff; font-weight:800; font-size:12px; margin-top:5px; }
-    @keyframes drDigitsPulse { from{transform:scale(1);filter:brightness(1)} to{transform:scale(1.035);filter:brightness(1.7)} }
-    @keyframes drDigitLock { 0%{transform:scale(1.12);filter:blur(3px) brightness(2)} 60%{transform:scale(.96);filter:blur(0) brightness(1.7)} 100%{transform:scale(1);filter:brightness(1.15)} }
-    @keyframes drRarityBurst { 0%{transform:scale(.88);filter:brightness(1)} 32%{transform:scale(1.12);filter:brightness(2.2)} 60%{transform:scale(.98)} 100%{transform:scale(1);filter:brightness(1.3)} }
-    @keyframes drSkipIn { from{opacity:0;transform:translateY(8px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
-    @keyframes drFxFade { 0%{opacity:0} 12%{opacity:1} 72%{opacity:.9} 100%{opacity:0} }
-    @keyframes drParticleFly { from{transform:translate3d(0,0,0) scale(.25);opacity:0} 12%{opacity:1} to{transform:translate3d(var(--dx),var(--dy),0) rotate(540deg) scale(0);opacity:0} }
-    @keyframes drCosmicSpin { to{transform:rotate(360deg)} }
-    @media(prefers-reduced-motion:reduce){#number.drRollingDigits,#number.drDigitLock,#number.drRarityBurst,.drSkipRollBtn.drOn,.drRarityFX,.drParticle{animation-duration:.01ms!important;animation-iteration-count:1!important}}
-  `;
-  document.head.appendChild(style);
-  const rollBtn = $("rollBtn");
-  if (rollBtn && !$("digitRollSkipButton")) {
-    const btn = document.createElement("button");
-    btn.id = "digitRollSkipButton";
-    btn.className = "drSkipRollBtn";
-    btn.type = "button";
-    btn.textContent = "⏭ SKIP ROLL";
-    btn.addEventListener("click", skipCurrentDigitRoll);
-    rollBtn.insertAdjacentElement("afterend", btn);
-  }
-  try {
-    digitRollSkipUnlocked =
-      localStorage.getItem("digitRollSkipRollUnlocked") === "true";
-    digitRollFastAnimation =
-      localStorage.getItem("digitRollFastAnimation") === "true";
-    digitRollXPBoost = localStorage.getItem("digitRollXPBoost") === "true";
-    digitRollBonusBadge =
-      localStorage.getItem("digitRollBonusBadge") === "true";
-  } catch (_) {}
-  updateDigitRollSkipButton();
-  setupDigitRollAdminPanel();
-}
-
-function updateDigitRollSkipButton() {
-  const btn = $("digitRollSkipButton");
-  if (!btn) return;
-  btn.classList.toggle("drOn", digitRollSkipUnlocked && rolling);
-  btn.disabled = digitRollSkipRequested;
-  btn.textContent = digitRollSkipRequested ? "⏭ SKIPPING…" : "⏭ SKIP ROLL";
-}
-
-function skipCurrentDigitRoll() {
-  if (!digitRollSkipUnlocked || !rolling || digitRollSkipRequested) return;
-  digitRollSkipRequested = true;
-  updateDigitRollSkipButton();
-  if (typeof digitRollRevealResolve === "function") digitRollRevealResolve();
-}
-window.skipCurrentDigitRoll = skipCurrentDigitRoll;
-
-function buySkipRollUpgrade() {
-  if (digitRollSkipUnlocked) return toast("Skip Roll is already unlocked.");
-  if (getXPBalance() < DIGIT_ROLL_SKIP_COST)
-    return toast("Not enough XP. Skip Roll costs 5,000 XP.");
-  xpBalance = getXPBalance() - DIGIT_ROLL_SKIP_COST;
-  xpSpent += DIGIT_ROLL_SKIP_COST;
-  digitRollSkipUnlocked = true;
-  try {
-    localStorage.setItem("digitRollSkipRollUnlocked", "true");
-  } catch (_) {}
-  saveLocal();
-  scheduleDigitRollCloudSave();
-  toast("⏭ Skip Roll unlocked permanently!");
-  updateShopUI();
-  updateDigitRollSkipButton();
-}
-window.buySkipRollUpgrade = buySkipRollUpgrade;
-
-function buyDigitRollExtraUpgrade(kind) {
-  const upgrades = {
-    fast: { cost: 2500, key: "digitRollFastAnimation", label: "⚡ Quick Spin" },
-    xp: { cost: 15000, key: "digitRollXPBoost", label: "✨ XP Surge" },
-    badge: {
-      cost: 25000,
-      key: "digitRollBonusBadge",
-      label: "🏅 Badge Magnet",
-    },
-  };
-  const item = upgrades[kind];
-  if (!item) return;
-  if (window[item.key]) return toast("That upgrade is already purchased.");
-  if (getXPBalance() < item.cost) return toast("Not enough XP.");
-  xpBalance = getXPBalance() - item.cost;
-  xpSpent += item.cost;
-  window[item.key] = true;
-  if (kind === "fast") digitRollFastAnimation = true;
-  if (kind === "xp") digitRollXPBoost = true;
-  if (kind === "badge") digitRollBonusBadge = true;
-  try {
-    localStorage.setItem(item.key, "true");
-  } catch (_) {}
-  saveLocal();
-  scheduleDigitRollCloudSave();
-  toast(item.label + " unlocked!");
-  updateShopUI();
-}
-window.buyDigitRollExtraUpgrade = buyDigitRollExtraUpgrade;
-
-function triggerDigitRollRarityFX(rarity) {
-  const normalized = String(rarity || "").toUpperCase();
-  const ranks = {
-    COMMON: 0,
-    UNCOMMON: 1,
-    RARE: 2,
-    EPIC: 3,
-    LEGENDARY: 4,
-    MYTHIC: 5,
-    DIVINE: 6,
-    TRANSCENDENT: 7,
-  };
-  const rank = ranks[normalized] ?? (normalized === "???" ? 8 : -1);
-  if (rank < 4) return;
-  const fx = document.createElement("div");
-  fx.className =
-    "drRarityFX " +
-    (rank >= 7
-      ? "drTranscendent"
-      : rank === 6
-        ? "drDivine"
-        : rank === 5
-          ? "drMythic"
-          : "drLegendary");
-  const count = rank >= 7 ? 150 : rank === 6 ? 100 : rank === 5 ? 65 : 34;
-  const colors =
-    rank >= 7
-      ? ["#b58aff", "#5ef5ff", "#ffffff", "#ff71d8"]
-      : rank === 6
-        ? ["#ffe27a", "#fff7d1", "#ffad42"]
-        : rank === 5
-          ? ["#ff4b9b", "#b15cff", "#ffffff"]
-          : ["#ffb45b", "#fff0b0"];
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement("i");
-    p.className = "drParticle";
-    p.style.setProperty("--x", Math.random() * 100 + "%");
-    p.style.setProperty("--y", 35 + Math.random() * 65 + "%");
-    p.style.setProperty(
-      "--s",
-      (rank >= 7 ? 3 + Math.random() * 7 : 2 + Math.random() * 5) + "px",
-    );
-    p.style.setProperty(
-      "--c",
-      colors[Math.floor(Math.random() * colors.length)],
-    );
-    p.style.setProperty(
-      "--dx",
-      (Math.random() * 2 - 1) * window.innerWidth * 0.65 + "px",
-    );
-    p.style.setProperty(
-      "--dy",
-      -80 - Math.random() * window.innerHeight * 0.85 + "px",
-    );
-    p.style.setProperty("--d", 1.1 + Math.random() * 2.1 + "s");
-    fx.appendChild(p);
-  }
-  document.body.appendChild(fx);
-  setTimeout(() => fx.remove(), 3700);
-}
-
-function getDigitRollCloudSnapshot() {
-  return {
-    version: 2,
-    savedAt: Date.now(),
-    history: Array.isArray(history) ? history.slice(0, 30) : [],
-    personalBest: personalBest || null,
-    allTimeBest: allTimeBest || null,
-    xpBalance: Number.isFinite(Number(xpBalance)) ? Number(xpBalance) : null,
-    xpSpent: Number(xpSpent || 0),
-    shopLuckLevel: Number(shopLuckLevel || 0),
-    skipRollUnlocked: !!digitRollSkipUnlocked,
-    fastAnimation: !!digitRollFastAnimation,
-    xpBoost: !!digitRollXPBoost,
-    bonusBadge: !!digitRollBonusBadge,
-  };
-}
-
-function applyDigitRollCloudSnapshot(snapshot) {
-  if (!snapshot || snapshot.version !== 2) return false;
-  if (Array.isArray(snapshot.history)) history = snapshot.history.slice(0, 30);
-  personalBest = snapshot.personalBest || null;
-  allTimeBest = snapshot.allTimeBest || null;
-  if (Number.isFinite(Number(snapshot.xpBalance)))
-    xpBalance = Math.max(0, Number(snapshot.xpBalance));
-  if (Number.isFinite(Number(snapshot.xpSpent)))
-    xpSpent = Math.max(0, Number(snapshot.xpSpent));
-  if (Number.isFinite(Number(snapshot.shopLuckLevel)))
-    shopLuckLevel = Math.max(0, Number(snapshot.shopLuckLevel));
-  digitRollSkipUnlocked = !!snapshot.skipRollUnlocked;
-  digitRollFastAnimation = !!snapshot.fastAnimation;
-  digitRollXPBoost = !!snapshot.xpBoost;
-  digitRollBonusBadge = !!snapshot.bonusBadge;
-  try {
-    localStorage.setItem("digitRollHistory", JSON.stringify(history));
-    localStorage.setItem("digitRollPersonal", JSON.stringify(personalBest));
-    localStorage.setItem("digitRollAll", JSON.stringify(allTimeBest));
-    if (xpBalance !== null)
-      localStorage.setItem("digitRollXPBalance", String(xpBalance));
-    localStorage.setItem("digitRollXPSpent", String(xpSpent));
-    localStorage.setItem("digitRollLuckLevel", String(shopLuckLevel));
-    localStorage.setItem(
-      "digitRollSkipRollUnlocked",
-      String(digitRollSkipUnlocked),
-    );
-    localStorage.setItem(
-      "digitRollFastAnimation",
-      String(digitRollFastAnimation),
-    );
-    localStorage.setItem("digitRollXPBoost", String(digitRollXPBoost));
-    localStorage.setItem("digitRollBonusBadge", String(digitRollBonusBadge));
-  } catch (_) {}
-  renderHistory();
-  updateShopUI();
-  updateDigitRollSkipButton();
-  return true;
-}
-
-function scheduleDigitRollCloudSave() {
-  if (!currentUser || !digitRollCloudHydrated) return;
-  clearTimeout(digitRollCloudSaveTimer);
-  digitRollCloudSaveTimer = setTimeout(async () => {
-    try {
-      const { error } = await supabaseClient.auth.updateUser({
-        data: { digit_roll_progress_v2: getDigitRollCloudSnapshot() },
-      });
-      if (error) console.warn("Progress cloud sync failed:", error.message);
-    } catch (error) {
-      console.warn("Progress cloud sync failed:", error);
-    }
-  }, 900);
-}
-
-async function hydrateDigitRollCloudProgress(user) {
-  if (!user) return;
-  digitRollCloudHydrated = false;
-  try {
-    const { data, error } = await supabaseClient.auth.getUser();
-    if (error) throw error;
-    const cloud = data?.user?.user_metadata?.digit_roll_progress_v2;
-    if (cloud && cloud.version === 2 && Number(cloud.savedAt) > 0) {
-      applyDigitRollCloudSnapshot(cloud);
-    } else {
-      // First migration only: upload the current local save if it has real content.
-      const hasLocalProgress =
-        history.length > 0 ||
-        Number(xpSpent) > 0 ||
-        Number(shopLuckLevel) > 0 ||
-        Number(xpBalance) > 0 ||
-        !!personalBest ||
-        !!allTimeBest;
-      digitRollCloudHydrated = true;
-      if (hasLocalProgress) scheduleDigitRollCloudSave();
-    }
-    digitRollCloudHydrated = true;
-    saveLocal();
-  } catch (error) {
-    console.warn("Cloud progress hydration failed; local save kept:", error);
-    digitRollCloudHydrated = false;
-  }
-}
-
-function setupDigitRollAdminPanel() {
-  const authorized =
-    String(currentUser?.email || "").toLowerCase() === "elicole613@gmail.com";
-  let button = document.getElementById("digitRollAdminButton");
-  if (!authorized) {
-    if (button) button.remove();
-    return;
-  }
-  if (!button) {
-    button = document.createElement("button");
-    button.id = "digitRollAdminButton";
-    button.type = "button";
-    button.className = "drNavBtn";
-    button.textContent = "🛡 Admin";
-    button.style.cssText =
-      "position:fixed;left:18px;bottom:18px;z-index:10001;border-color:rgba(255,190,90,.55);background:linear-gradient(135deg,rgba(90,55,10,.92),rgba(40,24,8,.94))";
-    button.addEventListener("click", openDigitRollAdminPanel);
-    document.body.appendChild(button);
-  }
-}
-function openDigitRollAdminPanel() {
-  if (
-    String(currentUser?.email || "").toLowerCase() !== "elicole613@gmail.com"
-  ) {
-    toast("Admin access denied.");
-    return;
-  }
-  let panel = document.getElementById("digitRollAdminPanel");
-  if (!panel) {
-    panel = document.createElement("div");
-    panel.id = "digitRollAdminPanel";
-    panel.style.cssText =
-      "position:fixed;inset:0;z-index:10020;display:none;overflow:auto;padding:22px;background:rgba(3,5,13,.86);backdrop-filter:blur(14px)";
-    panel.innerHTML = `<section style="max-width:780px;margin:5vh auto;padding:24px;border-radius:22px;background:#101726;color:#eef3ff;border:1px solid rgba(255,190,90,.4);box-shadow:0 25px 100px #000">
-      <header style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2 style="margin:0">🛡 Digit Roll Admin Hub</h2><button id="drAdminClose" class="drClose" type="button">×</button></header>
-      <p style="color:#aab5ca">Diagnostic controls for this build. Destructive actions require server-side authorization and are intentionally not simulated in the browser.</p>
-      <div id="drAdminStatus" style="padding:14px;border-radius:12px;background:#080d17;margin:14px 0">Ready.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="drAdminCheck" class="drBuy" type="button">🔎 Check Cloud</button><button id="drAdminCopy" class="drBuy" type="button">📋 Copy Diagnostics</button><button id="drAdminRefresh" class="drBuy" type="button">↻ Refresh Leaderboard</button></div>
-      <pre id="drAdminOutput" style="white-space:pre-wrap;overflow-wrap:anywhere;color:#a9c7ff;background:#080d17;padding:14px;border-radius:12px;max-height:42vh;overflow:auto"></pre>
-    </section>`;
-    panel.addEventListener("click", (e) => {
-      if (e.target === panel) panel.style.display = "none";
-    });
-    document.body.appendChild(panel);
-    panel.querySelector("#drAdminClose").onclick = () =>
-      (panel.style.display = "none");
-    panel.querySelector("#drAdminCheck").onclick = async () => {
-      const status = panel.querySelector("#drAdminStatus"),
-        output = panel.querySelector("#drAdminOutput");
-      status.textContent = "Checking Supabase…";
-      const report = {
-        checkedAt: new Date().toISOString(),
-        user: currentUser?.email || null,
-        authUserId: currentUser?.id || null,
-        cloudProgressHydrated: digitRollCloudHydrated,
-        localHistoryRows: history.length,
-        xpBalance: getXPBalance(),
-        xpSpent,
-        shopLuckLevel,
-        skipRollUnlocked: digitRollSkipUnlocked,
-      };
-      try {
-        const { count, error } = await supabaseClient
-          .from("rolls")
-          .select("id", { count: "exact", head: true });
-        report.rollsTable = error
-          ? { ok: false, message: error.message, code: error.code }
-          : { ok: true, count };
-        const { data: userData, error: userError } =
-          await supabaseClient.auth.getUser();
-        report.authSession = userError
-          ? { ok: false, message: userError.message }
-          : { ok: !!userData?.user };
-      } catch (e) {
-        report.checkError = String(e?.message || e);
-      }
-      output.textContent = JSON.stringify(report, null, 2);
-      status.textContent = "Diagnostics complete. Review the report below.";
-      window.digitRollAdminDiagnostics = report;
-    };
-    panel.querySelector("#drAdminCopy").onclick = async () => {
-      const output =
-        panel.querySelector("#drAdminOutput").textContent ||
-        "Run Check Cloud first.";
-      try {
-        await navigator.clipboard.writeText(output);
-        panel.querySelector("#drAdminStatus").textContent =
-          "Diagnostics copied.";
-      } catch (_) {
-        panel.querySelector("#drAdminStatus").textContent =
-          "Clipboard blocked. Select and copy the report manually.";
-      }
-    };
-    panel.querySelector("#drAdminRefresh").onclick = async () => {
-      await loadLeaderboard();
-      panel.querySelector("#drAdminStatus").textContent =
-        "Leaderboard refresh requested.";
-    };
-  }
-  panel.style.display = "block";
-}
-
 async function performRoll() {
   if (rolling) return;
+  if (await checkPlayerBan()) return;
 
   rolling = true;
-  digitRollSkipRequested = false;
-  updateDigitRollSkipButton();
 
   $("rollBtn").disabled = true;
 
@@ -3400,7 +3923,7 @@ async function performRoll() {
   $("badges").innerHTML =
     '<span class="empty">The number is being generated...</span>';
 
-  $("number").classList.add("rolling", "drRollingDigits");
+  $("number").classList.add("rolling");
 
   applyRarityColor($("liveRarity"), "COMMON");
 
@@ -3410,66 +3933,40 @@ async function performRoll() {
 
   const finalChars = randomRoll();
 
-  const visible = Array(10).fill("?");
+  const visible = Array(finalChars.length).fill("?");
 
   let i = 0;
 
   await new Promise((resolve) => {
-    const timer = setInterval(
-      () => {
-        if (digitRollSkipRequested) {
-          $("number").textContent = finalChars.join("");
-          clearInterval(timer);
-          resolve();
-          return;
-        }
-        const cycling = finalChars.map((digit, index) =>
-          index < i ? digit : String(Math.floor(Math.random() * 10)),
-        );
-        $("number").textContent = cycling.join("");
-        if (i < finalChars.length) {
-          visible[i] = finalChars[i];
-          i++;
-          $("number").classList.remove("drDigitLock");
-          void $("number").offsetWidth;
-          $("number").classList.add("drDigitLock");
-        }
-        if (i >= finalChars.length) {
-          $("number").textContent = finalChars.join("");
-          clearInterval(timer);
-          resolve();
-        }
-      },
-      digitRollFastAnimation ? 75 : 160,
-    );
+    const timer = setInterval(() => {
+      visible[i] = finalChars[i];
+
+      $("number").textContent = visible.join("");
+
+      i++;
+
+      if (i >= finalChars.length) {
+        clearInterval(timer);
+
+        resolve();
+      }
+    }, 900);
   });
 
-  $("number").classList.remove("rolling", "drRollingDigits");
-  $("number").classList.add("drDigitLock");
-  setTimeout(() => $("number")?.classList.remove("drDigitLock"), 500);
+  $("number").classList.remove("rolling");
 
   const analysis = analyze(finalChars);
-  triggerDigitRollRarityFX(analysis.rarity);
 
   applyGuaranteedBadges(analysis);
-  if (digitRollBonusBadge && Array.isArray(analysis.badges)) {
-    const already = new Set(analysis.badges.map((b) => b.name));
-    const pool = Object.values(staticBadgeCatalog).filter(
-      (b) => !already.has(b.name) && Number(b.oneIn) <= 10000,
-    );
-    if (pool.length) {
-      const picked = pool[Math.floor(Math.random() * pool.length)];
-      analysis.badges.push({
-        ...picked,
-        guaranteed: true,
-        upgradeGranted: true,
-      });
-    }
-  }
-  if (digitRollXPBoost)
-    analysis.xp = Math.floor(Number(analysis.xp || 0) * 1.25);
-  xpBalance = getXPBalance() + Number(analysis.xp || 0);
+  const usedCharmBonus = consumeCharm();
+  const usedNumberCharms = consumeNumberCharms();
+  if (usedCharmBonus) saveShopState();
+  xpBalance = Math.min(
+    getXPCapacity(),
+    getXPBalance() + Number(analysis.xp || 0),
+  );
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
+  await syncXPWallet();
 
   const roll = finalChars.join("");
 
@@ -3500,12 +3997,7 @@ async function performRoll() {
   let bIndex = 0;
 
   await new Promise((resolve) => {
-    digitRollRevealResolve = resolve;
     const revealBadge = () => {
-      if (digitRollSkipRequested) {
-        resolve();
-        return;
-      }
       if (bIndex < badges.length) {
         const b = badges[bIndex];
 
@@ -3585,7 +4077,6 @@ async function performRoll() {
 
     setTimeout(revealBadge, 450);
   });
-  digitRollRevealResolve = null;
 
   /* ==========================================================
      FINAL RESULT
@@ -3594,14 +4085,12 @@ async function performRoll() {
   $("rollLabel").textContent = "FINAL RESULT";
 
   $("liveRarity").textContent = "RARITY: " + analysis.rarity;
-  $("number").classList.add("drRarityBurst");
-  setTimeout(() => $("number")?.classList.remove("drRarityBurst"), 1200);
 
   $("rarity").textContent = analysis.rarity;
 
   $("chance").textContent = fmt(analysis.oneIn);
 
-  $("shown").textContent = analysis.shown + "/10";
+  $("shown").textContent = analysis.shown + "/" + getRollLength();
 
   $("blankBonus").textContent = "×" + analysis.blankMultiplier.toLocaleString();
 
@@ -3648,6 +4137,8 @@ async function performRoll() {
 
   history = history.slice(0, 30);
 
+  addBadgesToCollection(result.badges);
+
   if (better(result, personalBest)) {
     personalBest = result;
   }
@@ -3666,6 +4157,7 @@ async function performRoll() {
 
   if (currentUser) {
     await saveCloudRoll(result);
+    await syncBadgeCollection();
 
     await loadPersonalStats();
 
@@ -3675,8 +4167,6 @@ async function performRoll() {
   $("rollBtn").disabled = false;
 
   rolling = false;
-  digitRollSkipRequested = false;
-  updateDigitRollSkipButton();
 }
 
 /* ============================================================
@@ -3723,9 +4213,11 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     setTimeout(async () => {
       await ensureProfile(currentUser);
 
+      loadLocalBadgeCollection();
       updateAccountUI();
-      setupDigitRollAdminPanel();
-      await hydrateDigitRollCloudProgress(currentUser);
+      await loadAdminState();
+      await loadXPWallet();
+      await loadBadgeCollection();
 
       await loadPersonalStats();
 
@@ -3733,11 +4225,12 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     }, 0);
   } else {
     currentUser = null;
+
     profile = null;
-    digitRollCloudHydrated = false;
+    badgeCollection = new Set();
+    badgeCollectionLoadedForUser = null;
 
     updateAccountUI();
-    setupDigitRollAdminPanel();
   }
 });
 
@@ -3747,7 +4240,6 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 
 async function init() {
   loadLocal();
-  installDigitRollOverhaulFX();
 
   ensureShopUI();
 
@@ -3765,7 +4257,11 @@ async function init() {
 
       await ensureProfile(currentUser);
 
+      loadLocalBadgeCollection();
       updateAccountUI();
+      await loadAdminState();
+      await loadXPWallet();
+      await loadBadgeCollection();
 
       await loadPersonalStats();
     }
@@ -3783,3 +4279,6 @@ async function init() {
    ============================================================ */
 
 init();
+
+// Initialize prestige visuals from saved progression.
+updateRainbowNames();
