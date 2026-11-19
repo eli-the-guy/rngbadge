@@ -25,28 +25,88 @@
 
   /* Famous numbers. Matched anywhere inside the visible digits. */
   const EXTRA_REFERENCES = [
-    ["1969", "🌙 Apollo 11", "The year humans first walked on the Moon.", 90000],
-    ["1972", "🏓 Pong", "Pong arrived in 1972 and kicked off the arcade era.", 90000],
+    [
+      "1969",
+      "🌙 Apollo 11",
+      "The year humans first walked on the Moon.",
+      90000,
+    ],
+    [
+      "1972",
+      "🏓 Pong",
+      "Pong arrived in 1972 and kicked off the arcade era.",
+      90000,
+    ],
     ["1978", "👾 Space Invaders", "Space Invaders hit arcades in 1978.", 90000],
     ["1980", "🟡 Pac-Man", "Pac-Man started chomping in 1980.", 90000],
-    ["1138", "🎬 THX 1138", "A number hidden in many science-fiction films.", 120000],
-    ["1701", "🖖 NCC-1701", "The registry number of a very famous starship.", 120000],
+    [
+      "1138",
+      "🎬 THX 1138",
+      "A number hidden in many science-fiction films.",
+      120000,
+    ],
+    [
+      "1701",
+      "🖖 NCC-1701",
+      "The registry number of a very famous starship.",
+      120000,
+    ],
     ["2112", "🎸 2112", "A classic progressive-rock number.", 120000],
-    ["2038", "⏳ Year 2038", "The year 32-bit Unix timestamps run out.", 100000],
+    [
+      "2038",
+      "⏳ Year 2038",
+      "The year 32-bit Unix timestamps run out.",
+      100000,
+    ],
     ["2048", "🟧 2048", "The famous sliding-tile puzzle.", 100000],
     ["1024", "💾 1024", "One kibibyte: a very computery number.", 80000],
     ["65535", "🔌 65535", "The largest unsigned 16-bit integer.", 250000],
-    ["555", "📞 Fake Phone Number", "The classic movie-and-TV placeholder phone prefix.", 5000],
-    ["299792", "⚡ Speed of Light", "Roughly 299,792 kilometres per second.", 300000],
-    ["602214", "🧪 Avogadro", "The leading digits of Avogadro's number.", 300000],
+    [
+      "555",
+      "📞 Fake Phone Number",
+      "The classic movie-and-TV placeholder phone prefix.",
+      5000,
+    ],
+    [
+      "299792",
+      "⚡ Speed of Light",
+      "Roughly 299,792 kilometres per second.",
+      300000,
+    ],
+    [
+      "602214",
+      "🧪 Avogadro",
+      "The leading digits of Avogadro's number.",
+      300000,
+    ],
     ["112358", "🐚 Fibonacci", "The start of the Fibonacci sequence.", 300000],
     ["8675309", "☎️ 867-5309", "A very catchy phone number.", 5000000],
     /* Ten-digit legends: the entire roll has to line up. */
-    ["4815162342", "🏝️ The Numbers", "Six cursed numbers from a certain mysterious island.", 1e10],
+    [
+      "4815162342",
+      "🏝️ The Numbers",
+      "Six cursed numbers from a certain mysterious island.",
+      1e10,
+    ],
     ["3141592653", "🥧 Pi: 10 Digits", "Pi, carried to ten digits.", 1e10],
-    ["2718281828", "📐 Euler: 10 Digits", "The number e, carried to ten digits.", 1e10],
-    ["1618033988", "🌀 Golden Ratio: 10 Digits", "Phi, carried to ten digits.", 1e10],
-    ["1123581321", "🐚 Fibonacci: 10 Digits", "1, 1, 2, 3, 5, 8, 13, 21 — squashed together.", 1e10],
+    [
+      "2718281828",
+      "📐 Euler: 10 Digits",
+      "The number e, carried to ten digits.",
+      1e10,
+    ],
+    [
+      "1618033988",
+      "🌀 Golden Ratio: 10 Digits",
+      "Phi, carried to ten digits.",
+      1e10,
+    ],
+    [
+      "1123581321",
+      "🐚 Fibonacci: 10 Digits",
+      "1, 1, 2, 3, 5, 8, 13, 21 — squashed together.",
+      1e10,
+    ],
     ["1000000000", "💰 One Billion", "A 1 followed by nine zeros.", 1e10],
   ];
 
@@ -105,7 +165,8 @@
       name: "🪞 Bookends",
       explanation: "The first and last visible digits match.",
       oneIn: 10,
-      test: (c) => c.digits.length >= 4 && c.digits[0] === c.digits[c.digits.length - 1],
+      test: (c) =>
+        c.digits.length >= 4 && c.digits[0] === c.digits[c.digits.length - 1],
     },
     {
       name: "🧊 Triple Zero Tail",
@@ -141,23 +202,27 @@
       name: "👯‍♂️ Two Pair",
       explanation: "Two different digits each appear doubled side by side.",
       oneIn: 12,
-      test: (c) => new Set(c.runs.filter((r) => r.len >= 2).map((r) => r.d)).size >= 2,
+      test: (c) =>
+        new Set(c.runs.filter((r) => r.len >= 2).map((r) => r.d)).size >= 2,
     },
     {
       name: "👨‍👩‍👧 Triple Pair",
       explanation: "Three different digits each appear doubled side by side.",
       oneIn: 300,
-      test: (c) => new Set(c.runs.filter((r) => r.len >= 2).map((r) => r.d)).size >= 3,
+      test: (c) =>
+        new Set(c.runs.filter((r) => r.len >= 2).map((r) => r.d)).size >= 3,
     },
     {
       name: "🔱 Twin Triples",
       explanation: "Two separate digits each appear three times in a row.",
       oneIn: 100000,
-      test: (c) => new Set(c.runs.filter((r) => r.len >= 3).map((r) => r.d)).size >= 2,
+      test: (c) =>
+        new Set(c.runs.filter((r) => r.len >= 3).map((r) => r.d)).size >= 2,
     },
     {
       name: "🏠 Full House",
-      explanation: "One digit shows up exactly three times and another exactly twice.",
+      explanation:
+        "One digit shows up exactly three times and another exactly twice.",
       oneIn: 8,
       test: (c) => {
         const v = Object.values(c.counts);
@@ -178,13 +243,15 @@
     },
     {
       name: "🪶 Featherweight",
-      explanation: "Five or more digits showing, yet they add up to 12 or less.",
+      explanation:
+        "Five or more digits showing, yet they add up to 12 or less.",
       oneIn: 200,
       test: (c) => c.digits.length >= 5 && c.sum <= 12,
     },
     {
       name: "⚖️ Balanced Scales",
-      explanation: "With all ten digits showing, the first five add up to the same total as the last five.",
+      explanation:
+        "With all ten digits showing, the first five add up to the same total as the last five.",
       oneIn: 55,
       test: (c) =>
         c.blanks === 0 &&
@@ -196,17 +263,20 @@
       explanation: "Every digit and its mirror position add up to 9.",
       oneIn: 100000,
       test: (c) =>
-        c.blanks === 0 && c.digits.every((d, i) => Number(d) + Number(c.digits[9 - i]) === 9),
+        c.blanks === 0 &&
+        c.digits.every((d, i) => Number(d) + Number(c.digits[9 - i]) === 9),
     },
     {
       name: "👣 Skip Counting",
       explanation: "Four or more digits in a row step by exactly two.",
       oneIn: 160,
-      test: (c) => Math.max(longestStep(c.digits, 2), longestStep(c.digits, -2)) >= 4,
+      test: (c) =>
+        Math.max(longestStep(c.digits, 2), longestStep(c.digits, -2)) >= 4,
     },
     {
       name: "⚡ Zigzag",
-      explanation: "At least eight digits in a row alternate up, down, up, down.",
+      explanation:
+        "At least eight digits in a row alternate up, down, up, down.",
       oneIn: 40,
       test: (c) => c.digits.length >= 8 && isZigzag(c.digits),
     },
@@ -214,19 +284,24 @@
       name: "🪙 Coin Flip",
       explanation: "Every visible digit is a 0 or a 1 (six or more shown).",
       oneIn: 20000,
-      test: (c) => c.digits.length >= 6 && c.digits.every((d) => d === "0" || d === "1"),
+      test: (c) =>
+        c.digits.length >= 6 && c.digits.every((d) => d === "0" || d === "1"),
     },
     {
       name: "🎲 Dice Only",
-      explanation: "Every visible digit is between 1 and 6 (seven or more shown).",
+      explanation:
+        "Every visible digit is between 1 and 6 (seven or more shown).",
       oneIn: 80,
-      test: (c) => c.digits.length >= 7 && c.digits.every((d) => d >= "1" && d <= "6"),
+      test: (c) =>
+        c.digits.length >= 7 && c.digits.every((d) => d >= "1" && d <= "6"),
     },
     {
       name: "🟩 Square Digits",
-      explanation: "Every visible digit is a perfect square: 0, 1, 4 or 9 (six or more shown).",
+      explanation:
+        "Every visible digit is a perfect square: 0, 1, 4 or 9 (six or more shown).",
       oneIn: 300,
-      test: (c) => c.digits.length >= 6 && c.digits.every((d) => "0149".includes(d)),
+      test: (c) =>
+        c.digits.length >= 6 && c.digits.every((d) => "0149".includes(d)),
     },
     {
       name: "🕛 Twelve O'Clock",
@@ -277,7 +352,9 @@
   G.drNotifyNewBadges = function (badges) {
     try {
       const known = getUnlockedBadgeNames();
-      const fresh = (badges || []).map((b) => b.name).filter((n) => !known.has(n));
+      const fresh = (badges || [])
+        .map((b) => b.name)
+        .filter((n) => !known.has(n));
       if (!fresh.length) return;
       toast(
         fresh.length === 1
@@ -344,7 +421,9 @@
   const fxName = (r) => (r === "???" ? "unknown" : r.toLowerCase());
 
   const reduced = () =>
-    !!(G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    !!(
+      G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
 
   function fxMode() {
     try {
@@ -434,7 +513,10 @@
       num.classList.remove("fx-pop");
       void num.offsetWidth;
       num.style.setProperty("--fx-color", color + "88");
-      num.style.setProperty("--fx-scale", String(1.03 + Math.min(tier, 9) * 0.012));
+      num.style.setProperty(
+        "--fx-scale",
+        String(1.03 + Math.min(tier, 9) * 0.012),
+      );
       num.classList.add("fx-pop");
 
       const count = tier < 4 ? 0 : Math.min(70, (tier - 3) * 10);
@@ -457,7 +539,9 @@
   function shakeEls(S, amp) {
     (S.shake || []).forEach((el) => {
       el.style.transform =
-        amp > 0.2 ? `translate(${(Math.random() - 0.5) * amp * 2}px, ${(Math.random() - 0.5) * amp * 2}px)` : "";
+        amp > 0.2
+          ? `translate(${(Math.random() - 0.5) * amp * 2}px, ${(Math.random() - 0.5) * amp * 2}px)`
+          : "";
     });
   }
 
@@ -559,7 +643,8 @@
       });
 
       for (const s of S.stars) {
-        const a = (0.35 + 0.65 * Math.abs(Math.sin((ms / 700) * s.sp + s.ph))) * env;
+        const a =
+          (0.35 + 0.65 * Math.abs(Math.sin((ms / 700) * s.sp + s.ph))) * env;
         c.fillStyle = `rgba(255,255,255,${a})`;
         c.beginPath();
         c.arc(s.x, (s.y + ms * 0.01 * s.sp) % h, s.s, 0, 6.283);
@@ -581,7 +666,12 @@
         s.life++;
         s.x += s.vx;
         s.y += s.vy;
-        const gl = c.createLinearGradient(s.x, s.y, s.x - s.vx * 8, s.y - s.vy * 8);
+        const gl = c.createLinearGradient(
+          s.x,
+          s.y,
+          s.x - s.vx * 8,
+          s.y - s.vy * 8,
+        );
         gl.addColorStop(0, `rgba(255,255,255,${env})`);
         gl.addColorStop(1, "rgba(255,255,255,0)");
         c.strokeStyle = gl;
@@ -594,7 +684,14 @@
 
       const fa = Math.max(0, 1 - Math.abs(t - 0.3) / 0.12) * env;
       if (fa > 0) {
-        const fg = c.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.5);
+        const fg = c.createRadialGradient(
+          w / 2,
+          h / 2,
+          0,
+          w / 2,
+          h / 2,
+          Math.min(w, h) * 0.5,
+        );
         fg.addColorStop(0, `rgba(255,255,255,${fa})`);
         fg.addColorStop(1, "rgba(255,255,255,0)");
         c.fillStyle = fg;
@@ -762,12 +859,17 @@
         if (col.y > h) col.y = -20;
         for (let k = 0; k < 12; k++) {
           c.fillStyle = `rgba(255,79,224,${(1 - k / 12) * 0.55 * env})`;
-          c.fillText(String(Math.floor(Math.random() * 10)), i * 22, col.y - k * 18);
+          c.fillText(
+            String(Math.floor(Math.random() * 10)),
+            i * 22,
+            col.y - k * 18,
+          );
         }
       });
 
       const crack = Math.min(1, t * 2.2);
-      const wid = (8 + crack * Math.min(w, h) * 0.22) * (0.7 + 0.3 * Math.sin(ms / 60));
+      const wid =
+        (8 + crack * Math.min(w, h) * 0.22) * (0.7 + 0.3 * Math.sin(ms / 60));
       const gg = c.createLinearGradient(w / 2 - wid, 0, w / 2 + wid, 0);
       gg.addColorStop(0, "rgba(120,40,255,0)");
       gg.addColorStop(0.5, `rgba(255,255,255,${0.85 * env})`);
@@ -775,18 +877,29 @@
       c.fillStyle = gg;
       c.beginPath();
       c.moveTo(w / 2, 0);
-      for (let y = 0; y <= h; y += h / 24) c.lineTo(w / 2 + (Math.random() - 0.5) * wid * 0.9, y);
+      for (let y = 0; y <= h; y += h / 24)
+        c.lineTo(w / 2 + (Math.random() - 0.5) * wid * 0.9, y);
       c.lineTo(w / 2, h);
-      for (let y = h; y >= 0; y -= h / 24) c.lineTo(w / 2 + (Math.random() - 0.5) * wid * 0.9, y);
+      for (let y = h; y >= 0; y -= h / 24)
+        c.lineTo(w / 2 + (Math.random() - 0.5) * wid * 0.9, y);
       c.closePath();
       c.fill();
 
       c.globalCompositeOperation = "lighter";
-      const tints = ["rgba(0,255,255,.22)", "rgba(255,0,200,.22)", "rgba(255,255,0,.15)"];
+      const tints = [
+        "rgba(0,255,255,.22)",
+        "rgba(255,0,200,.22)",
+        "rgba(255,255,0,.15)",
+      ];
       for (let i = 0; i < 14; i++) {
         if (Math.random() < 0.6) {
           c.fillStyle = tints[i % 3];
-          c.fillRect((Math.random() - 0.5) * 120, Math.random() * h, w, 4 + Math.random() * 50);
+          c.fillRect(
+            (Math.random() - 0.5) * 120,
+            Math.random() * h,
+            w,
+            4 + Math.random() * 50,
+          );
         }
       }
       c.globalCompositeOperation = "source-over";
@@ -822,7 +935,8 @@
           c.lineWidth = 2.5;
           c.beginPath();
           for (let s = 0; s <= 6; s++) {
-            const a = (s / 6) * 6.283 + (ms / 1200) * (i % 2 ? 1 : -1) + i * 0.3;
+            const a =
+              (s / 6) * 6.283 + (ms / 1200) * (i % 2 ? 1 : -1) + i * 0.3;
             const x = cx + Math.cos(a) * rr;
             const y = cy + Math.sin(a) * rr;
             if (s) c.lineTo(x, y);
@@ -851,7 +965,16 @@
         S.n.width = Math.ceil(w / 5);
         S.n.height = Math.ceil(h / 5);
         S.nc = S.n.getContext("2d");
-        S.words = ["NULL", "0xDEAD", "UNDEFINED", "OVERFLOW", "???", "NaN", "SEGFAULT", "ERR_RARITY"];
+        S.words = [
+          "NULL",
+          "0xDEAD",
+          "UNDEFINED",
+          "OVERFLOW",
+          "???",
+          "NaN",
+          "SEGFAULT",
+          "ERR_RARITY",
+        ];
       }
       c.globalAlpha = env;
 
@@ -869,7 +992,14 @@
       c.drawImage(S.n, 0, 0, w, h);
 
       const pulse = 0.5 + 0.5 * Math.sin(ms / 180);
-      const vg = c.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.7);
+      const vg = c.createRadialGradient(
+        w / 2,
+        h / 2,
+        Math.min(w, h) * 0.2,
+        w / 2,
+        h / 2,
+        Math.max(w, h) * 0.7,
+      );
       vg.addColorStop(0, "rgba(0,0,0,0)");
       vg.addColorStop(1, `rgba(160,0,0,${0.55 + 0.3 * pulse})`);
       c.fillStyle = vg;
@@ -886,7 +1016,11 @@
       c.fillStyle = "rgba(255,70,70,.8)";
       for (let i = 0; i < 8; i++) {
         if (Math.random() < 0.18) {
-          c.fillText(S.words[Math.floor(Math.random() * S.words.length)], Math.random() * w, Math.random() * h);
+          c.fillText(
+            S.words[Math.floor(Math.random() * S.words.length)],
+            Math.random() * w,
+            Math.random() * h,
+          );
         }
       }
       c.globalAlpha = 1;
@@ -933,7 +1067,12 @@
       let done = false;
       let raf = 0;
       let showTimer = 0;
-      const S = { shake: [document.querySelector(".rollCard"), document.getElementById("number")].filter(Boolean) };
+      const S = {
+        shake: [
+          document.querySelector(".rollCard"),
+          document.getElementById("number"),
+        ].filter(Boolean),
+      };
 
       function end(skipped) {
         if (done) return;
@@ -990,7 +1129,8 @@
           lastScramble = now;
           if (t < 0.55) {
             let s = "";
-            for (let i = 0; i < 3; i++) s += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+            for (let i = 0; i < 3; i++)
+              s += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
             title.textContent = s;
           } else {
             title.textContent = Math.random() < 0.12 ? "█▒░" : "???";
@@ -1012,7 +1152,8 @@
     const mode = opts.force ? "full" : fxMode();
 
     if (mode === "off") return Promise.resolve();
-    if (mode === "simple" || tier < FIRST_CINEMATIC) return simpleEffect(rarity, tier);
+    if (mode === "simple" || tier < FIRST_CINEMATIC)
+      return simpleEffect(rarity, tier);
     return cinematic(rarity, tier, opts);
   };
 
@@ -1028,7 +1169,12 @@
     const b = document.getElementById("drFxButton");
     if (!b) return;
     const m = fxMode();
-    b.textContent = m === "full" ? "🎬 FX: Full" : m === "simple" ? "🎬 FX: Simple" : "🎬 FX: Off";
+    b.textContent =
+      m === "full"
+        ? "🎬 FX: Full"
+        : m === "simple"
+          ? "🎬 FX: Simple"
+          : "🎬 FX: Off";
   }
 
   /* ==========================================================
@@ -1084,7 +1230,10 @@ create policy "admins delete rolls" on public.rolls
     return isDev() ? "Local dev mode ON" : "Local dev mode OFF";
   };
 
-  if (/(^|[#&?])dev($|[&=])/.test(G.location.hash + G.location.search)) G.drDev(true);
+  if (/(^|[#&?])dev($|[&=])/.test(G.location.hash + G.location.search))
+    G.drDev(true);
+
+  const OWNER_EMAIL = "elicole613@gmail.com";
 
   async function checkAdmin() {
     if (typeof currentUser === "undefined" || !currentUser) {
@@ -1095,6 +1244,11 @@ create policy "admins delete rolls" on public.rolls
     }
     if (A.checkedFor === currentUser.id) return;
     A.checkedFor = currentUser.id;
+    if (String(currentUser.email || "").toLowerCase() === OWNER_EMAIL) {
+      A.isAdmin = true;
+      refreshNav();
+      return;
+    }
     try {
       const { data, error } = await supabaseClient
         .from("admins")
@@ -1125,7 +1279,8 @@ create policy "admins delete rolls" on public.rolls
       b.type = "button";
       b.title = "Cycle rarity effects: Full / Simple / Off";
       b.onclick = () => {
-        const next = { full: "simple", simple: "off", off: "full" }[fxMode()] || "full";
+        const next =
+          { full: "simple", simple: "off", off: "full" }[fxMode()] || "full";
         setFxMode(next);
         toast("🎬 Effects: " + next);
       };
@@ -1183,7 +1338,8 @@ create policy "admins delete rolls" on public.rolls
 
   G.openDigitRollAdmin = openAdmin;
 
-  const esc = (v) => (typeof escapeHTML === "function" ? escapeHTML(v) : String(v));
+  const esc = (v) =>
+    typeof escapeHTML === "function" ? escapeHTML(v) : String(v);
   const q = (id) => document.getElementById(id);
 
   function setStatus(id, text, isErr) {
@@ -1378,31 +1534,51 @@ create policy "admins delete rolls" on public.rolls
 
       case "addxp": {
         const n = Math.floor(Number(q("drXpInput").value));
-        if (!Number.isFinite(n) || n === 0) return setStatus("drEconStatus", "Enter an XP amount.", true);
+        if (!Number.isFinite(n) || n === 0)
+          return setStatus("drEconStatus", "Enter an XP amount.", true);
         xpBalance = Math.max(0, getXPBalance() + n);
         localStorage.setItem("digitRollXPBalance", String(xpBalance));
         updateShopUI();
         renderAdmin();
-        return setStatus("drEconStatus", (n > 0 ? "Added " : "Removed ") + Math.abs(n).toLocaleString() + " XP.");
+        return setStatus(
+          "drEconStatus",
+          (n > 0 ? "Added " : "Removed ") +
+            Math.abs(n).toLocaleString() +
+            " XP.",
+        );
       }
 
       case "setluck": {
-        shopLuckLevel = Math.max(0, Math.min(10, Number(q("drLuck").value) || 0));
+        shopLuckLevel = Math.max(
+          0,
+          Math.min(10, Number(q("drLuck").value) || 0),
+        );
         saveShopState();
         updateShopUI();
         renderAdmin();
-        return setStatus("drEconStatus", "Luck level set to " + shopLuckLevel + ".");
+        return setStatus(
+          "drEconStatus",
+          "Luck level set to " + shopLuckLevel + ".",
+        );
       }
 
       case "unlockall": {
-        localStorage.setItem("digitRollUnlockedBadges", JSON.stringify(Object.keys(staticBadgeCatalog)));
+        localStorage.setItem(
+          "digitRollUnlockedBadges",
+          JSON.stringify(Object.keys(staticBadgeCatalog)),
+        );
         updateShopUI();
         renderAdmin();
         return setStatus("drBadgeStatus", "Every badge unlocked.");
       }
 
       case "lockall": {
-        if (!confirm("Re-lock every badge? Badges from your saved roll history will unlock again.")) return;
+        if (
+          !confirm(
+            "Re-lock every badge? Badges from your saved roll history will unlock again.",
+          )
+        )
+          return;
         localStorage.setItem("digitRollUnlockedBadges", "[]");
         history = [];
         saveLocal();
@@ -1428,7 +1604,12 @@ create policy "admins delete rolls" on public.rolls
         return q("drImportFile").click();
 
       case "wipe": {
-        if (!confirm("Delete ALL local Digit Roll data in this browser (history, XP, luck, badges)?")) return;
+        if (
+          !confirm(
+            "Delete ALL local Digit Roll data in this browser (history, XP, luck, badges)?",
+          )
+        )
+          return;
         Object.keys(localStorage)
           .filter((k) => k.startsWith("digitRoll") && k !== "digitRollDev")
           .forEach((k) => localStorage.removeItem(k));
@@ -1437,8 +1618,15 @@ create policy "admins delete rolls" on public.rolls
       }
 
       case "copysql": {
-        const done = () => setStatus("drSessionStatus", "SQL copied. Paste it into the Supabase SQL editor.");
-        if (navigator.clipboard) navigator.clipboard.writeText(ADMIN_SQL).then(done, () => fallbackCopy(ADMIN_SQL, done));
+        const done = () =>
+          setStatus(
+            "drSessionStatus",
+            "SQL copied. Paste it into the Supabase SQL editor.",
+          );
+        if (navigator.clipboard)
+          navigator.clipboard
+            .writeText(ADMIN_SQL)
+            .then(done, () => fallbackCopy(ADMIN_SQL, done));
         else fallbackCopy(ADMIN_SQL, done);
         return;
       }
@@ -1467,7 +1655,11 @@ create policy "admins delete rolls" on public.rolls
       document.execCommand("copy");
       done();
     } catch (e) {
-      setStatus("drSessionStatus", "Could not copy. See admin-setup.sql instead.", true);
+      setStatus(
+        "drSessionStatus",
+        "Could not copy. See admin-setup.sql instead.",
+        true,
+      );
     }
     ta.remove();
   }
@@ -1477,13 +1669,24 @@ create policy "admins delete rolls" on public.rolls
   function forceRoll() {
     const raw = q("drForceInput").value.trim();
     if (raw.length !== 10 || !/^[0-9_]{10}$/.test(raw)) {
-      return setStatus("drForceStatus", "Needs exactly 10 characters: digits 0-9 or _ for a blank.", true);
+      return setStatus(
+        "drForceStatus",
+        "Needs exactly 10 characters: digits 0-9 or _ for a blank.",
+        true,
+      );
     }
     if (/^_+$/.test(raw)) {
-      return setStatus("drForceStatus", "At least one digit has to show (the game never rolls ten blanks).", true);
+      return setStatus(
+        "drForceStatus",
+        "At least one digit has to show (the game never rolls ten blanks).",
+        true,
+      );
     }
     G.DR_FORCE = raw.split("");
-    setStatus("drForceStatus", "Next roll will be " + raw + ". Close this panel and press ROLL.");
+    setStatus(
+      "drForceStatus",
+      "Next roll will be " + raw + ". Close this panel and press ROLL.",
+    );
   }
 
   /* ---------- simulator ---------- */
@@ -1506,13 +1709,18 @@ create policy "admins delete rolls" on public.rolls
         const r = analyze(randomRoll());
         rarityCount[r.rarity] = (rarityCount[r.rarity] || 0) + 1;
         badgeTotal += r.badges.length;
-        r.badges.forEach((b) => (badgeCount[b.name] = (badgeCount[b.name] || 0) + 1));
+        r.badges.forEach(
+          (b) => (badgeCount[b.name] = (badgeCount[b.name] || 0) + 1),
+        );
         if (!best || r.oneIn > best.oneIn) best = r;
       }
       done += n;
 
       if (done < total) {
-        setStatus("drSimStatus", "Running… " + Math.round((done / total) * 100) + "%");
+        setStatus(
+          "drSimStatus",
+          "Running… " + Math.round((done / total) * 100) + "%",
+        );
         setTimeout(chunk, 0);
         return;
       }
@@ -1565,7 +1773,9 @@ create policy "admins delete rolls" on public.rolls
   ];
 
   function downloadJSON(name, obj) {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {
+      type: "application/json",
+    });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = name;
@@ -1581,7 +1791,12 @@ create policy "admins delete rolls" on public.rolls
       const v = localStorage.getItem(k);
       if (v !== null) data[k] = v;
     });
-    downloadJSON("digit-roll-save.json", { app: "digit-roll", version: 1, exportedAt: new Date().toISOString(), data });
+    downloadJSON("digit-roll-save.json", {
+      app: "digit-roll",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data,
+    });
     setStatus("drSaveStatus", "Save exported.");
   }
 
@@ -1592,16 +1807,25 @@ create policy "admins delete rolls" on public.rolls
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result);
-        if (!parsed || parsed.app !== "digit-roll" || typeof parsed.data !== "object") {
+        if (
+          !parsed ||
+          parsed.app !== "digit-roll" ||
+          typeof parsed.data !== "object"
+        ) {
           throw new Error("That file is not a Digit Roll save.");
         }
         SAVE_KEYS.forEach((k) => {
-          if (typeof parsed.data[k] === "string") localStorage.setItem(k, parsed.data[k]);
+          if (typeof parsed.data[k] === "string")
+            localStorage.setItem(k, parsed.data[k]);
         });
         setStatus("drSaveStatus", "Imported. Reloading…");
         setTimeout(() => location.reload(), 600);
       } catch (err) {
-        setStatus("drSaveStatus", err.message || "Could not read that file.", true);
+        setStatus(
+          "drSaveStatus",
+          err.message || "Could not read that file.",
+          true,
+        );
       }
     };
     reader.readAsText(file);
@@ -1649,7 +1873,11 @@ create policy "admins delete rolls" on public.rolls
   async function deleteRoll(id) {
     if (!A.isAdmin || !id) return;
     if (!confirm("Delete this roll for everyone?")) return;
-    const { data, error } = await supabaseClient.from("rolls").delete().eq("id", id).select("id");
+    const { data, error } = await supabaseClient
+      .from("rolls")
+      .delete()
+      .eq("id", id)
+      .select("id");
     if (error) return setStatus("drGlobalStatus", error.message, true);
     if (!data || !data.length) return setStatus("drGlobalStatus", DENIED, true);
     A.rolls = A.rolls.filter((r) => String(r.id) !== String(id));
@@ -1660,13 +1888,21 @@ create policy "admins delete rolls" on public.rolls
 
   async function deletePlayerRolls(pid, name) {
     if (!A.isAdmin || !pid) return;
-    if (!confirm(`Delete EVERY roll from ${name}? This cannot be undone.`)) return;
-    const { data, error } = await supabaseClient.from("rolls").delete().eq("player_id", pid).select("id");
+    if (!confirm(`Delete EVERY roll from ${name}? This cannot be undone.`))
+      return;
+    const { data, error } = await supabaseClient
+      .from("rolls")
+      .delete()
+      .eq("player_id", pid)
+      .select("id");
     if (error) return setStatus("drGlobalStatus", error.message, true);
     if (!data || !data.length) return setStatus("drGlobalStatus", DENIED, true);
     A.rolls = A.rolls.filter((r) => r.player_id !== pid);
     renderGlobalRolls();
-    setStatus("drGlobalStatus", `Deleted ${data.length} roll${data.length === 1 ? "" : "s"} from ${name}.`);
+    setStatus(
+      "drGlobalStatus",
+      `Deleted ${data.length} roll${data.length === 1 ? "" : "s"} from ${name}.`,
+    );
     loadLeaderboard();
   }
 
