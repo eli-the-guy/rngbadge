@@ -90,7 +90,14 @@
   const getCap = () => Math.min(BASE_CAP + CAP_STEP * S.capLvl, maxCap());
   const capMaxed = () => getCap() >= maxCap();
   const capUpgradePrice = () => getCap() - 5000;
-  const rollLength = () => Math.min(MAX_LEN, BASE_LEN + S.numUp);
+  /* 5 upgrades (5 -> 10 digits) + 1 more per rebirth */
+  const maxUpgrades = () => NUM_UPGRADE_COSTS.length + S.rebirths;
+  const maxLength = () => BASE_LEN + maxUpgrades();
+  const numUpgradeCost = (i) =>
+    i < NUM_UPGRADE_COSTS.length
+      ? NUM_UPGRADE_COSTS[i]
+      : 10000 + 5000 * (i - NUM_UPGRADE_COSTS.length + 1);
+  const rollLength = () => Math.min(maxLength(), BASE_LEN + S.numUp);
   const rebirthCost = () => REBIRTH_STEP * (S.rebirths + 1);
 
   const skipping = () => skipFlag;
@@ -137,7 +144,12 @@
     if (applied.length) {
       S.charms = left;
       save();
-      toast("🔢 Number charm" + (applied.length > 1 ? "s" : "") + " used: " + applied.join(", "));
+      toast(
+        "🔢 Number charm" +
+          (applied.length > 1 ? "s" : "") +
+          " used: " +
+          applied.join(", "),
+      );
     }
 
     return applied;
@@ -182,7 +194,9 @@
     const n = finalChars.length;
 
     return new Promise((resolve) => {
-      box.innerHTML = finalChars.map(() => '<span class="dig dSpin">0</span>').join("");
+      box.innerHTML = finalChars
+        .map(() => '<span class="dig dSpin">0</span>')
+        .join("");
       const spans = Array.from(box.children);
       const locked = new Array(n).fill(false);
 
@@ -290,6 +304,9 @@
     capMaxed,
     capUpgradePrice,
     rollLength,
+    maxUpgrades,
+    maxLength,
+    numUpgradeCost,
     rebirthCost,
     syncRollUI,
     CONFIG: {

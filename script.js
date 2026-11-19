@@ -3045,6 +3045,7 @@ async function performRoll() {
     const cap = typeof drGetCap === "function" ? drGetCap() : Infinity;
     xpBalance = Math.min(cap, before + Number(analysis.xp || 0));
     if (before + Number(analysis.xp || 0) > cap) {
+      if (typeof drSfx === "function") drSfx("cap");
       toast(
         "📦 XP cap reached (" + cap.toLocaleString() + "). Extra XP was lost.",
       );
@@ -3092,6 +3093,8 @@ async function performRoll() {
         }
 
         const b = badges[bIndex];
+
+        if (typeof drSfx === "function") drSfx("badge");
 
         $("badges").innerHTML = `
 

@@ -96,7 +96,9 @@
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.18s ease, opacity 0.18s ease;
+  transition:
+    background 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .drToolBtn:hover:not(:disabled) {
@@ -168,32 +170,70 @@
   text-shadow: 0 0 12px currentColor;
 }
 
-.drName-1 { color: #a855f7; }
-.drName-2 { color: #6366f1; }
-.drName-3 { color: #3b82f6; }
-.drName-4 { color: #22c55e; }
-.drName-5 { color: #facc15; }
-.drName-6 { color: #fb923c; }
-.drName-7 { color: #ef4444; }
+.drName-1 {
+  color: #a855f7;
+}
+.drName-2 {
+  color: #6366f1;
+}
+.drName-3 {
+  color: #3b82f6;
+}
+.drName-4 {
+  color: #22c55e;
+}
+.drName-5 {
+  color: #facc15;
+}
+.drName-6 {
+  color: #fb923c;
+}
+.drName-7 {
+  color: #ef4444;
+}
 
 .drRainbow {
   font-weight: 900;
-  animation: drRainbowCycle 6s linear infinite;
+  background: linear-gradient(
+    90deg,
+    #ef4444,
+    #fb923c,
+    #facc15,
+    #22c55e,
+    #3b82f6,
+    #a855f7,
+    #ef4444
+  );
+  background-size: 200% 100%;
+  background-repeat: repeat-x;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3));
+  animation: drRainbowMove 3s linear infinite;
 }
 
-@keyframes drRainbowCycle {
-  0%, 100% { color: #ef4444; text-shadow: 0 0 12px #ef4444; }
-  17% { color: #fb923c; text-shadow: 0 0 12px #fb923c; }
-  33% { color: #facc15; text-shadow: 0 0 12px #facc15; }
-  50% { color: #22c55e; text-shadow: 0 0 12px #22c55e; }
-  67% { color: #3b82f6; text-shadow: 0 0 12px #3b82f6; }
-  83% { color: #a855f7; text-shadow: 0 0 12px #a855f7; }
+@keyframes drRainbowMove {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* long numbers (rebirth upgrades) wrap instead of overflowing */
+.number {
+  flex-wrap: wrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .number.rolling::after,
   .dig.dSpin,
-  .dig.dLock {
+  .dig.dLock,
+  .drRainbow {
     animation: none;
   }
 }

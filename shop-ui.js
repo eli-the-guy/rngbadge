@@ -55,23 +55,41 @@
         `<span class="drBigDigit">${d}</span> Number Charm`,
         `Guarantees a <b>${d}</b> on your next roll.`,
         `Cost: <b>${n(C.NUMBER_CHARM_COST)} XP</b>`,
-        buyBtn(armed ? "✓ Armed for next roll" : afford(C.NUMBER_CHARM_COST) ? "Buy" : "Not enough XP", "charm", d, armed || !afford(C.NUMBER_CHARM_COST)),
+        buyBtn(
+          armed
+            ? "✓ Armed for next roll"
+            : afford(C.NUMBER_CHARM_COST)
+              ? "Buy"
+              : "Not enough XP",
+          "charm",
+          d,
+          armed || !afford(C.NUMBER_CHARM_COST),
+        ),
       );
     }
-    html += section("🔢 Number Charms", "One use each. Armed charms are used up on your next roll.", charms);
+    html += section(
+      "🔢 Number Charms",
+      "One use each. Armed charms are used up on your next roll.",
+      charms,
+    );
 
     /* ---- number upgrades ---- */
     const nu = s.numUp;
-    const nuMax = nu >= C.NUM_UPGRADE_COSTS.length;
-    const nuCost = nuMax ? 0 : C.NUM_UPGRADE_COSTS[nu];
+    const nuMax = nu >= SH.maxUpgrades();
+    const nuCost = nuMax ? 0 : SH.numUpgradeCost(nu);
     html += section(
       "🔠 Number Upgrades",
-      `You start with ${C.BASE_LEN} digits. Each upgrade adds 1, up to ${C.MAX_LEN}.`,
+      `You start with ${C.BASE_LEN} digits. Each upgrade adds 1, up to ${SH.maxLength()} (each rebirth raises the limit by 1).`,
       card(
-        `Number Upgrade ${nuMax ? "(MAX)" : nu + 1 + "/" + C.NUM_UPGRADE_COSTS.length}`,
+        `Number Upgrade ${nuMax ? "(MAX)" : nu + 1 + "/" + SH.maxUpgrades()}`,
         `Currently rolling <b>${len}</b> digits.${nuMax ? "" : ` Next: <b>${len + 1}</b> digits.`}`,
         nuMax ? "" : `Cost: <b>${n(nuCost)} XP</b>`,
-        buyBtn(nuMax ? "✓ Maxed" : afford(nuCost) ? "Buy" : "Not enough XP", "numUp", undefined, nuMax || !afford(nuCost)),
+        buyBtn(
+          nuMax ? "✓ Maxed" : afford(nuCost) ? "Buy" : "Not enough XP",
+          "numUp",
+          undefined,
+          nuMax || !afford(nuCost),
+        ),
       ),
     );
 
@@ -80,13 +98,24 @@
       "🍀 Lucky Charm",
       `One extra guaranteed badge on your next roll. In stock: <b>${s.lucky}</b>.`,
       `Cost: <b>${n(C.LUCKY_CHARM_COST)} XP</b>`,
-      buyBtn(afford(C.LUCKY_CHARM_COST) ? "Buy" : "Not enough XP", "lucky", undefined, !afford(C.LUCKY_CHARM_COST)),
+      buyBtn(
+        afford(C.LUCKY_CHARM_COST) ? "Buy" : "Not enough XP",
+        "lucky",
+        undefined,
+        !afford(C.LUCKY_CHARM_COST),
+      ),
     );
     C.GLOVES.forEach((g, i) => {
       const lvl = i + 1;
       const owned = s.gloves >= lvl;
       const next = lvl === s.gloves + 1;
-      const label = owned ? "✓ Purchased" : !next ? "Buy the previous gloves first" : afford(g.cost) ? "Buy" : "Not enough XP";
+      const label = owned
+        ? "✓ Purchased"
+        : !next
+          ? "Buy the previous gloves first"
+          : afford(g.cost)
+            ? "Buy"
+            : "Not enough XP";
       luck += card(
         g.name,
         "Permanent lucky charm: <b>+1</b> guaranteed badge on <b>every</b> roll.",
@@ -94,7 +123,11 @@
         buyBtn(label, "gloves", lvl, owned || !next || !afford(g.cost)),
       );
     });
-    html += section("🧤 Luck", "Charms are single use. Gloves are permanent and stack.", luck);
+    html += section(
+      "🧤 Luck",
+      "Charms are single use. Gloves are permanent and stack.",
+      luck,
+    );
 
     /* ---- xp cap ---- */
     const capMaxed = SH.capMaxed();
@@ -106,7 +139,16 @@
         "XP Cap Upgrade",
         `Cap: <b>${n(cap)}</b>${capMaxed ? "" : ` → <b>${n(Math.min(cap + 10000, SH.maxCap()))}</b>`}`,
         capMaxed ? "" : `Cost: <b>${n(capPrice)} XP</b>`,
-        buyBtn(capMaxed ? "✓ Max for now" : afford(capPrice) ? "Buy" : "Not enough XP", "cap", undefined, capMaxed || !afford(capPrice)),
+        buyBtn(
+          capMaxed
+            ? "✓ Max for now"
+            : afford(capPrice)
+              ? "Buy"
+              : "Not enough XP",
+          "cap",
+          undefined,
+          capMaxed || !afford(capPrice),
+        ),
       ),
     );
 
@@ -115,15 +157,31 @@
       "⏭ Skip Wait",
       "Adds a Skip button under the roll button. Press it mid-roll to skip waiting.",
       `Cost: <b>${n(C.SKIP_COST)} XP</b>`,
-      buyBtn(s.skip ? "✓ Purchased" : afford(C.SKIP_COST) ? "Buy" : "Not enough XP", "skip", undefined, s.skip || !afford(C.SKIP_COST)),
+      buyBtn(
+        s.skip ? "✓ Purchased" : afford(C.SKIP_COST) ? "Buy" : "Not enough XP",
+        "skip",
+        undefined,
+        s.skip || !afford(C.SKIP_COST),
+      ),
     );
     speed += card(
       "⏩ Auto Skip",
       "A switch that skips every wait automatically. Needs Skip Wait.",
-      s.auto ? `Status: <b>${s.autoOn ? "ON" : "OFF"}</b>` : `Cost: <b>${n(C.AUTO_COST)} XP</b>`,
+      s.auto
+        ? `Status: <b>${s.autoOn ? "ON" : "OFF"}</b>`
+        : `Cost: <b>${n(C.AUTO_COST)} XP</b>`,
       s.auto
         ? `<button class="drBuy" onclick="drToggleAuto()">${s.autoOn ? "Turn OFF" : "Turn ON"}</button>`
-        : buyBtn(!s.skip ? "Buy Skip Wait first" : afford(C.AUTO_COST) ? "Buy" : "Not enough XP", "auto", undefined, !s.skip || !afford(C.AUTO_COST)),
+        : buyBtn(
+            !s.skip
+              ? "Buy Skip Wait first"
+              : afford(C.AUTO_COST)
+                ? "Buy"
+                : "Not enough XP",
+            "auto",
+            undefined,
+            !s.skip || !afford(C.AUTO_COST),
+          ),
     );
     html += section("⚡ Speed", "", speed);
 
@@ -133,8 +191,8 @@
     html += `<h3 class="drSection">🔄 True Rebirth</h3>
       <div class="drRebirth">
         <p>Resets <b>everything</b> in the shop and your XP back to the start. You keep your account, name and rolls.</p>
-        <p>Your leaderboard name becomes <b style="color:${rc.color}">${rc.label}</b>. After red, it cycles through the rainbow forever.</p>
-        <p>Each rebirth makes the next one ${n(100000)} XP more expensive and raises the XP cap limit by ${n(100000)}.</p>
+        <p>Your leaderboard name becomes <b style="color:${rc.color}">${rc.label}</b>. From the 8th rebirth on, a rainbow gradient moves across it forever.</p>
+        <p>Each rebirth makes the next one ${n(100000)} XP more expensive and raises the XP cap limit by ${n(100000)} and the number upgrade limit by 1.</p>
         <p>Cost: <b>${n(rCost)} XP</b> • Rebirths so far: <b>${s.rebirths}</b> • Needs an XP cap of at least ${n(rCost)}.</p>
         <button class="drBuy drRebirthBtn" ${afford(rCost) ? "" : "disabled"} onclick="drBuy('rebirth')">${afford(rCost) ? "Rebirth" : balance < rCost && SH.getCap() < rCost ? "Raise your XP cap first" : "Not enough XP"}</button>
       </div>`;
@@ -194,13 +252,15 @@
         }
         if (!spend(C.GLOVES[arg - 1].cost)) return;
         s.gloves = arg;
-        toast(`${C.GLOVES[arg - 1].name} equipped. +${arg} guaranteed badge${arg === 1 ? "" : "s"} per roll.`);
+        toast(
+          `${C.GLOVES[arg - 1].name} equipped. +${arg} guaranteed badge${arg === 1 ? "" : "s"} per roll.`,
+        );
         break;
       }
 
       case "numUp": {
-        if (s.numUp >= C.NUM_UPGRADE_COSTS.length) return;
-        if (!spend(C.NUM_UPGRADE_COSTS[s.numUp])) return;
+        if (s.numUp >= SH.maxUpgrades()) return;
+        if (!spend(SH.numUpgradeCost(s.numUp))) return;
         s.numUp++;
         toast(`🔠 You now roll ${SH.rollLength()} digits.`);
         {
@@ -291,7 +351,8 @@
 
   function rebirthColorInfo(count) {
     if (count <= 0) return { label: "plain", color: "#fff" };
-    if (count > C.REBIRTH_COLORS.length) return { label: "a smooth rainbow", color: "#fff" };
+    if (count > C.REBIRTH_COLORS.length)
+      return { label: "a rainbow gradient moving across it", color: "#fff" };
     const [label, color] = C.REBIRTH_COLORS[count - 1];
     return { label, color };
   }
@@ -299,24 +360,36 @@
   function styledName(name, count) {
     const safe = escapeHTML(name);
     if (!count || count <= 0) return safe;
-    const cls = count > C.REBIRTH_COLORS.length ? "drRainbow" : "drName-" + count;
+    const cls =
+      count > C.REBIRTH_COLORS.length ? "drRainbow" : "drName-" + count;
     return `<span class="drName ${cls}" title="${count} rebirth${count === 1 ? "" : "s"}">${safe}</span>`;
   }
 
   const rebirthCache = new Map();
 
   function rebirthsFor(id) {
-    if (typeof currentUser !== "undefined" && currentUser && id === currentUser.id) return S().rebirths;
+    if (
+      typeof currentUser !== "undefined" &&
+      currentUser &&
+      id === currentUser.id
+    )
+      return S().rebirths;
     return rebirthCache.get(id) || 0;
   }
 
-  G.drNameHTML = (row) => styledName(row.player_name || "Player", rebirthsFor(row.player_id));
+  G.drNameHTML = (row) =>
+    styledName(row.player_name || "Player", rebirthsFor(row.player_id));
 
   G.drLoadRebirths = async function (rows) {
     try {
-      const ids = [...new Set((rows || []).map((r) => r.player_id).filter(Boolean))];
+      const ids = [
+        ...new Set((rows || []).map((r) => r.player_id).filter(Boolean)),
+      ];
       if (!ids.length) return;
-      const { data, error } = await supabaseClient.from("profiles").select("id,rebirths").in("id", ids);
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id,rebirths")
+        .in("id", ids);
       if (error || !data) return;
       data.forEach((p) => rebirthCache.set(p.id, Number(p.rebirths) || 0));
     } catch (e) {}
@@ -329,14 +402,21 @@
   async function pushRebirths() {
     if (typeof currentUser === "undefined" || !currentUser) return;
     try {
-      await supabaseClient.from("profiles").update({ rebirths: S().rebirths }).eq("id", currentUser.id);
+      await supabaseClient
+        .from("profiles")
+        .update({ rebirths: S().rebirths })
+        .eq("id", currentUser.id);
     } catch (e) {}
   }
 
   async function pullRebirths() {
     if (typeof currentUser === "undefined" || !currentUser) return;
     try {
-      const { data, error } = await supabaseClient.from("profiles").select("rebirths").eq("id", currentUser.id).maybeSingle();
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("rebirths")
+        .eq("id", currentUser.id)
+        .maybeSingle();
       if (error || !data) return;
       const cloud = Number(data.rebirths) || 0;
       if (cloud > S().rebirths) {
@@ -358,7 +438,8 @@
     baseUpdateAccountUI();
     try {
       if (currentUser) {
-        const name = profile?.username || currentUser.user_metadata?.username || "Player";
+        const name =
+          profile?.username || currentUser.user_metadata?.username || "Player";
         $("userPill").innerHTML = "👤 " + styledName(name, S().rebirths);
       }
     } catch (e) {}
