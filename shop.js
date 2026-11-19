@@ -25,7 +25,32 @@
   const BASE_LEN = 5;
   const MAX_LEN = 10;
 
-  const NUMBER_CHARM_COST = 250;
+  /* Number charm prices come from a simulation: for each digit, ~120,000
+     rolls (5, 7 and 10 digits) with that digit guaranteed, counting how many
+     "good" badges (1 in 10,000 or rarer) show up per roll. Prices scale that
+     score linearly from 10,000 XP (worst digit) to 90,000 XP (best digit). */
+  const CHARM_VALUE = {
+    1: 0.933,
+    2: 0.898,
+    3: 0.817,
+    4: 0.817,
+    5: 0.7,
+    6: 0.93,
+    7: 0.749,
+    8: 0.686,
+    9: 0.766,
+  };
+  const NUMBER_CHARM_COSTS = {
+    1: 90000,
+    2: 79000,
+    3: 52000,
+    4: 52000,
+    5: 14000,
+    6: 89000,
+    7: 30000,
+    8: 10000,
+    9: 36000,
+  };
   const LUCKY_CHARM_COST = 400;
   const SKIP_COST = 1000;
   const AUTO_COST = 10000;
@@ -310,7 +335,8 @@
     rebirthCost,
     syncRollUI,
     CONFIG: {
-      NUMBER_CHARM_COST,
+      NUMBER_CHARM_COSTS,
+      CHARM_VALUE,
       LUCKY_CHARM_COST,
       SKIP_COST,
       AUTO_COST,

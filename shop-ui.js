@@ -50,26 +50,29 @@
     /* ---- number charms ---- */
     let charms = "";
     for (let d = 1; d <= 9; d++) {
-      const armed = s.charms.includes(d);
+      const armed = s.charms.filter((x) => x === d).length;
+      const price = C.NUMBER_CHARM_COSTS[d];
       charms += card(
         `<span class="drBigDigit">${d}</span> Number Charm`,
-        `Guarantees a <b>${d}</b> on your next roll.`,
-        `Cost: <b>${n(C.NUMBER_CHARM_COST)} XP</b>`,
+        `Guarantees a <b>${d}</b> on your next roll. Stack several to guarantee several <b>${d}</b>s. Armed: <b>${armed}</b>.<br><span class="drBalanceSub">Strong badges per roll with this digit: ~${C.CHARM_VALUE[d].toFixed(2)}</span>`,
+        `Cost: <b>${n(price)} XP</b> each`,
         buyBtn(
-          armed
-            ? "✓ Armed for next roll"
-            : afford(C.NUMBER_CHARM_COST)
-              ? "Buy"
+          afford(price)
+            ? armed
+              ? "Buy another"
+              : "Buy"
+            : balance < price && cap < price
+              ? "Raise your XP cap first"
               : "Not enough XP",
           "charm",
           d,
-          armed || !afford(C.NUMBER_CHARM_COST),
+          !afford(price),
         ),
       );
     }
     html += section(
       "🔢 Number Charms",
-      "One use each. Armed charms are used up on your next roll.",
+      "One use each, and they stack: two 7 charms guarantee two 7s. Priced by how many strong badges (1 in 10,000 or rarer) each digit tends to produce. Prices above your XP cap need cap upgrades first.",
       charms,
     );
 
@@ -231,10 +234,12 @@
 
     switch (kind) {
       case "charm": {
-        if (arg < 1 || arg > 9 || s.charms.includes(arg)) return;
-        if (!spend(C.NUMBER_CHARM_COST)) return;
+        if (arg < 1 || arg > 9) return;
+        if (!spend(C.NUMBER_CHARM_COSTS[arg])) return;
         s.charms.push(arg);
-        toast(`🔢 Number charm ${arg} armed for your next roll.`);
+        toast(
+          `🔢 Number charm ${arg} armed (${s.charms.filter((x) => x === arg).length} for your next roll).`,
+        );
         break;
       }
 
