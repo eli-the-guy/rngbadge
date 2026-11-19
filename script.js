@@ -3040,6 +3040,15 @@ async function performRoll() {
   const analysis = analyze(finalChars);
 
   applyGuaranteedBadges(analysis);
+
+  /* XP charms: permanent multiplier on all XP from this roll */
+  {
+    const mult = typeof drXPMultiplier === "function" ? drXPMultiplier() : 1;
+    analysis.baseXp = analysis.xp;
+    analysis.xpMult = mult;
+    if (mult > 1) analysis.xp = Math.round(Number(analysis.xp || 0) * mult);
+  }
+
   {
     const before = getXPBalance();
     const cap = typeof drGetCap === "function" ? drGetCap() : Infinity;
@@ -3192,7 +3201,10 @@ async function performRoll() {
 
   $("blankBonus").textContent = "×" + analysis.blankMultiplier.toLocaleString();
 
-  $("xp").textContent = "+" + analysis.xp;
+  $("xp").textContent =
+    "+" +
+    analysis.xp +
+    (analysis.xpMult > 1 ? " (×" + analysis.xpMult + ")" : "");
 
   updateShopUI();
 

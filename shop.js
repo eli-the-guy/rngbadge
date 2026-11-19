@@ -57,6 +57,19 @@
 
   const NUM_UPGRADE_COSTS = [500, 1500, 3500, 7000, 10000]; // 5 -> 10 digits
 
+  /* Permanent XP multiplier charms, bought in order. Your multiplier is the
+     best one you own (they do not multiply together). */
+  const XP_CHARMS = [
+    { mult: 1.5, cost: 5000, name: "✨ XP Charm I" },
+    { mult: 2, cost: 10000, name: "✨ XP Charm II" },
+    { mult: 3, cost: 20000, name: "💫 XP Charm III" },
+    { mult: 4, cost: 35000, name: "💫 XP Charm IV" },
+    { mult: 5, cost: 50000, name: "🌟 XP Charm V" },
+    { mult: 6, cost: 65000, name: "🌟 XP Charm VI" },
+    { mult: 8, cost: 85000, name: "⭐ XP Charm VII" },
+    { mult: 10, cost: 100000, name: "👑 XP Charm VIII" },
+  ];
+
   const GLOVES = [
     { cost: 20000, name: "🧤 Lucky Gloves I" },
     { cost: 30000, name: "🧤 Lucky Gloves II" },
@@ -84,6 +97,7 @@
   const fresh = () => ({
     charms: [], // digits 1-9 armed for the next roll
     lucky: 0, // consumable lucky charms in stock
+    xpCharm: 0, // permanent XP charm tiers owned (0-8)
     gloves: 0, // permanent lucky gloves level
     numUp: 0, // number upgrades bought
     capLvl: 0, // xp cap upgrades bought
@@ -135,6 +149,13 @@
   G.drSkipping = skipping;
 
   /* Called once per roll by applyGuaranteedBadges */
+  /* XP multiplier from the best XP charm owned */
+  G.drXPMultiplier = function () {
+    return S.xpCharm > 0
+      ? XP_CHARMS[Math.min(S.xpCharm, XP_CHARMS.length) - 1].mult
+      : 1;
+  };
+
   G.drLuckCount = function () {
     const count = S.gloves + (S.lucky > 0 ? 1 : 0);
     if (S.lucky > 0) S.lucky--;
@@ -342,6 +363,7 @@
       AUTO_COST,
       NUM_UPGRADE_COSTS,
       GLOVES,
+      XP_CHARMS,
       REBIRTH_COLORS,
       MAX_LEN,
       BASE_LEN,

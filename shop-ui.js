@@ -44,7 +44,7 @@
 
     let html = `<div class="drBalance">
       💰 XP: ${n(balance)} / ${n(cap)}${balance >= cap ? " (full)" : ""}<br>
-      <span class="drBalanceSub">🔢 ${len} digits per roll • 🧤 Gloves ${s.gloves}/${C.GLOVES.length} • 🍀 Lucky charms ${s.lucky} • 🔄 Rebirths ${s.rebirths}</span>
+      <span class="drBalanceSub">🔢 ${len} digits per roll • 🧤 Gloves ${s.gloves}/${C.GLOVES.length} • 🍀 Lucky charms ${s.lucky} • ✨ XP ×${drXPMultiplier()} • 🔄 Rebirths ${s.rebirths}</span>
     </div>`;
 
     /* ---- number charms ---- */
@@ -74,6 +74,34 @@
       "🔢 Number Charms",
       "One use each, and they stack: two 7 charms guarantee two 7s. Priced by how many strong badges (1 in 10,000 or rarer) each digit tends to produce. Prices above your XP cap need cap upgrades first.",
       charms,
+    );
+
+    /* ---- xp charms ---- */
+    let xpc = "";
+    C.XP_CHARMS.forEach((c, i) => {
+      const lvl = i + 1;
+      const owned = s.xpCharm >= lvl;
+      const next = lvl === s.xpCharm + 1;
+      const label = owned
+        ? "✓ Purchased"
+        : !next
+          ? "Buy the previous XP charm first"
+          : afford(c.cost)
+            ? "Buy"
+            : balance < c.cost && cap < c.cost
+              ? "Raise your XP cap first"
+              : "Not enough XP";
+      xpc += card(
+        c.name,
+        `Permanent. Every roll earns <b>${c.mult}×</b> XP.`,
+        `Cost: <b>${n(c.cost)} XP</b>`,
+        buyBtn(label, "xpcharm", lvl, owned || !next || !afford(c.cost)),
+      );
+    });
+    html += section(
+      "✨ XP Charms",
+      "Permanent XP multipliers from 1.5× up to 10×. Buy them in order. Your multiplier is the best one you own (they don't multiply together).",
+      xpc,
     );
 
     /* ---- number upgrades ---- */
@@ -259,6 +287,19 @@
         s.gloves = arg;
         toast(
           `${C.GLOVES[arg - 1].name} equipped. +${arg} guaranteed badge${arg === 1 ? "" : "s"} per roll.`,
+        );
+        break;
+      }
+
+      case "xpcharm": {
+        if (arg !== s.xpCharm + 1 || arg > C.XP_CHARMS.length) {
+          toast("Buy the previous XP charm first.");
+          return;
+        }
+        if (!spend(C.XP_CHARMS[arg - 1].cost)) return;
+        s.xpCharm = arg;
+        toast(
+          `${C.XP_CHARMS[arg - 1].name}: all XP is now ×${C.XP_CHARMS[arg - 1].mult}.`,
         );
         break;
       }
