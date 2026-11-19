@@ -1,0 +1,679 @@
+/* ============================================================
+   DIGIT ROLL — EFFECTS, RARITY TIERS & ADMIN PANEL
+   Loaded after style.css
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Rarity colours for every tier (style.css only covered 9)
+   ------------------------------------------------------------ */
+
+.rarity-novice {
+  color: #7d879b;
+}
+.rarity-plain {
+  color: #9aa5ba;
+}
+.rarity-basic {
+  color: #b0b9c9;
+}
+.rarity-common {
+  color: #b9c1d0;
+}
+
+.rarity-transcendent {
+  color: #8ff7ff;
+  text-shadow:
+    0 0 14px rgba(143, 247, 255, 0.8),
+    0 0 36px rgba(143, 200, 255, 0.45);
+  animation: drGlowPulse 1.4s ease-in-out infinite alternate;
+}
+
+.rarity-celestial {
+  color: #a9b2ff;
+  text-shadow:
+    0 0 14px rgba(150, 160, 255, 0.85),
+    0 0 40px rgba(170, 110, 255, 0.5);
+  animation: drGlowPulse 1.6s ease-in-out infinite alternate;
+}
+
+.rarity-ascended {
+  color: #ffd36b;
+  text-shadow:
+    0 0 14px rgba(255, 200, 90, 0.85),
+    0 0 42px rgba(255, 160, 40, 0.5);
+  animation: drGlowPulse 1.3s ease-in-out infinite alternate;
+}
+
+.rarity-omnipotent {
+  color: #fff2b8;
+  text-shadow:
+    0 0 12px #fff,
+    0 0 32px rgba(255, 220, 120, 0.95),
+    0 0 60px rgba(255, 170, 40, 0.6);
+  animation: drGlowPulse 0.9s ease-in-out infinite alternate;
+}
+
+.rarity-infinite {
+  color: #7cf7ff;
+  text-shadow:
+    0 0 14px rgba(124, 247, 255, 0.9),
+    0 0 40px rgba(255, 90, 255, 0.5);
+  animation: drHueSpin 5s linear infinite;
+}
+
+.rarity-beyond {
+  color: #ff4fe0;
+  text-shadow:
+    2px 0 rgba(0, 255, 255, 0.8),
+    -2px 0 rgba(255, 255, 0, 0.6),
+    0 0 26px rgba(255, 79, 224, 0.8);
+  animation: drGlitchText 2.4s steps(1) infinite;
+}
+
+.rarity-absolute {
+  color: #ffffff;
+  text-shadow:
+    0 0 10px #fff,
+    0 0 30px rgba(255, 235, 170, 0.95),
+    0 0 70px rgba(255, 190, 80, 0.7);
+  animation: drHueSpin 3s linear infinite;
+}
+
+/* the one in style.css is "rarity-unknown" — make it angrier */
+.rarity-unknown {
+  color: #ff3030;
+  text-shadow:
+    0 0 10px rgba(255, 30, 30, 0.95),
+    0 0 30px rgba(255, 0, 0, 0.7),
+    0 0 60px rgba(255, 0, 0, 0.4);
+  animation: drUnknownFlicker 0.9s steps(1) infinite;
+}
+
+/* history pills / leaderboard pills keep a calm look for the wild tiers */
+.rarity.rarity-infinite,
+.rarity.rarity-absolute {
+  animation-duration: 8s;
+}
+.rarity.rarity-beyond,
+.rarity.rarity-unknown {
+  animation-duration: 4s;
+}
+
+@keyframes drGlowPulse {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.45);
+  }
+}
+
+@keyframes drHueSpin {
+  from {
+    filter: hue-rotate(0deg) brightness(1.1);
+  }
+  to {
+    filter: hue-rotate(360deg) brightness(1.1);
+  }
+}
+
+@keyframes drGlitchText {
+  0%,
+  88%,
+  100% {
+    transform: translate(0);
+  }
+  90% {
+    transform: translate(-3px, 1px);
+  }
+  93% {
+    transform: translate(4px, -2px);
+  }
+  96% {
+    transform: translate(-2px, 2px);
+  }
+}
+
+@keyframes drUnknownFlicker {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  72% {
+    opacity: 0.55;
+    filter: brightness(1.8);
+  }
+  76% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.7;
+    filter: brightness(1.4);
+  }
+}
+
+/* the big number: aura around the box for the rare stuff */
+.number.rarity-transcendent {
+  border-color: rgba(143, 247, 255, 0.45);
+  box-shadow: 0 0 60px rgba(143, 247, 255, 0.18);
+}
+.number.rarity-celestial {
+  border-color: rgba(170, 130, 255, 0.5);
+  box-shadow: 0 0 70px rgba(150, 120, 255, 0.22);
+}
+.number.rarity-ascended {
+  border-color: rgba(255, 200, 90, 0.5);
+  box-shadow: 0 0 70px rgba(255, 190, 70, 0.22);
+}
+.number.rarity-omnipotent {
+  border-color: rgba(255, 235, 170, 0.6);
+  box-shadow: 0 0 90px rgba(255, 220, 120, 0.3);
+}
+.number.rarity-infinite {
+  border-color: rgba(124, 247, 255, 0.55);
+  box-shadow: 0 0 90px rgba(124, 247, 255, 0.25);
+}
+.number.rarity-beyond {
+  border-color: rgba(255, 79, 224, 0.6);
+  box-shadow: 0 0 90px rgba(255, 79, 224, 0.28);
+}
+.number.rarity-absolute {
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 110px rgba(255, 235, 170, 0.35);
+}
+.number.rarity-unknown {
+  border-color: rgba(255, 40, 40, 0.7);
+  box-shadow: 0 0 110px rgba(255, 0, 0, 0.35);
+}
+
+/* ------------------------------------------------------------
+   Simple effect for every tier below TRANSCENDENT
+   ------------------------------------------------------------ */
+
+.number.fx-pop {
+  animation: drPop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+@keyframes drPop {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 var(--fx-color, #fff);
+  }
+  45% {
+    transform: scale(var(--fx-scale, 1.05));
+    box-shadow: 0 0 46px 6px var(--fx-color, #fff);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+#drSparkCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6000;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------
+   Full-screen cinematic overlay (TRANSCENDENT and above)
+   ------------------------------------------------------------ */
+
+.drFx {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.drFx.out {
+  opacity: 0;
+}
+
+.drFx > canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.drFxTitle,
+.drFxRoll,
+.drFxSub,
+.drFxHint {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.drFxTitle {
+  font-size: clamp(34px, 10vw, 118px);
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  padding-left: 0.12em;
+  line-height: 1;
+  color: #fff;
+  opacity: 0;
+  transform: scale(1.45);
+  filter: blur(10px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.7s ease;
+}
+
+.drFx.show .drFxTitle {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.drFxRoll {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(18px, 4.2vw, 42px);
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.35s;
+}
+
+.drFxSub {
+  font-size: clamp(13px, 2vw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  transition: opacity 0.8s ease 0.6s;
+}
+
+.drFx.show .drFxRoll,
+.drFx.show .drFxSub {
+  opacity: 1;
+}
+
+.drFxHint {
+  position: absolute;
+  bottom: 22px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* per-tier title colours */
+.drFx-transcendent .drFxTitle {
+  color: #fff;
+  text-shadow:
+    0 0 20px #fff,
+    0 0 60px rgba(150, 200, 255, 0.95);
+}
+.drFx-celestial .drFxTitle {
+  color: #e6e8ff;
+  text-shadow:
+    0 0 24px rgba(160, 150, 255, 0.95),
+    0 0 70px rgba(120, 90, 255, 0.8);
+}
+.drFx-ascended .drFxTitle {
+  color: #fff1c4;
+  text-shadow:
+    0 0 24px rgba(255, 200, 90, 0.95),
+    0 0 70px rgba(255, 150, 20, 0.8);
+}
+.drFx-omnipotent .drFxTitle {
+  color: #fff;
+  text-shadow:
+    0 0 18px #fff,
+    0 0 50px rgba(255, 220, 120, 1),
+    0 0 100px rgba(255, 150, 30, 0.9);
+}
+.drFx-infinite .drFxTitle {
+  color: #d8ffff;
+  text-shadow:
+    0 0 24px rgba(124, 247, 255, 1),
+    0 0 70px rgba(255, 90, 255, 0.8);
+  animation: drHueSpin 4s linear infinite;
+}
+.drFx-beyond .drFxTitle {
+  color: #fff;
+  text-shadow:
+    4px 0 rgba(0, 255, 255, 0.9),
+    -4px 0 rgba(255, 0, 200, 0.9),
+    0 0 40px rgba(255, 79, 224, 0.9);
+  animation: drGlitchText 0.9s steps(1) infinite;
+}
+.drFx-absolute .drFxTitle,
+.drFx-absolute .drFxRoll,
+.drFx-absolute .drFxSub {
+  color: #fff;
+  text-shadow:
+    0 0 20px #fff,
+    0 0 60px rgba(255, 200, 90, 1);
+  transition:
+    opacity 0.7s ease,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.7s ease,
+    color 0.5s ease,
+    text-shadow 0.5s ease;
+}
+/* the ABSOLUTE sequence ends on a white screen, so text flips to dark */
+.drFx-absolute.dark .drFxTitle,
+.drFx-absolute.dark .drFxRoll,
+.drFx-absolute.dark .drFxSub {
+  color: #0b0b12;
+  text-shadow: none;
+}
+.drFx-unknown .drFxTitle {
+  color: #ff2a2a;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  text-shadow:
+    0 0 20px rgba(255, 0, 0, 1),
+    0 0 70px rgba(255, 0, 0, 0.9);
+  animation: drUnknownFlicker 0.6s steps(1) infinite;
+}
+.drFx-unknown .drFxRoll,
+.drFx-unknown .drFxSub {
+  color: #ff6a6a;
+}
+
+/* reduced-motion version: flat colour flash + title only */
+.drFx.reduced {
+  background: radial-gradient(circle, rgba(10, 14, 30, 0.88), rgba(0, 0, 0, 0.94));
+}
+
+/* ------------------------------------------------------------
+   Nav additions (FX switch, Admin button) + move nav off the topbar
+   ------------------------------------------------------------ */
+
+body #digitRollNav {
+  top: auto;
+  bottom: 18px;
+  right: auto;
+  left: 18px;
+  flex-wrap: wrap;
+  max-width: calc(100vw - 36px);
+}
+
+@media (max-width: 650px) {
+  body #digitRollNav {
+    left: 10px;
+    bottom: 10px;
+  }
+}
+
+.drNavBtn.drAdminBtn {
+  border-color: rgba(255, 140, 120, 0.4);
+  color: #ffb4a6;
+}
+
+/* ------------------------------------------------------------
+   Admin panel
+   ------------------------------------------------------------ */
+
+.drAdminOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  display: none;
+  overflow: auto;
+  padding: 26px 16px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.drAdminOverlay.open {
+  display: block;
+}
+
+.drAdminPage {
+  width: min(1100px, 100%);
+  margin: 30px auto;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(16, 21, 33, 0.98);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6);
+}
+
+.drAdminHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.drAdminTitle {
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.drAdminTag {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(255, 180, 90, 0.14);
+  border: 1px solid rgba(255, 180, 90, 0.35);
+  color: #ffd29a;
+}
+
+.drAdminTag.ok {
+  background: rgba(114, 230, 161, 0.14);
+  border-color: rgba(114, 230, 161, 0.4);
+  color: #8ee6ad;
+}
+
+.drAdminClose {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.drAdminGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 14px;
+}
+
+.drAdminCard {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.drAdminCard.wide {
+  grid-column: 1 / -1;
+}
+
+.drAdminCard h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.drAdminCard > p,
+.drAdminNote {
+  margin: 0 0 12px;
+  color: #9ba7c0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.drRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.drRow > input,
+.drRow > select {
+  flex: 1;
+  min-width: 120px;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.drBtn {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(124, 156, 255, 0.16);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.drBtn:hover {
+  background: rgba(124, 156, 255, 0.28);
+}
+
+.drBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.drBtn.danger {
+  background: rgba(255, 90, 110, 0.14);
+  border-color: rgba(255, 110, 130, 0.35);
+  color: #ffb0bb;
+}
+
+.drChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.drChip {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.drChip:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.drTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.drTable th,
+.drTable td {
+  padding: 8px 9px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.drTable th {
+  color: #8e9ab0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.drTable code {
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.drBarWrap {
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  min-width: 70px;
+}
+
+.drBar {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #657cff, #9a63ff);
+}
+
+.drStatus {
+  min-height: 18px;
+  margin-top: 6px;
+  color: #9ba7c0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.drStatus.err {
+  color: #ff9baa;
+}
+
+.drPre {
+  max-height: 160px;
+  overflow: auto;
+  margin: 0 0 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #b9c4dc;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 650px) {
+  .drAdminPage {
+    padding: 16px;
+    margin: 12px auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rarity-transcendent,
+  .rarity-celestial,
+  .rarity-ascended,
+  .rarity-omnipotent,
+  .rarity-infinite,
+  .rarity-beyond,
+  .rarity-absolute,
+  .rarity-unknown {
+    animation: none;
+  }
+}
