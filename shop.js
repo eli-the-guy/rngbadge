@@ -54,6 +54,11 @@
   const LUCKY_CHARM_COST = 400;
   const SKIP_COST = 1000;
   const AUTO_COST = 10000;
+  const AUTO_ROLL_COST = 15000;
+  const AUTO_STOP_COST = 5000;
+  const HOTKEY_COST = 1500;
+  const FAST_REVEAL_COST = 4000;
+  const AUTO_ROLL_DELAY = 800; // ms between auto rolls
 
   const NUM_UPGRADE_COSTS = [500, 1500, 3500, 7000, 10000]; // 5 -> 10 digits
 
@@ -102,6 +107,11 @@
     numUp: 0, // number upgrades bought
     capLvl: 0, // xp cap upgrades bought
     skip: false,
+    autoRoll: false, // auto roll unlocked
+    autoRollOn: false,
+    autoStop: false, // auto roll stops on a good badge
+    hotkey: false, // Space rolls
+    fastReveal: false, // digits lock in twice as fast
     auto: false,
     autoOn: false,
     rebirths: 0,
@@ -215,6 +225,22 @@
     skipFlag = false;
     const b = $("drSkipBtn");
     if (b) b.disabled = true;
+
+    if (S.autoRoll && S.autoRollOn) {
+      const last = typeof history !== "undefined" ? history[0] : null;
+      if (S.autoStop && last && Number(last.oneIn || 0) >= 10000) {
+        S.autoRollOn = false;
+        save();
+        syncRollUI();
+        toast("🛑 Auto roll stopped: good badge found!");
+        if (typeof drSfx === "function") drSfx("newbadge");
+        if (typeof updateShopUI === "function") updateShopUI();
+        return;
+      }
+      setTimeout(() => {
+        if (S.autoRoll && S.autoRollOn && !rolling) performRoll();
+      }, AUTO_ROLL_DELAY);
+    }
   };
 
   /* Wait that ends early when skip is pressed */
@@ -257,7 +283,7 @@
 
       const loop = setInterval(() => {
         const fast = skipFlag;
-        const gap = fast ? (next === 0 ? 350 : 90) : 900;
+        const gap = fast ? (next === 0 ? 350 : 90) : S.fastReveal ? 450 : 900;
 
         if (performance.now() - last < gap) return;
 
@@ -276,14 +302,14 @@
     });
   };
 
-  /* Skip button + auto skip switch under the roll button */
+  /* Skip / auto skip / auto roll buttons under the roll button */
   function ensureRollTools() {
     const rb = $("rollBtn");
     if (!rb) return;
 
     let wrap = $("drRollTools");
 
-    if (!S.skip) {
+    if (!S.skip && !S.autoRoll) {
       if (wrap) wrap.remove();
       return;
     }
@@ -296,21 +322,31 @@
     }
 
     wrap.innerHTML =
-      '<button id="drSkipBtn" class="drToolBtn" type="button" disabled>⏭ Skip wait</button>' +
-      (S.auto
+      (S.skip
+        ? '<button id="drSkipBtn" class="drToolBtn" type="button" disabled>⏭ Skip wait</button>'
+        : "") +
+      (S.skip && S.auto
         ? `<button id="drAutoBtn" class="drToolBtn ${S.autoOn ? "on" : ""}" type="button">⏩ Auto skip: ${S.autoOn ? "ON" : "OFF"}</button>`
+        : "") +
+      (S.autoRoll
+        ? `<button id="drAutoRollBtn" class="drToolBtn ${S.autoRollOn ? "on" : ""}" type="button">🔁 Auto roll: ${S.autoRollOn ? "ON" : "OFF"}</button>`
         : "");
 
     const sb = $("drSkipBtn");
-    sb.disabled = !rolling;
-    sb.onclick = () => {
-      if (!rolling) return;
-      skipFlag = true;
-      sb.disabled = true;
-    };
+    if (sb) {
+      sb.disabled = !rolling;
+      sb.onclick = () => {
+        if (!rolling) return;
+        skipFlag = true;
+        sb.disabled = true;
+      };
+    }
 
     const ab = $("drAutoBtn");
     if (ab) ab.onclick = () => G.drToggleAuto();
+
+    const arb = $("drAutoRollBtn");
+    if (arb) arb.onclick = () => G.drToggleAutoRoll();
   }
 
   function initNumberPlaceholder() {
@@ -325,6 +361,28 @@
     ensureRollTools();
     initNumberPlaceholder();
   }
+
+  G.drToggleAutoRoll = function () {
+    if (!S.autoRoll) return;
+    S.autoRollOn = !S.autoRollOn;
+    save();
+    syncRollUI();
+    updateShopUI();
+    toast("🔁 Auto roll " + (S.autoRollOn ? "enabled" : "disabled"));
+    if (S.autoRollOn && !rolling) performRoll();
+  };
+
+  /* Space bar rolls (after buying the hotkey) */
+  document.addEventListener("keydown", (e) => {
+    if (!S.hotkey || e.code !== "Space" || e.repeat) return;
+    const t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName)) return;
+    if (t && t.isContentEditable) return;
+    const ov = document.querySelector(".open");
+    if (ov) return; // a page/modal is open
+    e.preventDefault();
+    if (!rolling) performRoll();
+  });
 
   G.drToggleAuto = function () {
     if (!S.auto) return;
@@ -361,6 +419,10 @@
       LUCKY_CHARM_COST,
       SKIP_COST,
       AUTO_COST,
+      AUTO_ROLL_COST,
+      AUTO_STOP_COST,
+      HOTKEY_COST,
+      FAST_REVEAL_COST,
       NUM_UPGRADE_COSTS,
       GLOVES,
       XP_CHARMS,

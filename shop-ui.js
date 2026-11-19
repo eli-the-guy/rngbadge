@@ -214,7 +214,73 @@
             !s.skip || !afford(C.AUTO_COST),
           ),
     );
-    html += section("⚡ Speed", "", speed);
+    speed += card(
+      "🔁 Auto Roll",
+      "A switch that keeps rolling for you, one roll after another.",
+      s.autoRoll
+        ? `Status: <b>${s.autoRollOn ? "ON" : "OFF"}</b>`
+        : `Cost: <b>${n(C.AUTO_ROLL_COST)} XP</b>`,
+      s.autoRoll
+        ? `<button class="drBuy" onclick="drToggleAutoRoll()">${s.autoRollOn ? "Turn OFF" : "Turn ON"}</button>`
+        : buyBtn(
+            afford(C.AUTO_ROLL_COST)
+              ? "Buy"
+              : balance < C.AUTO_ROLL_COST && cap < C.AUTO_ROLL_COST
+                ? "Raise your XP cap first"
+                : "Not enough XP",
+            "autoRoll",
+            undefined,
+            !afford(C.AUTO_ROLL_COST),
+          ),
+    );
+    speed += card(
+      "🛑 Auto Stop",
+      "Auto roll pauses by itself when you land a good badge (1 in 10,000 or rarer). Needs Auto Roll.",
+      `Cost: <b>${n(C.AUTO_STOP_COST)} XP</b>`,
+      buyBtn(
+        s.autoStop
+          ? "✓ Purchased"
+          : !s.autoRoll
+            ? "Buy Auto Roll first"
+            : afford(C.AUTO_STOP_COST)
+              ? "Buy"
+              : "Not enough XP",
+        "autoStop",
+        undefined,
+        s.autoStop || !s.autoRoll || !afford(C.AUTO_STOP_COST),
+      ),
+    );
+    speed += card(
+      "⚡ Fast Reveal",
+      "Digits lock in twice as fast during a normal roll (0.45s instead of 0.9s).",
+      `Cost: <b>${n(C.FAST_REVEAL_COST)} XP</b>`,
+      buyBtn(
+        s.fastReveal
+          ? "✓ Purchased"
+          : afford(C.FAST_REVEAL_COST)
+            ? "Buy"
+            : "Not enough XP",
+        "fastReveal",
+        undefined,
+        s.fastReveal || !afford(C.FAST_REVEAL_COST),
+      ),
+    );
+    speed += card(
+      "⌨️ Space Hotkey",
+      "Press the Space bar to roll.",
+      `Cost: <b>${n(C.HOTKEY_COST)} XP</b>`,
+      buyBtn(
+        s.hotkey
+          ? "✓ Purchased"
+          : afford(C.HOTKEY_COST)
+            ? "Buy"
+            : "Not enough XP",
+        "hotkey",
+        undefined,
+        s.hotkey || !afford(C.HOTKEY_COST),
+      ),
+    );
+    html += section("⚡ Speed & Quality of Life", "", speed);
 
     /* ---- rebirth ---- */
     const rc = rebirthColorInfo(s.rebirths + 1);
@@ -343,6 +409,38 @@
         break;
       }
 
+      case "autoRoll": {
+        if (s.autoRoll || !spend(C.AUTO_ROLL_COST)) return;
+        s.autoRoll = true;
+        toast("🔁 Auto roll unlocked. Use the switch under the roll button.");
+        break;
+      }
+
+      case "autoStop": {
+        if (!s.autoRoll) {
+          toast("Buy Auto Roll first.");
+          return;
+        }
+        if (s.autoStop || !spend(C.AUTO_STOP_COST)) return;
+        s.autoStop = true;
+        toast("🛑 Auto roll will now stop on good badges.");
+        break;
+      }
+
+      case "fastReveal": {
+        if (s.fastReveal || !spend(C.FAST_REVEAL_COST)) return;
+        s.fastReveal = true;
+        toast("⚡ Digits now lock in faster.");
+        break;
+      }
+
+      case "hotkey": {
+        if (s.hotkey || !spend(C.HOTKEY_COST)) return;
+        s.hotkey = true;
+        toast("⌨️ Press Space to roll.");
+        break;
+      }
+
       case "rebirth":
         return doRebirth();
 
@@ -372,6 +470,7 @@
     )
       return;
 
+    const oldXP = getXPBalance();
     const fresh = SH.fresh();
     fresh.rebirths = next;
     SH.S = fresh;
@@ -389,6 +488,44 @@
     if (typeof loadLeaderboard === "function") loadLeaderboard();
 
     toast(`🔄 Rebirth ${next} complete! Your name is now ${info.label}.`);
+
+    if (typeof G.drRebirthScene === "function") {
+      const inClose = typeof closeDigitRollPages === "function";
+      if (inClose) closeDigitRollPages();
+      const isRainbow = next > C.REBIRTH_COLORS.length;
+      let hue = 280;
+      if (!isRainbow) {
+        const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(
+          info.color,
+        );
+        if (m) {
+          const r = parseInt(m[1], 16) / 255,
+            g = parseInt(m[2], 16) / 255,
+            b = parseInt(m[3], 16) / 255;
+          const mx = Math.max(r, g, b),
+            mn = Math.min(r, g, b),
+            d = mx - mn;
+          if (d) {
+            let h =
+              mx === r
+                ? ((g - b) / d) % 6
+                : mx === g
+                  ? (b - r) / d + 2
+                  : (r - g) / d + 4;
+            hue = (h * 60 + 360) % 360;
+          }
+        }
+      }
+      G.drRebirthScene({
+        count: next,
+        oldXP,
+        hue,
+        rainbow: isRainbow,
+        label: isRainbow
+          ? "Your name is now a moving rainbow"
+          : "Your name is now " + info.label,
+      });
+    }
   }
 
   /* ==========================================================
@@ -504,4 +641,362 @@
   SH.syncRollUI();
   G.updateAccountUI();
   if (typeof currentUser !== "undefined" && currentUser) pullRebirths();
+})();
+
+/* ============================================================
+   TRUE REBIRTH SCENE
+   Full-screen cinematic: the old self is sucked into a singularity,
+   a flash and shockwaves hit on the sound's boom (~2.2s), then a
+   phoenix-style ember rise with the new rebirth number.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  const TOTAL = 6.4;
+  const BOOM = 2.2;
+
+  function injectCSS() {
+    if (document.getElementById("drRbCSS")) return;
+    const st = document.createElement("style");
+    st.id = "drRbCSS";
+    st.textContent = `
+      #drRbScene{position:fixed;inset:0;z-index:100000;background:#000;opacity:0;transition:opacity .45s ease;overflow:hidden;cursor:pointer}
+      #drRbScene.on{opacity:1}
+      #drRbScene.out{opacity:0;transition:opacity .9s ease}
+      #drRbCanvas{position:absolute;inset:0;width:100%;height:100%}
+      #drRbFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+      .drRbText{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:min(92vw,900px);pointer-events:none;color:#fff;font-family:inherit}
+      .drRbSmall{font-size:clamp(13px,2.2vw,20px);letter-spacing:.35em;text-transform:uppercase;opacity:.85;min-height:1.5em}
+      .drRbXP{font-size:clamp(28px,6vw,64px);font-weight:900;font-variant-numeric:tabular-nums;margin-top:10px;text-shadow:0 0 24px rgba(255,80,80,.8)}
+      .drRbBig{font-size:clamp(40px,11vw,120px);font-weight:900;line-height:1;letter-spacing:.02em;opacity:0;transform:scale(2.6);filter:blur(14px)}
+      .drRbBig.show{opacity:1;transform:scale(1);filter:blur(0);transition:transform .9s cubic-bezier(.12,1.2,.3,1),opacity .5s ease,filter .8s ease}
+      .drRbBig.rainbow{background:linear-gradient(90deg,#f33,#fa3,#ff3,#3f6,#3af,#63f,#f3c,#f33);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:drRbRb 2s linear infinite}
+      @keyframes drRbRb{to{background-position:-300% 0}}
+      .drRbSub{margin-top:16px;font-size:clamp(14px,2.6vw,24px);font-weight:700;opacity:0;transform:translateY(14px);transition:opacity .7s ease .5s,transform .7s ease .5s}
+      .drRbSub.show{opacity:.95;transform:none}
+      #drRbScene.shake{animation:drRbShake .09s linear infinite}
+      @keyframes drRbShake{0%{transform:translate(0,0)}25%{transform:translate(var(--sx,3px),calc(var(--sx,3px)*-1))}50%{transform:translate(calc(var(--sx,3px)*-1),var(--sx,3px))}75%{transform:translate(var(--sx,3px),var(--sx,3px))}100%{transform:translate(0,0)}}
+      @media (prefers-reduced-motion:reduce){#drRbScene.shake{animation:none}}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const fmt = (v) => Number(v).toLocaleString();
+
+  window.drRebirthScene = function (opts) {
+    opts = opts || {};
+    const count = opts.count || 1;
+    const rainbow = !!opts.rainbow;
+    const baseHue = opts.hue == null ? 280 : opts.hue;
+    const oldXP = Math.max(0, Number(opts.oldXP) || 0);
+    const label = opts.label || "";
+    const reduced =
+      window.matchMedia &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    injectCSS();
+    const old = document.getElementById("drRbScene");
+    if (old) old.remove();
+
+    const root = document.createElement("div");
+    root.id = "drRbScene";
+    root.innerHTML =
+      '<canvas id="drRbCanvas"></canvas><div id="drRbFlash"></div>' +
+      '<div class="drRbText"><div class="drRbSmall" id="drRbSmall"></div>' +
+      '<div class="drRbXP" id="drRbXP"></div>' +
+      '<div class="drRbBig' +
+      (rainbow ? " rainbow" : "") +
+      '" id="drRbBig"></div>' +
+      '<div class="drRbSub" id="drRbSub"></div></div>';
+    document.body.appendChild(root);
+    requestAnimationFrame(() => root.classList.add("on"));
+
+    const cv = root.querySelector("canvas");
+    const ctx = cv.getContext("2d");
+    const flash = root.querySelector("#drRbFlash");
+    const small = root.querySelector("#drRbSmall");
+    const xpEl = root.querySelector("#drRbXP");
+    const big = root.querySelector("#drRbBig");
+    const sub = root.querySelector("#drRbSub");
+
+    let W = 0,
+      H = 0,
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+    function resize() {
+      W = innerWidth;
+      H = innerHeight;
+      cv.width = W * dpr;
+      cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+
+    const hueAt = (t, i) =>
+      rainbow ? (t * 120 + i * 37) % 360 : baseHue + ((i * 13) % 50) - 25;
+    const R = Math.random;
+    const cx = () => W / 2;
+    const cy = () => H / 2;
+
+    /* implosion particles */
+    const sucked = [];
+    for (let i = 0; i < (reduced ? 60 : 320); i++) {
+      sucked.push({
+        a: R() * Math.PI * 2,
+        d: Math.max(W, H) * (0.55 + R() * 0.6),
+        spin: (R() < 0.5 ? -1 : 1) * (1.2 + R() * 2),
+        size: 1 + R() * 2.6,
+        k: R(),
+        delay: R() * 0.9,
+      });
+    }
+
+    /* embers rising after the boom */
+    const embers = [];
+    function spawnEmbers(n, t) {
+      for (let i = 0; i < n; i++) {
+        embers.push({
+          x: R() * W,
+          y: H + 10,
+          vy: 90 + R() * 260,
+          sway: R() * 40 + 10,
+          ph: R() * 6.28,
+          size: 1.5 + R() * 3.5,
+          life: 0,
+          max: 2.2 + R() * 2,
+          hue:
+            (rainbow ? (t * 140 + R() * 120) % 360 : baseHue + R() * 70 - 25) |
+            0,
+        });
+      }
+    }
+
+    /* feathers / phoenix wing arcs */
+    const rings = [];
+    let boomed = false;
+
+    let start = performance.now();
+    let raf = 0;
+    let done = false;
+    let textShown = false;
+    let canClose = false;
+
+    const stages = [
+      [0, "Unraveling everything…"],
+      [0.9, "Your power collapses…"],
+      [1.7, "Into a single point…"],
+    ];
+    let stageIdx = -1;
+
+    function finish() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      root.classList.add("out");
+      setTimeout(() => root.remove(), 950);
+    }
+
+    root.addEventListener("click", () => {
+      if (canClose) finish();
+    });
+
+    function frame(now) {
+      const t = (now - start) / 1000;
+      if (t >= TOTAL) return finish();
+
+      /* ---------------- shake ---------------- */
+      if (!reduced) {
+        if (t < BOOM) {
+          root.style.setProperty(
+            "--sx",
+            (1 + (t / BOOM) * 9).toFixed(1) + "px",
+          );
+          root.classList.add("shake");
+        } else if (t < BOOM + 0.8) {
+          root.style.setProperty(
+            "--sx",
+            (14 * (1 - (t - BOOM) / 0.8)).toFixed(1) + "px",
+          );
+          root.classList.add("shake");
+        } else root.classList.remove("shake");
+      }
+
+      /* ---------------- text, phase A ---------------- */
+      if (t < BOOM) {
+        while (stageIdx + 1 < stages.length && t >= stages[stageIdx + 1][0]) {
+          stageIdx++;
+          small.textContent = stages[stageIdx][1];
+        }
+        const p = Math.min(1, t / (BOOM - 0.2));
+        xpEl.textContent = "XP " + fmt(Math.round(oldXP * (1 - p * p)));
+        xpEl.style.opacity = String(1 - Math.max(0, (t - (BOOM - 0.5)) / 0.5));
+      } else {
+        xpEl.style.display = "none";
+      }
+
+      /* ---------------- canvas ---------------- */
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = t < BOOM ? "rgba(0,0,0,0.22)" : "rgba(0,0,0,0.16)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+
+      if (t < BOOM) {
+        const prog = t / BOOM;
+        /* spiral suction */
+        for (const s of sucked) {
+          const tt = Math.max(0, t - s.delay * 0.5);
+          const e = Math.min(1, tt / (BOOM - 0.1 - s.delay * 0.5));
+          const ease = e * e * e;
+          const dist = s.d * (1 - ease);
+          const ang = s.a + s.spin * ease * 6;
+          const x = cx() + Math.cos(ang) * dist;
+          const y = cy() + Math.sin(ang) * dist;
+          ctx.fillStyle = `hsla(${hueAt(t, s.k * 10)},100%,${55 + s.k * 25}%,${0.35 + 0.5 * e})`;
+          ctx.beginPath();
+          ctx.arc(x, y, s.size * (1 + ease), 0, 6.283);
+          ctx.fill();
+        }
+        /* singularity */
+        const r = 8 + prog * prog * 70;
+        const g = ctx.createRadialGradient(cx(), cy(), 0, cx(), cy(), r * 3.2);
+        g.addColorStop(0, "rgba(255,255,255,0.95)");
+        g.addColorStop(0.25, `hsla(${hueAt(t, 0)},100%,65%,0.7)`);
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx(), cy(), r * 3.2, 0, 6.283);
+        ctx.fill();
+        /* converging ring pulses */
+        for (let k = 0; k < 3; k++) {
+          const q = (t * 0.9 + k / 3) % 1;
+          ctx.strokeStyle = `hsla(${hueAt(t, k * 4)},100%,70%,${(1 - q) * 0.5})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(cx(), cy(), (1 - q) * Math.max(W, H) * 0.5, 0, 6.283);
+          ctx.stroke();
+        }
+      }
+
+      /* ---------------- boom ---------------- */
+      if (!boomed && t >= BOOM) {
+        boomed = true;
+        for (let k = 0; k < 4; k++)
+          rings.push({ born: t + k * 0.13, hue: k * 50 });
+        flash.style.transition = "none";
+        flash.style.opacity = "1";
+        requestAnimationFrame(() => {
+          flash.style.transition = "opacity 1.1s ease-out";
+          flash.style.opacity = "0";
+        });
+        small.textContent = "";
+        setTimeout(() => {
+          if (done) return;
+          small.textContent = "TRUE REBIRTH";
+          big.textContent = "#" + count;
+          big.classList.add("show");
+          sub.textContent = label;
+          sub.classList.add("show");
+          textShown = true;
+        }, 450);
+      }
+
+      if (t >= BOOM) {
+        const bt = t - BOOM;
+
+        /* rotating rays */
+        const rayA = Math.min(1, bt / 0.5) * Math.max(0, 1 - bt / 3.6);
+        if (rayA > 0.01) {
+          ctx.save();
+          ctx.translate(cx(), cy());
+          ctx.rotate(bt * 0.5);
+          const L = Math.max(W, H);
+          for (let i = 0; i < 18; i++) {
+            ctx.rotate(Math.PI / 9);
+            const g = ctx.createLinearGradient(0, 0, L, 0);
+            g.addColorStop(0, `hsla(${hueAt(t, i)},100%,70%,${0.32 * rayA})`);
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(L, -L * 0.045);
+            ctx.lineTo(L, L * 0.045);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        /* light pillar */
+        const pa = Math.max(0, 1 - bt / 2.4) * Math.min(1, bt / 0.2);
+        if (pa > 0.01) {
+          const pw = 40 + bt * 60;
+          const g = ctx.createLinearGradient(cx() - pw, 0, cx() + pw, 0);
+          g.addColorStop(0, "rgba(0,0,0,0)");
+          g.addColorStop(0.5, `hsla(${hueAt(t, 0)},100%,80%,${0.55 * pa})`);
+          g.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = g;
+          ctx.fillRect(cx() - pw, 0, pw * 2, H);
+        }
+
+        /* shockwave rings */
+        for (const rg of rings) {
+          const q = (t - rg.born) / 1.8;
+          if (q < 0 || q > 1) continue;
+          const rr = q * Math.hypot(W, H) * 0.62;
+          ctx.strokeStyle = `hsla(${rainbow ? (t * 120 + rg.hue) % 360 : baseHue + rg.hue * 0.3},100%,${70}%,${(1 - q) * 0.9})`;
+          ctx.lineWidth = 14 * (1 - q) + 1;
+          ctx.beginPath();
+          ctx.arc(cx(), cy(), rr, 0, 6.283);
+          ctx.stroke();
+        }
+
+        /* orbiting glyph ring around the number */
+        if (bt > 0.6) {
+          const ra =
+            Math.min(1, (bt - 0.6) / 0.6) * Math.max(0, 1 - (bt - 3) / 0.8);
+          const R2 = Math.min(W, H) * 0.3;
+          for (let i = 0; i < 14; i++) {
+            const a = bt * 0.9 + (i / 14) * 6.283;
+            ctx.fillStyle = `hsla(${hueAt(t, i)},100%,72%,${0.9 * ra})`;
+            ctx.beginPath();
+            ctx.arc(
+              cx() + Math.cos(a) * R2 * 1.4,
+              cy() + Math.sin(a) * R2 * 0.55,
+              4 + (i % 3),
+              0,
+              6.283,
+            );
+            ctx.fill();
+          }
+        }
+
+        /* rising embers */
+        if (bt < 3.4) spawnEmbers(reduced ? 1 : 7, t);
+        for (let i = embers.length - 1; i >= 0; i--) {
+          const e = embers[i];
+          e.life += 1 / 60;
+          if (e.life > e.max) {
+            embers.splice(i, 1);
+            continue;
+          }
+          e.y -= e.vy / 60;
+          const x = e.x + Math.sin(e.life * 2.5 + e.ph) * e.sway;
+          const a = Math.sin((e.life / e.max) * Math.PI);
+          ctx.fillStyle = `hsla(${e.hue},100%,62%,${a * 0.9})`;
+          ctx.beginPath();
+          ctx.arc(x, e.y, e.size, 0, 6.283);
+          ctx.fill();
+        }
+      }
+
+      if (t > 2.6 && !canClose) canClose = true;
+      raf = requestAnimationFrame(frame);
+    }
+
+    raf = requestAnimationFrame(frame);
+    window.addEventListener("resize", resize);
+    setTimeout(
+      () => window.removeEventListener("resize", resize),
+      (TOTAL + 1) * 1000,
+    );
+  };
 })();
