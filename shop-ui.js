@@ -236,19 +236,21 @@
     speed += card(
       "🛑 Auto Stop",
       "Auto roll pauses by itself when you land a good badge (1 in 10,000 or rarer). Needs Auto Roll.",
-      `Cost: <b>${n(C.AUTO_STOP_COST)} XP</b>`,
-      buyBtn(
-        s.autoStop
-          ? "✓ Purchased"
-          : !s.autoRoll
-            ? "Buy Auto Roll first"
-            : afford(C.AUTO_STOP_COST)
-              ? "Buy"
-              : "Not enough XP",
-        "autoStop",
-        undefined,
-        s.autoStop || !s.autoRoll || !afford(C.AUTO_STOP_COST),
-      ),
+      s.autoStop
+        ? `Status: <b>${s.autoStopOn ? "ON" : "OFF"}</b>`
+        : `Cost: <b>${n(C.AUTO_STOP_COST)} XP</b>`,
+      s.autoStop
+        ? `<button class="drBuy" onclick="drToggleAutoStop()">${s.autoStopOn ? "Turn OFF" : "Turn ON"}</button>`
+        : buyBtn(
+            !s.autoRoll
+              ? "Buy Auto Roll first"
+              : afford(C.AUTO_STOP_COST)
+                ? "Buy"
+                : "Not enough XP",
+            "autoStop",
+            undefined,
+            !s.autoRoll || !afford(C.AUTO_STOP_COST),
+          ),
     );
     speed += card(
       "⚡ Fast Reveal",
@@ -423,6 +425,7 @@
         }
         if (s.autoStop || !spend(C.AUTO_STOP_COST)) return;
         s.autoStop = true;
+        s.autoStopOn = true;
         toast("🛑 Auto roll will now stop on good badges.");
         break;
       }
@@ -653,6 +656,8 @@
   "use strict";
 
   const TOTAL = 6.4;
+  const G_drSfx = (...a) =>
+    typeof window.drSfx === "function" ? window.drSfx(...a) : undefined;
   const BOOM = 2.2;
 
   function injectCSS() {
@@ -694,6 +699,8 @@
       window.matchMedia &&
       matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    if (typeof G_drSfx === "function")
+      G_drSfx("rebirthScene", { count, rainbow });
     injectCSS();
     const old = document.getElementById("drRbScene");
     if (old) old.remove();

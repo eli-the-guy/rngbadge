@@ -109,7 +109,8 @@
     skip: false,
     autoRoll: false, // auto roll unlocked
     autoRollOn: false,
-    autoStop: false, // auto roll stops on a good badge
+    autoStop: false, // auto stop unlocked
+    autoStopOn: true, // auto stop switch
     hotkey: false, // Space rolls
     fastReveal: false, // digits lock in twice as fast
     auto: false,
@@ -228,7 +229,12 @@
 
     if (S.autoRoll && S.autoRollOn) {
       const last = typeof history !== "undefined" ? history[0] : null;
-      if (S.autoStop && last && Number(last.oneIn || 0) >= 10000) {
+      if (
+        S.autoStop &&
+        S.autoStopOn &&
+        last &&
+        Number(last.oneIn || 0) >= 10000
+      ) {
         S.autoRollOn = false;
         save();
         syncRollUI();
@@ -328,6 +334,9 @@
       (S.skip && S.auto
         ? `<button id="drAutoBtn" class="drToolBtn ${S.autoOn ? "on" : ""}" type="button">⏩ Auto skip: ${S.autoOn ? "ON" : "OFF"}</button>`
         : "") +
+      (S.autoRoll && S.autoStop
+        ? `<button id="drAutoStopBtn" class="drToolBtn ${S.autoStopOn ? "on" : ""}" type="button">🛑 Auto stop: ${S.autoStopOn ? "ON" : "OFF"}</button>`
+        : "") +
       (S.autoRoll
         ? `<button id="drAutoRollBtn" class="drToolBtn ${S.autoRollOn ? "on" : ""}" type="button">🔁 Auto roll: ${S.autoRollOn ? "ON" : "OFF"}</button>`
         : "");
@@ -345,6 +354,9 @@
     const ab = $("drAutoBtn");
     if (ab) ab.onclick = () => G.drToggleAuto();
 
+    const asb = $("drAutoStopBtn");
+    if (asb) asb.onclick = () => G.drToggleAutoStop();
+
     const arb = $("drAutoRollBtn");
     if (arb) arb.onclick = () => G.drToggleAutoRoll();
   }
@@ -361,6 +373,15 @@
     ensureRollTools();
     initNumberPlaceholder();
   }
+
+  G.drToggleAutoStop = function () {
+    if (!S.autoStop) return;
+    S.autoStopOn = !S.autoStopOn;
+    save();
+    syncRollUI();
+    updateShopUI();
+    toast("🛑 Auto stop " + (S.autoStopOn ? "enabled" : "disabled"));
+  };
 
   G.drToggleAutoRoll = function () {
     if (!S.autoRoll) return;
