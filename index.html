@@ -1,721 +1,409 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Digit Roll — Global</title>
+    <title>Digit Roll — Global</title>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Main stylesheet -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="effects.css" />
-</head>
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="effects.css" />
+    <link rel="stylesheet" href="shop.css" />
+  </head>
 
-<body>
-
-  <!-- ============================================================
+  <body>
+    <!-- ============================================================
        APP
        ============================================================ -->
 
-  <div id="app">
-
-    <!-- ==========================================================
+    <div id="app">
+      <!-- ==========================================================
          HEADER
          ========================================================== -->
 
-    <header class="topbar">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brandIcon">🎲</div>
 
-      <div class="brand">
-        <div class="brandIcon">🎲</div>
-
-        <div>
-          <h1>Digit Roll</h1>
-          <span>Global</span>
-        </div>
-      </div>
-
-      <div class="accountArea">
-
-        <div id="userPill" class="userPill">
-          Guest
+          <div>
+            <h1>Digit Roll</h1>
+            <span>Global</span>
+          </div>
         </div>
 
-        <button id="authButton" class="topButton">
-          🔐 Login
-        </button>
+        <div class="accountArea">
+          <div id="userPill" class="userPill">Guest</div>
 
-        <button
-          id="profileButton"
-          class="topButton"
-          style="display:none"
-        >
-          👤 Profile
-        </button>
+          <button id="authButton" class="topButton">🔐 Login</button>
 
-        <button
-          id="logoutButton"
-          class="topButton danger"
-          style="display:none"
-        >
-          Logout
-        </button>
+          <button id="profileButton" class="topButton" style="display: none">
+            👤 Profile
+          </button>
 
-      </div>
+          <button
+            id="logoutButton"
+            class="topButton danger"
+            style="display: none"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
-    </header>
-
-
-    <!-- ==========================================================
+      <!-- ==========================================================
          REALTIME STATUS
          ========================================================== -->
 
-    <div class="realtimeStatus">
+      <div class="realtimeStatus">
+        <span id="realtimeDot" class="realtimeDot off"></span>
 
-      <span id="realtimeDot" class="realtimeDot off"></span>
+        <span id="realtimeText"> Realtime Offline </span>
+      </div>
 
-      <span id="realtimeText">
-        Realtime Offline
-      </span>
-
-    </div>
-
-
-    <!-- ==========================================================
+      <!-- ==========================================================
          MAIN CONTENT
          ========================================================== -->
 
-    <main class="main">
-
-      <!-- ========================================================
+      <main class="main">
+        <!-- ========================================================
            ROLL CARD
            ======================================================== -->
 
-      <section class="rollCard">
+        <section class="rollCard">
+          <div class="rollHeader">
+            <div>
+              <div class="eyebrow">RANDOM NUMBER GENERATOR</div>
 
-        <div class="rollHeader">
-
-          <div>
-            <div class="eyebrow">
-              RANDOM NUMBER GENERATOR
+              <h2 id="rollLabel">READY TO ROLL</h2>
             </div>
 
-            <h2 id="rollLabel">
-              READY TO ROLL
-            </h2>
+            <div id="liveRarity" class="liveRarity rarity-common">
+              RARITY: —
+            </div>
           </div>
 
-          <div
-            id="liveRarity"
-            class="liveRarity rarity-common"
-          >
-            RARITY: —
-          </div>
-
-        </div>
-
-
-        <!-- ======================================================
+          <!-- ======================================================
              NUMBER DISPLAY
              ====================================================== -->
 
-        <div
-          id="number"
-          class="number rarity-common"
-        >
-          ??????????
-        </div>
+          <div id="number" class="number rarity-common">??????????</div>
 
-
-        <!-- ======================================================
+          <!-- ======================================================
              ROLL BUTTON
              ====================================================== -->
 
-        <button
-          id="rollBtn"
-          class="rollButton"
-          type="button"
-        >
-          <span>🎲</span>
-          ROLL
-        </button>
+          <button id="rollBtn" class="rollButton" type="button">
+            <span>🎲</span>
+            ROLL
+          </button>
 
-
-        <!-- ======================================================
+          <!-- ======================================================
              RESULT STATS
              ====================================================== -->
 
-        <div class="statsGrid">
+          <div class="statsGrid">
+            <div class="statCard">
+              <div class="statLabel">RARITY</div>
 
-          <div class="statCard">
-
-            <div class="statLabel">
-              RARITY
+              <div id="rarity" class="statValue rarity-common">—</div>
             </div>
 
-            <div
-              id="rarity"
-              class="statValue rarity-common"
-            >
-              —
+            <div class="statCard">
+              <div class="statLabel">CHANCE</div>
+
+              <div id="chance" class="statValue">—</div>
             </div>
 
+            <div class="statCard">
+              <div class="statLabel">DIGITS SHOWN</div>
+
+              <div id="shown" class="statValue">—</div>
+            </div>
+
+            <div class="statCard">
+              <div class="statLabel">BLANK BONUS</div>
+
+              <div id="blankBonus" class="statValue">—</div>
+            </div>
+
+            <div class="statCard">
+              <div class="statLabel">XP</div>
+
+              <div id="xp" class="statValue">—</div>
+            </div>
           </div>
 
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              CHANCE
-            </div>
-
-            <div id="chance" class="statValue">
-              —
-            </div>
-
-          </div>
-
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              DIGITS SHOWN
-            </div>
-
-            <div id="shown" class="statValue">
-              —
-            </div>
-
-          </div>
-
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              BLANK BONUS
-            </div>
-
-            <div id="blankBonus" class="statValue">
-              —
-            </div>
-
-          </div>
-
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              XP
-            </div>
-
-            <div id="xp" class="statValue">
-              —
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ======================================================
+          <!-- ======================================================
              BADGES
              ====================================================== -->
 
-        <div class="sectionHeader">
+          <div class="sectionHeader">
+            <div>
+              <h3>🏅 Badges</h3>
 
-          <div>
-            <h3>🏅 Badges</h3>
-
-            <p>
-              Discover unusual patterns and references.
-            </p>
+              <p>Discover unusual patterns and references.</p>
+            </div>
           </div>
 
-        </div>
+          <div id="badges" class="badges">
+            <span class="empty"> Roll the dice to discover badges. </span>
+          </div>
+        </section>
 
-        <div id="badges" class="badges">
-
-          <span class="empty">
-            Roll the dice to discover badges.
-          </span>
-
-        </div>
-
-      </section>
-
-
-      <!-- ========================================================
+        <!-- ========================================================
            GLOBAL LEADERBOARD
            ======================================================== -->
 
-      <section class="panel">
+        <section class="panel">
+          <div class="panelHeader">
+            <div>
+              <div class="eyebrow">GLOBAL</div>
 
-        <div class="panelHeader">
+              <h2>🌎 Leaderboard</h2>
 
-          <div>
-
-            <div class="eyebrow">
-              GLOBAL
+              <p>The rarest rolls from everyone.</p>
             </div>
-
-            <h2>🌎 Leaderboard</h2>
-
-            <p>
-              The rarest rolls from everyone.
-            </p>
-
-          </div>
-
-          <button
-            id="refreshLeaderboard"
-            class="secondaryButton"
-            type="button"
-          >
-            ↻ Refresh
-          </button>
-
-        </div>
-
-
-        <!-- ======================================================
-             GLOBAL BEST
-             ====================================================== -->
-
-        <div class="bestGrid">
-
-          <div class="bestCard">
-
-            <div class="statLabel">
-              🏆 ALL-TIME BEST
-            </div>
-
-            <div
-              id="allBest"
-              class="bestNumber"
-            >
-              —
-            </div>
-
-            <div
-              id="allBestMeta"
-              class="small"
-            >
-              No rolls yet
-            </div>
-
-          </div>
-
-
-          <div class="bestCard">
-
-            <div class="statLabel">
-              🔥 TODAY'S BEST
-            </div>
-
-            <div
-              id="todayBest"
-              class="bestNumber"
-            >
-              —
-            </div>
-
-            <div
-              id="todayBestMeta"
-              class="small"
-            >
-              No rolls today
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- ======================================================
-             GLOBAL ROWS
-             ====================================================== -->
-
-        <div
-          id="globalRows"
-          class="globalRows"
-        >
-
-          <span class="empty">
-            Loading leaderboard...
-          </span>
-
-        </div>
-
-      </section>
-
-
-      <!-- ========================================================
-           HISTORY
-           ======================================================== -->
-
-      <section class="panel">
-
-        <div class="panelHeader">
-
-          <div>
-
-            <div class="eyebrow">
-              LOCAL HISTORY
-            </div>
-
-            <h2>📜 Roll History</h2>
-
-          </div>
-
-          <div
-            id="historyCount"
-            class="small"
-          >
-            0 rolls
-          </div>
-
-        </div>
-
-        <div
-          id="history"
-          class="history"
-        >
-
-          <span class="empty">
-            No rolls yet.
-          </span>
-
-        </div>
-
-      </section>
-
-
-      <!-- ========================================================
-           PROFILE
-           ======================================================== -->
-
-      <section
-        id="profileSection"
-        class="panel profilePanel"
-        style="display:none"
-      >
-
-        <div class="panelHeader">
-
-          <div>
-
-            <div class="eyebrow">
-              YOUR ACCOUNT
-            </div>
-
-            <h2>👤 Profile</h2>
-
-          </div>
-
-        </div>
-
-
-        <div class="profileInfo">
-
-          <div class="profileRow">
-
-            <span>
-              Email
-            </span>
-
-            <strong id="profileEmail">
-              —
-            </strong>
-
-          </div>
-
-
-          <div class="profileRow">
-
-            <span>
-              Username
-            </span>
-
-            <strong id="profileUsername">
-              —
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <!-- ======================================================
-             USERNAME
-             ====================================================== -->
-
-        <div class="usernameEditor">
-
-          <label for="usernameInput">
-            Change username
-          </label>
-
-          <div class="usernameControls">
-
-            <input
-              id="usernameInput"
-              type="text"
-              maxlength="24"
-              placeholder="Username"
-            />
 
             <button
-              id="saveUsername"
+              id="refreshLeaderboard"
               class="secondaryButton"
               type="button"
             >
-              Save
+              ↻ Refresh
             </button>
-
           </div>
 
-          <div
-            id="usernameStatus"
-            class="small"
-          ></div>
+          <!-- ======================================================
+             GLOBAL BEST
+             ====================================================== -->
 
-        </div>
+          <div class="bestGrid">
+            <div class="bestCard">
+              <div class="statLabel">🏆 ALL-TIME BEST</div>
 
+              <div id="allBest" class="bestNumber">—</div>
 
-        <!-- ======================================================
+              <div id="allBestMeta" class="small">No rolls yet</div>
+            </div>
+
+            <div class="bestCard">
+              <div class="statLabel">🔥 TODAY'S BEST</div>
+
+              <div id="todayBest" class="bestNumber">—</div>
+
+              <div id="todayBestMeta" class="small">No rolls today</div>
+            </div>
+          </div>
+
+          <!-- ======================================================
+             GLOBAL ROWS
+             ====================================================== -->
+
+          <div id="globalRows" class="globalRows">
+            <span class="empty"> Loading leaderboard... </span>
+          </div>
+        </section>
+
+        <!-- ========================================================
+           HISTORY
+           ======================================================== -->
+
+        <section class="panel">
+          <div class="panelHeader">
+            <div>
+              <div class="eyebrow">LOCAL HISTORY</div>
+
+              <h2>📜 Roll History</h2>
+            </div>
+
+            <div id="historyCount" class="small">0 rolls</div>
+          </div>
+
+          <div id="history" class="history">
+            <span class="empty"> No rolls yet. </span>
+          </div>
+        </section>
+
+        <!-- ========================================================
+           PROFILE
+           ======================================================== -->
+
+        <section
+          id="profileSection"
+          class="panel profilePanel"
+          style="display: none"
+        >
+          <div class="panelHeader">
+            <div>
+              <div class="eyebrow">YOUR ACCOUNT</div>
+
+              <h2>👤 Profile</h2>
+            </div>
+          </div>
+
+          <div class="profileInfo">
+            <div class="profileRow">
+              <span> Email </span>
+
+              <strong id="profileEmail"> — </strong>
+            </div>
+
+            <div class="profileRow">
+              <span> Username </span>
+
+              <strong id="profileUsername"> — </strong>
+            </div>
+          </div>
+
+          <!-- ======================================================
+             USERNAME
+             ====================================================== -->
+
+          <div class="usernameEditor">
+            <label for="usernameInput"> Change username </label>
+
+            <div class="usernameControls">
+              <input
+                id="usernameInput"
+                type="text"
+                maxlength="24"
+                placeholder="Username"
+              />
+
+              <button id="saveUsername" class="secondaryButton" type="button">
+                Save
+              </button>
+            </div>
+
+            <div id="usernameStatus" class="small"></div>
+          </div>
+
+          <!-- ======================================================
              PERSONAL STATS
              ====================================================== -->
 
-        <div class="statsGrid profileStats">
+          <div class="statsGrid profileStats">
+            <div class="statCard">
+              <div class="statLabel">ROLLS</div>
 
-          <div class="statCard">
-
-            <div class="statLabel">
-              ROLLS
+              <div id="profileRolls" class="statValue">0</div>
             </div>
 
-            <div
-              id="profileRolls"
-              class="statValue"
-            >
-              0
+            <div class="statCard">
+              <div class="statLabel">TOTAL XP</div>
+
+              <div id="profileXP" class="statValue">0</div>
             </div>
 
+            <div class="statCard">
+              <div class="statLabel">PERSONAL BEST</div>
+
+              <div id="profileBest" class="statValue">—</div>
+
+              <div id="profileBestMeta" class="small">No rolls yet</div>
+            </div>
           </div>
+        </section>
+      </main>
 
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              TOTAL XP
-            </div>
-
-            <div
-              id="profileXP"
-              class="statValue"
-            >
-              0
-            </div>
-
-          </div>
-
-
-          <div class="statCard">
-
-            <div class="statLabel">
-              PERSONAL BEST
-            </div>
-
-            <div
-              id="profileBest"
-              class="statValue"
-            >
-              —
-            </div>
-
-            <div
-              id="profileBestMeta"
-              class="small"
-            >
-              No rolls yet
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </main>
-
-
-    <!-- ==========================================================
+      <!-- ==========================================================
          AUTH MODAL
          ========================================================== -->
 
-    <div
-      id="authModal"
-      class="modal"
-    >
+      <div id="authModal" class="modal">
+        <div class="modalCard">
+          <button class="modalClose" type="button" onclick="closeAuth()">
+            ×
+          </button>
 
-      <div class="modalCard">
+          <div class="authTabs">
+            <button id="loginTab" class="authTab active" type="button">
+              Login
+            </button>
 
-        <button
-          class="modalClose"
-          type="button"
-          onclick="closeAuth()"
-        >
-          ×
-        </button>
+            <button id="signupTab" class="authTab" type="button">
+              Sign Up
+            </button>
+          </div>
 
+          <h2 id="authTitle">🔐 Login</h2>
 
-        <div class="authTabs">
+          <input
+            id="authUsername"
+            type="text"
+            maxlength="24"
+            placeholder="Username"
+            style="display: none"
+          />
 
-          <button
-            id="loginTab"
-            class="authTab active"
-            type="button"
-          >
+          <input
+            id="authEmail"
+            type="email"
+            autocomplete="email"
+            placeholder="Email"
+          />
+
+          <input
+            id="authPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Password"
+          />
+
+          <button id="authSubmit" class="rollButton" type="button">
             Login
           </button>
 
-          <button
-            id="signupTab"
-            class="authTab"
-            type="button"
-          >
-            Sign Up
-          </button>
-
+          <div id="authStatus" class="modalStatus"></div>
         </div>
-
-
-        <h2 id="authTitle">
-          🔐 Login
-        </h2>
-
-
-        <input
-          id="authUsername"
-          type="text"
-          maxlength="24"
-          placeholder="Username"
-          style="display:none"
-        />
-
-
-        <input
-          id="authEmail"
-          type="email"
-          autocomplete="email"
-          placeholder="Email"
-        />
-
-
-        <input
-          id="authPassword"
-          type="password"
-          autocomplete="current-password"
-          placeholder="Password"
-        />
-
-
-        <button
-          id="authSubmit"
-          class="rollButton"
-          type="button"
-        >
-          Login
-        </button>
-
-
-        <div
-          id="authStatus"
-          class="modalStatus"
-        ></div>
-
       </div>
 
-    </div>
-
-
-    <!-- ==========================================================
+      <!-- ==========================================================
          BADGE MODAL
          ========================================================== -->
 
-    <div
-      id="badgeModal"
-      class="modal"
-    >
+      <div id="badgeModal" class="modal">
+        <div class="modalCard badgeModalCard">
+          <button class="modalClose" type="button" onclick="closeBadgeInfo()">
+            ×
+          </button>
 
-      <div class="modalCard badgeModalCard">
+          <div id="badgeModalName" class="badgeModalName">Badge</div>
 
-        <button
-          class="modalClose"
-          type="button"
-          onclick="closeBadgeInfo()"
-        >
-          ×
-        </button>
+          <div id="badgeModalExplanation" class="badgeModalExplanation">—</div>
 
+          <div id="badgeModalChance" class="badgeModalChance">
+            Badge chance: —
+          </div>
 
-        <div
-          id="badgeModalName"
-          class="badgeModalName"
-        >
-          Badge
+          <button
+            class="secondaryButton"
+            type="button"
+            onclick="closeBadgeInfo()"
+          >
+            Close
+          </button>
         </div>
-
-
-        <div
-          id="badgeModalExplanation"
-          class="badgeModalExplanation"
-        >
-          —
-        </div>
-
-
-        <div
-          id="badgeModalChance"
-          class="badgeModalChance"
-        >
-          Badge chance: —
-        </div>
-
-
-        <button
-          class="secondaryButton"
-          type="button"
-          onclick="closeBadgeInfo()"
-        >
-          Close
-        </button>
-
       </div>
 
-    </div>
-
-
-    <!-- ==========================================================
+      <!-- ==========================================================
          TOAST
          ========================================================== -->
 
-    <div
-      id="toast"
-      class="toast"
-    ></div>
+      <div id="toast" class="toast"></div>
+    </div>
 
-  </div>
-
-
-  <!-- ============================================================
+    <!-- ============================================================
        JAVASCRIPT
        ============================================================ -->
 
-  <script src="script.js"></script>
-  <script src="extras.js"></script>
-
-</body>
+    <script src="script.js"></script>
+    <script src="extras.js"></script>
+    <script src="shop.js"></script>
+    <script src="shop-ui.js"></script>
+  </body>
 </html>

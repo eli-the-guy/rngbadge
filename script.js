@@ -712,7 +712,8 @@ function ensureXPBalance() {
 }
 
 function getXPBalance() {
-  return Math.max(0, Number(ensureXPBalance()));
+  const cap = typeof drGetCap === "function" ? drGetCap() : Infinity;
+  return Math.min(cap, Math.max(0, Number(ensureXPBalance())));
 }
 
 function saveShopState() {
@@ -733,7 +734,10 @@ function getUnlockedBadgeNames() {
 }
 
 function applyGuaranteedBadges(result) {
-  const count = Math.max(0, shopLuckLevel);
+  const count =
+    typeof drLuckCount === "function"
+      ? drLuckCount()
+      : Math.max(0, shopLuckLevel);
   if (!count) return result;
 
   Object.values(result.badges || {}).forEach((b) =>
@@ -828,6 +832,10 @@ function updateShopUI() {
       .join("")}</div>`;
     return;
   }
+  if (typeof drRenderShop === "function") {
+    drRenderShop(content);
+    return;
+  }
   content.innerHTML = `<div class="drBalance">💰 XP Balance: ${balance.toLocaleString()} XP<br>🍀 Guaranteed badges per roll: ${shopLuckLevel}</div><div class="drShopGrid">${LUCK_SHOP_ITEMS.map(
     (item) => {
       const owned = shopLuckLevel >= item.level;
@@ -905,7 +913,7 @@ function fmt(n) {
 function meta(x) {
   if (!x) return "No rolls yet";
 
-  return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/10 digits`;
+  return `${x.rarity} • ${fmt(x.oneIn)} • ${x.shown}/${x.total || 10} digits`;
 }
 
 function better(a, b) {
@@ -972,12 +980,12 @@ function applyRarityColor(element, rarity) {
    RANDOM ROLL
    ============================================================ */
 
-function randomRoll() {
+function randomRoll(len = 10) {
   const chars = [];
 
   let blanks = 0;
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < len; i++) {
     if (Math.random() < 0.055) {
       chars.push("_");
       blanks++;
@@ -986,8 +994,8 @@ function randomRoll() {
     }
   }
 
-  if (blanks === 10) {
-    const index = Math.floor(Math.random() * 10);
+  if (blanks === len) {
+    const index = Math.floor(Math.random() * len);
 
     chars[index] = String(Math.floor(Math.random() * 10));
   }
@@ -2600,6 +2608,7 @@ async function loadLeaderboard() {
 
   const rows = data || [];
   window.currentLeaderboardRows = rows;
+  if (typeof drLoadRebirths === "function") await drLoadRebirths(rows);
 
   if (!rows.length) {
     $("globalRows").innerHTML =
@@ -2660,7 +2669,7 @@ async function loadLeaderboard() {
           <div>
 
             <div class="globalPlayer">
-              ${escapeHTML(row.player_name || "Player")}
+              ${typeof drNameHTML === "function" ? drNameHTML(row) : escapeHTML(row.player_name || "Player")}
             </div>
 
             <div class="small">
@@ -3001,6 +3010,7 @@ async function performRoll() {
     '<span class="empty">The number is being generated...</span>';
 
   $("number").classList.add("rolling");
+  if (typeof drBeginRoll === "function") drBeginRoll();
 
   applyRarityColor($("liveRarity"), "COMMON");
 
@@ -3008,34 +3018,38 @@ async function performRoll() {
 
   applyRarityColor($("number"), "COMMON");
 
-  const finalChars = randomRoll();
+  const rollLen = typeof drRollLength === "function" ? drRollLength() : 10;
 
-  const visible = Array(10).fill("?");
+  const finalChars = randomRoll(rollLen);
 
-  let i = 0;
+  if (typeof drApplyCharms === "function") drApplyCharms(finalChars);
 
-  await new Promise((resolve) => {
-    const timer = setInterval(() => {
+  if (typeof drRunReveal === "function") {
+    await drRunReveal(finalChars);
+  } else {
+    const visible = Array(rollLen).fill("?");
+    for (let i = 0; i < rollLen; i++) {
+      await new Promise((r) => setTimeout(r, 900));
       visible[i] = finalChars[i];
-
       $("number").textContent = visible.join("");
-
-      i++;
-
-      if (i >= 10) {
-        clearInterval(timer);
-
-        resolve();
-      }
-    }, 900);
-  });
+    }
+  }
 
   $("number").classList.remove("rolling");
 
   const analysis = analyze(finalChars);
 
   applyGuaranteedBadges(analysis);
-  xpBalance = getXPBalance() + Number(analysis.xp || 0);
+  {
+    const before = getXPBalance();
+    const cap = typeof drGetCap === "function" ? drGetCap() : Infinity;
+    xpBalance = Math.min(cap, before + Number(analysis.xp || 0));
+    if (before + Number(analysis.xp || 0) > cap) {
+      toast(
+        "📦 XP cap reached (" + cap.toLocaleString() + "). Extra XP was lost.",
+      );
+    }
+  }
   localStorage.setItem("digitRollXPBalance", String(xpBalance));
 
   const roll = finalChars.join("");
@@ -3044,6 +3058,8 @@ async function performRoll() {
     roll,
 
     ...analysis,
+
+    total: rollLen,
 
     time: Date.now(),
   };
@@ -3069,6 +3085,12 @@ async function performRoll() {
   await new Promise((resolve) => {
     const revealBadge = () => {
       if (bIndex < badges.length) {
+        if (typeof drSkipping === "function" && drSkipping()) {
+          bIndex = badges.length;
+          resolve();
+          return;
+        }
+
         const b = badges[bIndex];
 
         $("badges").innerHTML = `
@@ -3139,7 +3161,10 @@ async function performRoll() {
 
         bIndex++;
 
-        setTimeout(revealBadge, focusMs);
+        (typeof drWait === "function"
+          ? drWait(focusMs)
+          : new Promise((r) => setTimeout(r, focusMs))
+        ).then(revealBadge);
       } else {
         resolve();
       }
@@ -3160,7 +3185,7 @@ async function performRoll() {
 
   $("chance").textContent = fmt(analysis.oneIn);
 
-  $("shown").textContent = analysis.shown + "/10";
+  $("shown").textContent = analysis.shown + "/" + rollLen;
 
   $("blankBonus").textContent = "×" + analysis.blankMultiplier.toLocaleString();
 
@@ -3243,6 +3268,9 @@ async function performRoll() {
   $("rollBtn").disabled = false;
 
   rolling = false;
+
+  if (typeof drEndRoll === "function") drEndRoll();
+  updateShopUI();
 }
 
 /* ============================================================
