@@ -392,7 +392,11 @@
 
 /* reduced-motion version: flat colour flash + title only */
 .drFx.reduced {
-  background: radial-gradient(circle, rgba(10, 14, 30, 0.88), rgba(0, 0, 0, 0.94));
+  background: radial-gradient(
+    circle,
+    rgba(10, 14, 30, 0.88),
+    rgba(0, 0, 0, 0.94)
+  );
 }
 
 /* ------------------------------------------------------------
@@ -675,5 +679,584 @@ body #digitRollNav {
   .rarity-absolute,
   .rarity-unknown {
     animation: none;
+  }
+}
+
+/* ============================================================
+   MID-WEIGHT SCENES: EPIC, LEGENDARY, MYTHIC, DIVINE
+   Played inside the roll card, anchored on the number.
+   ============================================================ */
+
+.drMid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ---------- EPIC: arcane rune circle ---------- */
+
+.drMid-epic .drRune {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: min(380px, 86%);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  animation: drRuneLife 2.3s ease-in-out both;
+}
+
+.drRune * {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.drRune {
+  filter: drop-shadow(0 0 8px var(--c));
+}
+
+.drRuneRing {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drDraw 0.9s ease-out 0.05s forwards;
+}
+
+.drRuneStar {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drDraw 0.9s ease-out 0.45s forwards;
+}
+.drRuneStar.d2 {
+  animation-delay: 0.65s;
+}
+
+.drRuneDash {
+  stroke-dasharray: 5 9;
+  opacity: 0.8;
+}
+
+.drRuneTicks line {
+  stroke-width: 1.5;
+  opacity: 0.8;
+}
+
+.drRuneGem {
+  fill: var(--c);
+  stroke: none;
+}
+
+.drRuneCore {
+  fill: var(--c);
+  stroke: none;
+  opacity: 0;
+  animation: drCoreFlash 0.8s ease-out 1.05s both;
+}
+
+.drRuneSpinA {
+  transform-origin: 0 0;
+  animation: drSpin 5s linear infinite;
+}
+.drRuneSpinB {
+  transform-origin: 0 0;
+  animation: drSpin 4s linear infinite reverse;
+}
+
+@keyframes drDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes drCoreFlash {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+@keyframes drRuneLife {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55) rotate(-25deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+.number.fx-epic {
+  animation: drEpicPulse 2.3s ease-in-out;
+}
+@keyframes drEpicPulse {
+  0%,
+  40% {
+    filter: brightness(1);
+  }
+  55% {
+    filter: brightness(1.7) saturate(1.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* ---------- LEGENDARY: sunburst, banner, light sweep ---------- */
+
+.drSun {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: 900px;
+  height: 900px;
+  margin: -450px 0 0 -450px;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 190, 60, 0.42) 0deg 5deg,
+    transparent 5deg 15deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 8%, transparent 62%);
+  mask-image: radial-gradient(circle, #000 8%, transparent 62%);
+  animation: drSunLife 2.8s ease-out both;
+}
+@keyframes drSunLife {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0);
+  }
+  25% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1) rotate(40deg);
+  }
+}
+
+.drBanner {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--nt) - 4px);
+  transform: translate(-50%, -50%) scaleX(0);
+  padding: 7px 46px;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    calc(100% - 18px) 50%,
+    100% 100%,
+    0 100%,
+    18px 50%
+  );
+  background: linear-gradient(180deg, #ffe08a, #e59a14 55%, #b86e05);
+  box-shadow: 0 6px 24px rgba(255, 170, 30, 0.5);
+  animation: drBannerLife 2.8s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+.drBanner span {
+  display: block;
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: 5px;
+  white-space: nowrap;
+  color: #4a2a00;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+@keyframes drBannerLife {
+  0% {
+    transform: translate(-50%, -50%) scaleX(0);
+    opacity: 1;
+  }
+  18% {
+    transform: translate(-50%, -50%) scaleX(1);
+  }
+  82% {
+    transform: translate(-50%, -50%) scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.drSweepBox {
+  position: absolute;
+  left: var(--nl);
+  top: var(--nt);
+  width: var(--nw);
+  height: var(--nh);
+  overflow: hidden;
+  border-radius: 22px;
+}
+.drSweep {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 22%;
+  left: -30%;
+  transform: skewX(-20deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 245, 200, 0.85),
+    transparent
+  );
+  animation:
+    drSweepGo 0.9s ease-in-out 0.7s both,
+    drSweepGo 0.9s ease-in-out 1.7s both;
+}
+@keyframes drSweepGo {
+  from {
+    left: -30%;
+  }
+  to {
+    left: 115%;
+  }
+}
+
+.number.fx-legendary {
+  animation: drGoldPulse 2.8s ease-in-out;
+}
+@keyframes drGoldPulse {
+  0%,
+  20% {
+    filter: brightness(1);
+  }
+  35% {
+    filter: brightness(1.5) sepia(0.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* ---------- MYTHIC: portal vortex, chromatic materialise ---------- */
+
+.drPortal {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: 560px;
+  height: 560px;
+  margin: -280px 0 0 -280px;
+  animation: drPortalLife 2.6s ease-in-out both;
+}
+.drPortal i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    var(--c),
+    transparent 25%,
+    #8b5cf6 50%,
+    transparent 75%,
+    var(--c)
+  );
+  -webkit-mask-image: radial-gradient(
+    circle,
+    transparent 32%,
+    #000 40%,
+    transparent 70%
+  );
+  mask-image: radial-gradient(
+    circle,
+    transparent 32%,
+    #000 40%,
+    transparent 70%
+  );
+  animation: drSpin 1.1s linear infinite;
+  filter: blur(1px);
+}
+.drPortal i:nth-child(2) {
+  inset: 12%;
+  animation-duration: 1.7s;
+  animation-direction: reverse;
+  opacity: 0.8;
+}
+.drPortal b {
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #000 35%,
+    rgba(60, 0, 80, 0.7) 70%,
+    transparent
+  );
+  box-shadow: 0 0 60px var(--c);
+}
+@keyframes drPortalLife {
+  0% {
+    opacity: 0;
+    transform: scale(0.1) rotate(-90deg);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.15) rotate(180deg);
+  }
+}
+
+.drRiftLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--cy);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--c),
+    #fff,
+    var(--c),
+    transparent
+  );
+  box-shadow: 0 0 20px var(--c);
+  transform: scaleX(0);
+  animation: drRift 0.7s ease-out 1.2s both;
+}
+@keyframes drRift {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  60% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+.number.fx-mythic {
+  animation: drChroma 2.6s ease-out;
+}
+@keyframes drChroma {
+  0% {
+    opacity: 0.35;
+    filter: blur(4px);
+    text-shadow:
+      -16px 0 #00e5ff,
+      16px 0 #ff2d6f;
+  }
+  50% {
+    opacity: 0.6;
+    filter: blur(3px);
+    text-shadow:
+      -14px 0 #00e5ff,
+      14px 0 #ff2d6f;
+  }
+  75% {
+    opacity: 1;
+    filter: blur(1px);
+    text-shadow:
+      -8px 0 #00e5ff,
+      8px 0 #ff2d6f;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    text-shadow:
+      -0px 0 #00e5ff,
+      0 0 #ff2d6f;
+  }
+}
+
+/* ---------- DIVINE: light beam, halo, ground ripple ---------- */
+
+.drBeam {
+  position: absolute;
+  left: var(--cx);
+  top: 0;
+  height: calc(var(--cy) + 40px);
+  width: 120px;
+  margin-left: -60px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(180, 250, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0.9)
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 35%,
+    #000 65%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 35%,
+    #000 65%,
+    transparent
+  );
+  transform-origin: top center;
+  animation: drBeamLife 3s ease-in-out both;
+}
+@keyframes drBeamLife {
+  0% {
+    opacity: 0;
+    transform: scaleY(0) scaleX(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: scaleY(1) scaleX(0.4);
+  }
+  45% {
+    transform: scaleY(1) scaleX(1.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1) scaleX(0.2);
+  }
+}
+
+.drHalo {
+  position: absolute;
+  left: var(--cx);
+  top: calc(var(--nt) - 8px);
+  width: 190px;
+  height: 46px;
+  margin-left: -95px;
+  border-radius: 50%;
+  border: 5px solid #e8ffff;
+  box-shadow:
+    0 0 18px var(--c),
+    0 0 40px var(--c),
+    inset 0 0 14px var(--c);
+  animation: drHaloLife 3s ease-out both;
+}
+@keyframes drHaloLife {
+  0% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-5px) scale(1);
+  }
+  55% {
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    transform: translateY(-5px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(1.1);
+  }
+}
+
+.drRipple {
+  position: absolute;
+  left: var(--cx);
+  top: calc(var(--nt) + var(--nh) - 6px);
+  width: 160px;
+  height: 36px;
+  margin-left: -80px;
+  border-radius: 50%;
+  border: 3px solid var(--c);
+  box-shadow: 0 0 14px var(--c);
+  opacity: 0;
+  animation: drRippleGo 1.2s ease-out 0.7s 2 both;
+}
+@keyframes drRippleGo {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(5.5, 4);
+  }
+}
+
+.drBloom {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: 520px;
+  height: 520px;
+  margin: -260px 0 0 -260px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9),
+    rgba(140, 240, 255, 0.35) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  animation: drBloomGo 1.4s ease-out 0.6s both;
+}
+@keyframes drBloomGo {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+.number.fx-divine {
+  animation: drDivineGlow 3s ease-in-out;
+}
+@keyframes drDivineGlow {
+  0%,
+  15% {
+    filter: brightness(1);
+  }
+  35% {
+    filter: brightness(2) saturate(0.6);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drMid {
+    display: none;
   }
 }

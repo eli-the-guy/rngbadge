@@ -504,7 +504,8 @@
 
   /* ---------- simple effect: every tier below TRANSCENDENT ---------- */
 
-  function simpleEffect(rarity, tier) {
+  function simpleEffect(rarity, tier, opts) {
+    opts = opts || {};
     return new Promise((resolve) => {
       const num = document.getElementById("number");
       if (!num) return resolve();
@@ -520,7 +521,7 @@
       num.classList.add("fx-pop");
 
       const count = tier < 4 ? 0 : Math.min(70, (tier - 3) * 10);
-      if (count && !reduced()) sparkBurst(num, color, count);
+      if (count && !reduced() && !opts.noSparks) sparkBurst(num, color, count);
 
       setTimeout(
         () => {
@@ -529,6 +530,104 @@
         },
         tier >= 7 ? 1300 : 650,
       );
+    });
+  }
+
+  /* ---------- mid-weight scenes: EPIC, LEGENDARY, MYTHIC, DIVINE ----------
+     Each one plays inside the roll card (never full screen) and uses
+     shapes, light and motion rather than just particles. */
+
+  const FIRST_MID = 6; // EPIC
+
+  const MID_DURATION = {
+    epic: 2300,
+    legendary: 2800,
+    mythic: 2600,
+    divine: 3000,
+  };
+
+  function runeSVG() {
+    let ticks = "";
+    for (let i = 0; i < 36; i++) {
+      const long = i % 3 === 0;
+      ticks += `<line x1="0" y1="${-(long ? 188 : 192)}" x2="0" y2="-200" transform="rotate(${i * 10})"/>`;
+    }
+    const tri = (r, flip) => {
+      const pts = [0, 1, 2].map((k) => {
+        const a = ((flip ? 60 : 0) + k * 120 - 90) * (Math.PI / 180);
+        return (
+          (Math.cos(a) * r).toFixed(1) + "," + (Math.sin(a) * r).toFixed(1)
+        );
+      });
+      return pts.join(" ");
+    };
+    let gems = "";
+    for (let i = 0; i < 8; i++) {
+      gems += `<path d="M0,-176 l6,8 l-6,8 l-6,-8z" transform="rotate(${i * 45})" class="drRuneGem"/>`;
+    }
+    return `<svg class="drRune" viewBox="-210 -210 420 420" aria-hidden="true">
+      <g class="drRuneSpinA">
+        <circle class="drRuneRing" r="180" pathLength="1"/>
+        <g class="drRuneTicks">${ticks}</g>
+        ${gems}
+      </g>
+      <g class="drRuneSpinB">
+        <circle class="drRuneDash" r="150"/>
+        <polygon class="drRuneStar" points="${tri(140, false)}" pathLength="1"/>
+        <polygon class="drRuneStar d2" points="${tri(140, true)}" pathLength="1"/>
+      </g>
+      <circle class="drRuneCore" r="60"/>
+    </svg>`;
+  }
+
+  const MID_HTML = {
+    epic: runeSVG,
+    legendary: () =>
+      '<div class="drSun"></div>' +
+      '<div class="drBanner"><span>★ LEGENDARY ★</span></div>' +
+      '<div class="drSweepBox"><div class="drSweep"></div></div>',
+    mythic: () =>
+      '<div class="drPortal"><i></i><i></i><b></b></div><div class="drRiftLine"></div>',
+    divine: () =>
+      '<div class="drBeam"></div><div class="drHalo"></div><div class="drRipple"></div><div class="drBloom"></div>',
+  };
+
+  function midEffect(rarity, tier) {
+    return new Promise((resolve) => {
+      const num = document.getElementById("number");
+      const card = num && num.closest(".rollCard");
+      const kind = fxName(rarity);
+
+      if (!num || !card || reduced() || !MID_HTML[kind]) {
+        simpleEffect(rarity, tier).then(resolve);
+        return;
+      }
+
+      document.querySelectorAll(".drMid").forEach((e) => e.remove());
+
+      const cr = card.getBoundingClientRect();
+      const nr = num.getBoundingClientRect();
+
+      const stage = document.createElement("div");
+      stage.className = "drMid drMid-" + kind;
+      stage.style.setProperty("--c", FX_COLORS[rarity] || "#fff");
+      stage.style.setProperty("--cx", nr.left - cr.left + nr.width / 2 + "px");
+      stage.style.setProperty("--cy", nr.top - cr.top + nr.height / 2 + "px");
+      stage.style.setProperty("--nw", nr.width + "px");
+      stage.style.setProperty("--nh", nr.height + "px");
+      stage.style.setProperty("--nl", nr.left - cr.left + "px");
+      stage.style.setProperty("--nt", nr.top - cr.top + "px");
+      stage.innerHTML = MID_HTML[kind]();
+      card.appendChild(stage);
+
+      num.classList.add("fx-" + kind);
+      simpleEffect(rarity, tier, { noSparks: true });
+
+      setTimeout(() => {
+        stage.remove();
+        num.classList.remove("fx-" + kind);
+        resolve();
+      }, MID_DURATION[kind]);
     });
   }
 
@@ -1152,8 +1251,9 @@
     const mode = opts.force ? "full" : fxMode();
 
     if (mode === "off") return Promise.resolve();
-    if (mode === "simple" || tier < FIRST_CINEMATIC)
+    if (mode === "simple" || tier < FIRST_MID)
       return simpleEffect(rarity, tier);
+    if (tier < FIRST_CINEMATIC) return midEffect(rarity, tier);
     return cinematic(rarity, tier, opts);
   };
 
