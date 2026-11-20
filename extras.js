@@ -1401,6 +1401,8 @@ create policy "admins delete rolls" on public.rolls
     return true;
   }
 
+  G.drIsAdmin = () => A.isAdmin || isDev();
+
   function refreshNav() {
     if (!ensureNavButtons()) return;
     const b = document.getElementById("drAdminButton");

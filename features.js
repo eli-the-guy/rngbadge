@@ -536,7 +536,12 @@
       ["daily", "🎯 Daily"],
       ["stats", "📈 Stats"],
       ["prestige", "★ Prestige"],
-    ].concat(extraTabs.map((t) => [t.key, t.label]));
+    ].concat(
+      extraTabs
+        .filter((t) => !t.visible || t.visible())
+        .map((t) => [t.key, t.label]),
+    );
+    if (!tabs.some((t) => t[0] === tab)) tab = "daily";
     $id("pgTabs").innerHTML = tabs
       .map(
         ([k, l]) =>
@@ -688,8 +693,14 @@
 
   /* ---------- extension API for other scripts ---------- */
   G.drProgress = {
-    addTab: (key, label, renderFn, bindFn) =>
-      extraTabs.push({ key, label, render: renderFn, bind: bindFn }),
+    addTab: (key, label, renderFn, bindFn, visibleFn) =>
+      extraTabs.push({
+        key,
+        label,
+        render: renderFn,
+        bind: bindFn,
+        visible: visibleFn,
+      }),
     onRoll: (fn) => rollHooks.push(fn),
     rerender: () => render(),
     isOpen: () => open,
