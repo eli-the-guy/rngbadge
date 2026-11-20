@@ -14,7 +14,20 @@
 
   const $id = (id) => document.getElementById(id);
   const n = (v) => Number(v || 0).toLocaleString();
-  const esc = (s) => (typeof escapeHTML === "function" ? escapeHTML(String(s)) : String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]));
+  const esc = (s) =>
+    typeof escapeHTML === "function"
+      ? escapeHTML(String(s))
+      : String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const sfx = (a, b) => typeof G.drSfx === "function" && G.drSfx(a, b);
 
@@ -30,20 +43,48 @@
       localStorage.setItem(key, JSON.stringify(v));
     } catch (e) {}
   };
-  const pushProfile = () => typeof G.drPushProfile === "function" && G.drPushProfile();
+  const pushProfile = () =>
+    typeof G.drPushProfile === "function" && G.drPushProfile();
 
   /* ==========================================================
      TIMED EVENTS (every weekend, rotating)
      ========================================================== */
 
   const EVENTS = [
-    { id: "xp2", name: "⚡ Double XP Weekend", desc: "All XP from rolls is doubled.", xp: 2 },
-    { id: "sale", name: "🏷️ Charm Sale", desc: "Number charms and lucky charms are 50% off.", charm: 0.5 },
-    { id: "luck", name: "🍀 Lucky Weekend", desc: "Every roll gets +1 guaranteed badge.", luck: 1 },
-    { id: "rush", name: "🎯 Daily Rush", desc: "Daily challenge XP rewards are doubled.", daily: 2 },
+    {
+      id: "xp2",
+      name: "⚡ Double XP Weekend",
+      desc: "All XP from rolls is doubled.",
+      xp: 2,
+    },
+    {
+      id: "sale",
+      name: "🏷️ Charm Sale",
+      desc: "Number charms and lucky charms are 50% off.",
+      charm: 0.5,
+    },
+    {
+      id: "luck",
+      name: "🍀 Lucky Weekend",
+      desc: "Every roll gets +1 guaranteed badge.",
+      luck: 1,
+    },
+    {
+      id: "rush",
+      name: "🎯 Daily Rush",
+      desc: "Daily challenge XP rewards are doubled.",
+      daily: 2,
+    },
   ];
 
-  const weekIndex = (d) => Math.floor((Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) + 3) / 7);
+  const weekIndex = (d) =>
+    Math.floor(
+      (Math.floor(
+        Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000,
+      ) +
+        3) /
+        7,
+    );
 
   function startOfNextWeekend(from) {
     const d = new Date(from);
@@ -69,7 +110,11 @@
     }
     const now = new Date();
     const dow = now.getDay();
-    if (dow === 6 || dow === 0) return { ev: EVENTS[weekIndex(now) % EVENTS.length], ends: nextMonday(now) };
+    if (dow === 6 || dow === 0)
+      return {
+        ev: EVENTS[weekIndex(now) % EVENTS.length],
+        ends: nextMonday(now),
+      };
     return null;
   }
   function nextEvent() {
@@ -126,7 +171,10 @@
   function renderEvents() {
     const cur = currentEvent();
     const nx = nextEvent();
-    const list = EVENTS.map((e) => `<div class="pgCard ${cur && cur.ev.id === e.id ? "done" : ""}"><h3>${e.name}</h3><p>${e.desc}</p></div>`).join("");
+    const list = EVENTS.map(
+      (e) =>
+        `<div class="pgCard ${cur && cur.ev.id === e.id ? "done" : ""}"><h3>${e.name}</h3><p>${e.desc}</p></div>`,
+    ).join("");
     return `<div class="pgBanner">${
       cur
         ? `Active now: <b>${cur.ev.name}</b><br><span class="pgSub">${cur.ev.desc}${cur.ends ? " Ends in " + dur(cur.ends - Date.now()) + "." : ""}</span>`
@@ -168,7 +216,11 @@
       { id: "aura", name: "Aura", cost: 6000 },
     ],
   };
-  const KIND_LABEL = { theme: "🖼️ Roll Box Themes", font: "🔤 Digit Fonts", fx: "✨ Name Effects" };
+  const KIND_LABEL = {
+    theme: "🖼️ Roll Box Themes",
+    font: "🔤 Digit Fonts",
+    fx: "✨ Name Effects",
+  };
 
   function injectCosCSS() {
     if ($id("cosCSS")) return;
@@ -186,21 +238,21 @@
       body.drFont-round .number{font-family:"Trebuchet MS","Arial Rounded MT Bold",sans-serif!important}
       body.drFont-impact .number{font-family:Impact,"Arial Black",sans-serif!important;letter-spacing:.06em}
       body.drFont-script .number{font-family:"Brush Script MT","Segoe Script",cursive!important}
-      .drFx{display:inline-block}
-      .drFx-glow{text-shadow:0 0 8px currentColor,0 0 18px currentColor}
-      .drFx-pulse{animation:drFxPulse 1.6s ease-in-out infinite}
-      @keyframes drFxPulse{0%,100%{text-shadow:0 0 2px currentColor}50%{text-shadow:0 0 14px currentColor,0 0 26px currentColor}}
-      .drFx-sparkle{position:relative}
-      .drFx-sparkle::after{content:"✦";position:absolute;right:-.9em;top:-.3em;font-size:.8em;color:#fde68a;animation:drFxSpark 1.4s ease-in-out infinite}
-      @keyframes drFxSpark{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(90deg)}}
-      .drFx-glitch{animation:drFxGlitch 2.4s steps(1) infinite}
-      @keyframes drFxGlitch{0%,90%,100%{text-shadow:none}92%{text-shadow:2px 0 #f0f,-2px 0 #0ff}95%{text-shadow:-2px 1px #f0f,2px -1px #0ff}}
-      .drFx-aura{text-shadow:0 0 6px currentColor,0 0 14px currentColor,0 0 30px currentColor;animation:drFxAura 3s ease-in-out infinite}
-      @keyframes drFxAura{50%{text-shadow:0 0 10px currentColor,0 0 24px currentColor,0 0 46px currentColor}}
+      .drNm{display:inline-block}
+      .drNm-glow{text-shadow:0 0 8px currentColor,0 0 18px currentColor}
+      .drNm-pulse{animation:drNmPulse 1.6s ease-in-out infinite}
+      @keyframes drNmPulse{0%,100%{text-shadow:0 0 2px currentColor}50%{text-shadow:0 0 14px currentColor,0 0 26px currentColor}}
+      .drNm-sparkle{position:relative}
+      .drNm-sparkle::after{content:"✦";position:absolute;right:-.9em;top:-.3em;font-size:.8em;color:#fde68a;animation:drNmSpark 1.4s ease-in-out infinite}
+      @keyframes drNmSpark{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(90deg)}}
+      .drNm-glitch{animation:drNmGlitch 2.4s steps(1) infinite}
+      @keyframes drNmGlitch{0%,90%,100%{text-shadow:none}92%{text-shadow:2px 0 #f0f,-2px 0 #0ff}95%{text-shadow:-2px 1px #f0f,2px -1px #0ff}}
+      .drNm-aura{text-shadow:0 0 6px currentColor,0 0 14px currentColor,0 0 30px currentColor;animation:drNmAura 3s ease-in-out infinite}
+      @keyframes drNmAura{50%{text-shadow:0 0 10px currentColor,0 0 24px currentColor,0 0 46px currentColor}}
       .pgSw{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
       .pgSw .pgBtn{margin:0;flex:1;min-width:100px}
       .pgBtn.on{background:rgba(122,162,255,.3);outline:1px solid rgba(122,162,255,.7)}
-      @media (prefers-reduced-motion:reduce){.drFx{animation:none!important}.drFx-sparkle::after{animation:none;opacity:1}}
+      @media (prefers-reduced-motion:reduce){.drNm{animation:none!important}.drNm-sparkle::after{animation:none;opacity:1}}
     `;
     document.head.appendChild(st);
   }
@@ -208,7 +260,9 @@
   function applyCosmetics() {
     injectCosCSS();
     const cl = document.body.classList;
-    [...cl].filter((c) => /^dr(Theme|Font)-/.test(c)).forEach((c) => cl.remove(c));
+    [...cl]
+      .filter((c) => /^dr(Theme|Font)-/.test(c))
+      .forEach((c) => cl.remove(c));
     if (cos.eq.theme) cl.add("drTheme-" + cos.eq.theme);
     if (cos.eq.font) cl.add("drFont-" + cos.eq.font);
   }
@@ -243,11 +297,16 @@
           const btn = owned
             ? `<button class="pgBtn ${eq ? "on" : ""}" data-eq="${kind}:${it.id}">${eq ? "✓ Equipped" : "Equip"}</button>`
             : `<button class="pgBtn" data-buy="${kind}:${it.id}" ${bal >= it.cost ? "" : "disabled"}>${bal >= it.cost ? "Buy" : bal < it.cost && cap < it.cost ? "Raise your XP cap first" : "Not enough XP"}</button>`;
-          const demo = kind === "fx" ? `<p>Preview: <span class="drFx drFx-${it.id}" style="color:#a855f7;font-weight:900">PlayerName</span></p>` : "";
+          const demo =
+            kind === "fx"
+              ? `<p>Preview: <span class="drNm drNm-${it.id}" style="color:#a855f7;font-weight:900">PlayerName</span></p>`
+              : "";
           return `<div class="pgCard ${eq ? "done" : ""}"><h3>${it.name}</h3>${demo}<p>${owned ? "Owned" : "Cost: <b>" + n(it.cost) + " XP</b>"}</p>${btn}</div>`;
         })
         .join("");
-      const none = cos.eq[kind] ? `<button class="pgBtn" data-eq="${kind}:" style="max-width:220px">Remove ${kind === "fx" ? "effect" : kind === "font" ? "font" : "theme"}</button>` : "";
+      const none = cos.eq[kind]
+        ? `<button class="pgBtn" data-eq="${kind}:" style="max-width:220px">Remove ${kind === "fx" ? "effect" : kind === "font" ? "font" : "theme"}</button>`
+        : "";
       html += `<div class="pgH">${KIND_LABEL[kind]}</div><div class="pgGrid">${cards}</div>${none}`;
     });
     return html;
@@ -292,7 +351,11 @@
   const ACH_KEY = "digitRollAch";
   const ach = load(ACH_KEY, { done: {}, title: "", milestones: {} });
 
-  const maxTier = (s) => Object.keys(s.rarity || {}).reduce((m, k) => (s.rarity[k] > 0 ? Math.max(m, P.tierOf(k)) : m), 0);
+  const maxTier = (s) =>
+    Object.keys(s.rarity || {}).reduce(
+      (m, k) => (s.rarity[k] > 0 ? Math.max(m, P.tierOf(k)) : m),
+      0,
+    );
   const ctx = () => {
     const s = P.stats();
     return {
@@ -302,8 +365,14 @@
       tier: maxTier(s),
       rb: G.__drShop ? G.__drShop.S.rebirths : 0,
       sh: G.__drShop ? G.__drShop.S : {},
-      unl: typeof getUnlockedBadgeNames === "function" ? getUnlockedBadgeNames().size : 0,
-      cat: typeof staticBadgeCatalog !== "undefined" ? Object.keys(staticBadgeCatalog).length : 0,
+      unl:
+        typeof getUnlockedBadgeNames === "function"
+          ? getUnlockedBadgeNames().size
+          : 0,
+      cat:
+        typeof staticBadgeCatalog !== "undefined"
+          ? Object.keys(staticBadgeCatalog).length
+          : 0,
       streak: Math.max(P.currentStreak(), P.daily().streak || 0),
     };
   };
@@ -313,24 +382,66 @@
     ["veteran", "Veteran", "Roll 1,000 times", (c) => c.rolls >= 1000, 1],
     ["grinder", "Grinder", "Roll 10,000 times", (c) => c.rolls >= 10000, 2],
     ["rich", "Rich", "Earn 100,000 XP in total", (c) => c.xp >= 100000, 1],
-    ["tycoon", "Tycoon", "Earn 1,000,000 XP in total", (c) => c.xp >= 1000000, 2],
+    [
+      "tycoon",
+      "Tycoon",
+      "Earn 1,000,000 XP in total",
+      (c) => c.xp >= 1000000,
+      2,
+    ],
     ["epic", "Epic Finder", "Roll an Epic", (c) => c.tier >= 6, 0],
     ["legend", "Legend", "Roll a Legendary", (c) => c.tier >= 7, 0],
     ["myth", "Mythbreaker", "Roll a Mythic", (c) => c.tier >= 8, 1],
     ["divine", "Blessed", "Roll a Divine", (c) => c.tier >= 9, 2],
     ["trans", "Transcendent", "Roll a Transcendent", (c) => c.tier >= 10, 3],
-    ["beyond", "Beyond Reason", "Roll an Ascended or higher", (c) => c.tier >= 12, 3],
+    [
+      "beyond",
+      "Beyond Reason",
+      "Roll an Ascended or higher",
+      (c) => c.tier >= 12,
+      3,
+    ],
     ["absolute", "The Absolute", "Roll an Absolute", (c) => c.tier >= 16, 5],
     ["reborn", "Reborn", "Do 1 true rebirth", (c) => c.rb >= 1, 0],
     ["phoenix", "Phoenix", "Do 3 true rebirths", (c) => c.rb >= 3, 2],
     ["rainbow", "Rainbow Soul", "Do 8 true rebirths", (c) => c.rb >= 8, 5],
     ["collector", "Collector", "Unlock 25 badges", (c) => c.unl >= 25, 0],
     ["hoarder", "Hoarder", "Unlock 100 badges", (c) => c.unl >= 100, 1],
-    ["complete", "Completionist", "Unlock every badge", (c) => c.cat > 0 && c.unl >= c.cat, 5],
-    ["streak3", "Dedicated", "Reach a 3-day daily streak", (c) => c.streak >= 3, 0],
-    ["streak7", "Devoted", "Reach a 7-day daily streak", (c) => c.streak >= 7, 2],
-    ["streak30", "Unstoppable", "Reach a 30-day daily streak", (c) => c.streak >= 30, 5],
-    ["multi", "Multiplier", "Own XP Charm VIII (×10)", (c) => c.sh.xpCharm >= 8, 1],
+    [
+      "complete",
+      "Completionist",
+      "Unlock every badge",
+      (c) => c.cat > 0 && c.unl >= c.cat,
+      5,
+    ],
+    [
+      "streak3",
+      "Dedicated",
+      "Reach a 3-day daily streak",
+      (c) => c.streak >= 3,
+      0,
+    ],
+    [
+      "streak7",
+      "Devoted",
+      "Reach a 7-day daily streak",
+      (c) => c.streak >= 7,
+      2,
+    ],
+    [
+      "streak30",
+      "Unstoppable",
+      "Reach a 30-day daily streak",
+      (c) => c.streak >= 30,
+      5,
+    ],
+    [
+      "multi",
+      "Multiplier",
+      "Own XP Charm VIII (×10)",
+      (c) => c.sh.xpCharm >= 8,
+      1,
+    ],
     ["gloves", "Lucky One", "Own Lucky Gloves V", (c) => c.sh.gloves >= 5, 1],
     ["stylist", "Stylist", "Own 3 cosmetics", () => ownedCount() >= 3, 0],
   ];
@@ -341,8 +452,13 @@
     { pct: 75, pts: 3, boost: 0.05 },
     { pct: 100, pts: 5, boost: 0.1 },
   ];
-  G.drMilestoneBoost = () => 1 + MILESTONES.reduce((s, m) => s + (ach.milestones[m.pct] ? m.boost : 0), 0);
-  G.drGetTitle = () => (ach.title && ach.done[ach.title] ? ACHS.find((a) => a[0] === ach.title)[1] : "");
+  G.drMilestoneBoost = () =>
+    1 +
+    MILESTONES.reduce((s, m) => s + (ach.milestones[m.pct] ? m.boost : 0), 0);
+  G.drGetTitle = () =>
+    ach.title && ach.done[ach.title]
+      ? ACHS.find((a) => a[0] === ach.title)[1]
+      : "";
 
   let checking = false;
   function checkAll() {
@@ -361,7 +477,9 @@
         ach.done[id] = Date.now();
         changed = true;
         if (pts) P.addPoints(pts);
-        say(`🏆 Achievement: ${title}${pts ? " (+" + pts + " ★)" : ""} — title unlocked!`);
+        say(
+          `🏆 Achievement: ${title}${pts ? " (+" + pts + " ★)" : ""} — title unlocked!`,
+        );
         sfx("newbadge");
       });
       const pct = c.cat ? (c.unl / c.cat) * 100 : 0;
@@ -370,7 +488,9 @@
         ach.milestones[m.pct] = Date.now();
         changed = true;
         P.addPoints(m.pts);
-        say(`🏅 Badge collection ${m.pct}%! +${m.pts} ★ and +${Math.round(m.boost * 100)}% XP forever.`);
+        say(
+          `🏅 Badge collection ${m.pct}%! +${m.pts} ★ and +${Math.round(m.boost * 100)}% XP forever.`,
+        );
         sfx("rebirth");
       });
       if (changed) {
@@ -398,7 +518,9 @@
       const done = !!ach.done[id];
       const eq = ach.title === id;
       return `<div class="pgCard ${done ? "done" : ""}"><h3>${done ? "🏆" : "🔒"} ${esc(title)}</h3><p>${esc(desc)}${pts ? ` • +${pts} ★` : ""}</p>${
-        done ? `<button class="pgBtn ${eq ? "on" : ""}" data-title="${id}">${eq ? "✓ Title equipped" : "Equip title"}</button>` : ""
+        done
+          ? `<button class="pgBtn ${eq ? "on" : ""}" data-title="${id}">${eq ? "✓ Title equipped" : "Equip title"}</button>`
+          : ""
       }</div>`;
     }).join("");
     return `<div class="pgBanner">Badge collection: <b>${n(c.unl)} / ${n(c.cat)}</b> (${pct.toFixed(1)}%) • Achievements: <b>${Object.keys(ach.done).length} / ${ACHS.length}</b><br>
@@ -435,12 +557,30 @@
 
   function seedLog() {
     if (log.length || !Array.isArray(history)) return;
-    log = history.map((r) => ({ r: r.roll, o: r.oneIn, k: r.rarity, x: r.xp, t: r.time || Date.now(), b: (r.badges || []).map((b) => (typeof b === "string" ? b : b.name)).slice(0, 8) }));
+    log = history.map((r) => ({
+      r: r.roll,
+      o: r.oneIn,
+      k: r.rarity,
+      x: r.xp,
+      t: r.time || Date.now(),
+      b: (r.badges || [])
+        .map((b) => (typeof b === "string" ? b : b.name))
+        .slice(0, 8),
+    }));
   }
   seedLog();
 
   P.onRoll((r) => {
-    log.unshift({ r: r.roll, o: r.oneIn, k: r.rarity, x: r.xp, t: r.time || Date.now(), b: (r.badges || []).map((b) => (typeof b === "string" ? b : b.name)).slice(0, 8) });
+    log.unshift({
+      r: r.roll,
+      o: r.oneIn,
+      k: r.rarity,
+      x: r.xp,
+      t: r.time || Date.now(),
+      b: (r.badges || [])
+        .map((b) => (typeof b === "string" ? b : b.name))
+        .slice(0, 8),
+    });
     if (log.length > 500) log.length = 500;
     save(LOG_KEY, log);
   });
@@ -454,13 +594,20 @@
     const pages = Math.max(1, Math.ceil(rows.length / PAGE));
     logState.page = Math.min(logState.page, pages - 1);
     const slice = rows.slice(logState.page * PAGE, logState.page * PAGE + PAGE);
-    const opts = ["All rarities"].concat(P.TIERS.slice(3, 17).map((t) => t + "+"));
+    const opts = ["All rarities"].concat(
+      P.TIERS.slice(3, 17).map((t) => t + "+"),
+    );
     const sel = `<select id="pgLogMin" style="padding:9px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff">${opts
-      .map((o, i) => `<option value="${i === 0 ? 0 : i + 2}" ${logState.min === (i === 0 ? 0 : i + 2) ? "selected" : ""}>${o}</option>`)
+      .map(
+        (o, i) =>
+          `<option value="${i === 0 ? 0 : i + 2}" ${logState.min === (i === 0 ? 0 : i + 2) ? "selected" : ""}>${o}</option>`,
+      )
       .join("")}</select>`;
     const list = slice
       .map(
-        (e) => `<div class="pgCard" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px">
+        (
+          e,
+        ) => `<div class="pgCard" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px">
           <div><b style="font-size:20px;letter-spacing:.06em">${esc(e.r)}</b> <span class="rarity ${typeof rarityClass === "function" ? rarityClass(e.k) : ""}">${esc(e.k)}</span>
           <div class="pgSub">1 in ${n(e.o)} • +${n(e.x)} XP • ${new Date(e.t).toLocaleString()}${e.b && e.b.length ? " • 🏅 " + e.b.map(esc).join(", ") : ""}</div></div>
           <button class="pgBtn" style="margin:0;width:auto;padding:9px 14px" data-share="${log.indexOf(e)}">📤 Share</button></div>`,
