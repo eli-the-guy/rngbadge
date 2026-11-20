@@ -721,16 +721,40 @@ function saveShopState() {
   localStorage.setItem("digitRollXPSpent", String(xpSpent));
 }
 
-function getUnlockedBadgeNames() {
-  const unlocked = new Set();
-  history.forEach((row) => {
+/* Unlocked badges are stored permanently, separate from the 30-roll
+   history, so they never disappear when old rolls fall off the board. */
+const UNLOCKED_KEY = "digitRollUnlockedBadges";
+
+function readStoredUnlocked() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(UNLOCKED_KEY));
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function rememberBadges(rows) {
+  const unlocked = new Set(readStoredUnlocked());
+  const before = unlocked.size;
+  (rows || []).forEach((row) => {
     if (Array.isArray(row.badges)) {
       row.badges.forEach((b) =>
         unlocked.add(typeof b === "string" ? b : b.name),
       );
     }
   });
+  if (unlocked.size !== before) {
+    try {
+      localStorage.setItem(UNLOCKED_KEY, JSON.stringify([...unlocked]));
+    } catch (e) {}
+  }
   return unlocked;
+}
+
+function getUnlockedBadgeNames() {
+  /* stored set + anything still in history (also migrates old saves) */
+  return rememberBadges(history);
 }
 
 function applyGuaranteedBadges(result) {
@@ -3204,7 +3228,9 @@ async function performRoll() {
   $("xp").textContent =
     "+" +
     analysis.xp +
-    (analysis.xpMult > 1 ? " (×" + analysis.xpMult + ")" : "");
+    (analysis.xpMult > 1
+      ? " (" + analysis.baseXp + " × " + analysis.xpMult + ")"
+      : "");
 
   updateShopUI();
 
@@ -3253,6 +3279,7 @@ async function performRoll() {
      ========================================================== */
 
   history.unshift(result);
+  rememberBadges([result]);
 
   history = history.slice(0, 30);
 
