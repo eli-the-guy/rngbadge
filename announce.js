@@ -16,7 +16,18 @@
   const $id = (id) => document.getElementById(id);
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const sfx = (a, b) => typeof G.drSfx === "function" && G.drSfx(a, b);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
   const isAdmin = () => typeof G.drIsAdmin === "function" && G.drIsAdmin();
 
   /* ==========================================================
@@ -24,20 +35,91 @@
      ========================================================== */
 
   const OPT = {
-    anim: [["slide", "Slide in"], ["bounce", "Bounce"], ["zoom", "Zoom"], ["fade", "Fade"], ["typewriter", "Typewriter"], ["shake", "Shake"], ["glitch", "Glitch"], ["flip", "Flip"]],
-    bg: [["dark", "Midnight"], ["aurora", "Aurora"], ["sunset", "Sunset"], ["ocean", "Ocean"], ["lava", "Lava"], ["gold", "Gold"], ["mint", "Mint"], ["glass", "Glass"]],
-    font: [["sans", "Clean"], ["serif", "Serif"], ["mono", "Typewriter"], ["impact", "Heavy"], ["script", "Script"]],
-    size: [["s", "Small"], ["m", "Medium"], ["l", "Large"], ["xl", "Huge"]],
-    pos: [["top", "Top banner"], ["center", "Center of screen"], ["bottom", "Bottom banner"]],
-    icon: [["📢", "📢"], ["🎉", "🎉"], ["⚠️", "⚠️"], ["🔥", "🔥"], ["⭐", "⭐"], ["🚀", "🚀"], ["🎁", "🎁"], ["🛠️", "🛠️"], ["", "None"]],
-    sound: [["none", "None"], ["chime", "Chime"], ["fanfare", "Fanfare"], ["alert", "Alert"]],
-    particles: [["none", "None"], ["confetti", "Confetti"], ["stars", "Stars"], ["embers", "Embers"], ["hearts", "Hearts"]],
+    anim: [
+      ["slide", "Slide in"],
+      ["bounce", "Bounce"],
+      ["zoom", "Zoom"],
+      ["fade", "Fade"],
+      ["typewriter", "Typewriter"],
+      ["shake", "Shake"],
+      ["glitch", "Glitch"],
+      ["flip", "Flip"],
+    ],
+    bg: [
+      ["dark", "Midnight"],
+      ["aurora", "Aurora"],
+      ["sunset", "Sunset"],
+      ["ocean", "Ocean"],
+      ["lava", "Lava"],
+      ["gold", "Gold"],
+      ["mint", "Mint"],
+      ["glass", "Glass"],
+    ],
+    font: [
+      ["sans", "Clean"],
+      ["serif", "Serif"],
+      ["mono", "Typewriter"],
+      ["impact", "Heavy"],
+      ["script", "Script"],
+    ],
+    size: [
+      ["s", "Small"],
+      ["m", "Medium"],
+      ["l", "Large"],
+      ["xl", "Huge"],
+    ],
+    pos: [
+      ["top", "Top banner"],
+      ["center", "Center of screen"],
+      ["bottom", "Bottom banner"],
+    ],
+    icon: [
+      ["📢", "📢"],
+      ["🎉", "🎉"],
+      ["⚠️", "⚠️"],
+      ["🔥", "🔥"],
+      ["⭐", "⭐"],
+      ["🚀", "🚀"],
+      ["🎁", "🎁"],
+      ["🛠️", "🛠️"],
+      ["", "None"],
+    ],
+    sound: [
+      ["none", "None"],
+      ["chime", "Chime"],
+      ["fanfare", "Fanfare"],
+      ["alert", "Alert"],
+    ],
+    particles: [
+      ["none", "None"],
+      ["confetti", "Confetti"],
+      ["stars", "Stars"],
+      ["embers", "Embers"],
+      ["hearts", "Hearts"],
+    ],
   };
   const ok = (key, v) => OPT[key].some((o) => o[0] === v);
-  const DEFAULT_FX = { anim: "slide", bg: "dark", font: "sans", size: "m", pos: "top", icon: "📢", sound: "chime", particles: "none", color: "#ffffff", glow: true, rainbow: false, secs: 10 };
+  const DEFAULT_FX = {
+    anim: "slide",
+    bg: "dark",
+    font: "sans",
+    size: "m",
+    pos: "top",
+    icon: "📢",
+    sound: "chime",
+    particles: "none",
+    color: "#ffffff",
+    glow: true,
+    rainbow: false,
+    secs: 10,
+  };
 
   function clean(raw) {
-    const s = Object.assign({}, DEFAULT_FX, raw && typeof raw === "object" ? raw : {});
+    const s = Object.assign(
+      {},
+      DEFAULT_FX,
+      raw && typeof raw === "object" ? raw : {},
+    );
     Object.keys(OPT).forEach((k) => {
       if (!ok(k, s[k])) s[k] = DEFAULT_FX[k];
     });
@@ -71,7 +153,12 @@
      DISPLAY (what every player sees)
      ========================================================== */
 
-  const PARTICLE_CHARS = { confetti: ["🎊", "🎉", "✨", "🟡", "🟣", "🔵"], stars: ["⭐", "✨", "🌟", "💫"], embers: ["🔥", "✨", "🧡"], hearts: ["💖", "💜", "💙", "💗"] };
+  const PARTICLE_CHARS = {
+    confetti: ["🎊", "🎉", "✨", "🟡", "🟣", "🔵"],
+    stars: ["⭐", "✨", "🌟", "💫"],
+    embers: ["🔥", "✨", "🧡"],
+    hearts: ["💖", "💜", "💙", "💗"],
+  };
 
   function injectCSS() {
     if ($id("drAnnCSS")) return;
@@ -186,7 +273,9 @@
     const h = host();
     const wrap = document.createElement("div");
     wrap.className = `drAnn pos-${s.pos} annIn-${s.anim}`;
-    const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced =
+      window.matchMedia &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
     wrap.innerHTML = `<div class="drAnnBox annBg-${s.bg} annFont-${s.font} annSz-${s.size} ${s.glow ? "annGlow" : ""} ${s.rainbow ? "annRainbow" : ""}" style="color:${s.color}" role="alert">
         ${s.icon ? `<span class="drAnnIcon"></span>` : ""}<span class="drAnnText"></span>
         <button class="drAnnX" type="button" aria-label="Dismiss">×</button>
@@ -200,14 +289,17 @@
     if (s.anim === "typewriter" && !reduced) {
       let i = 0;
       textEl.classList.add("annTyping");
-      typer = setInterval(() => {
-        i++;
-        textEl.textContent = full.slice(0, i);
-        if (i >= full.length) {
-          clearInterval(typer);
-          textEl.classList.remove("annTyping");
-        }
-      }, Math.max(15, Math.min(60, 1800 / full.length)));
+      typer = setInterval(
+        () => {
+          i++;
+          textEl.textContent = full.slice(0, i);
+          if (i >= full.length) {
+            clearInterval(typer);
+            textEl.classList.remove("annTyping");
+          }
+        },
+        Math.max(15, Math.min(60, 1800 / full.length)),
+      );
     } else textEl.textContent = full;
 
     playSound(s.sound);
@@ -282,9 +374,14 @@
   async function poll(firstLoad) {
     if (tableMissing || typeof supabaseClient === "undefined") return;
     try {
-      const { data, error } = await supabaseClient.from("announcements").select("id,message,style,created_at").order("created_at", { ascending: false }).limit(1);
+      const { data, error } = await supabaseClient
+        .from("announcements")
+        .select("id,message,style,created_at")
+        .order("created_at", { ascending: false })
+        .limit(1);
       if (error) {
-        if (/does not exist|relation|schema cache/i.test(error.message || "")) tableMissing = true;
+        if (/does not exist|relation|schema cache/i.test(error.message || ""))
+          tableMissing = true;
         return;
       }
       if (data && data[0]) receive(data[0], firstLoad ? 15 * 60000 : 5 * 60000);
@@ -292,11 +389,16 @@
   }
 
   function subscribe() {
-    if (typeof supabaseClient === "undefined" || !supabaseClient.channel) return;
+    if (typeof supabaseClient === "undefined" || !supabaseClient.channel)
+      return;
     try {
       supabaseClient
         .channel("digit-announcements")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "announcements" }, (payload) => receive(payload.new, 5 * 60000))
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "announcements" },
+          (payload) => receive(payload.new, 5 * 60000),
+        )
         .subscribe();
     } catch (e) {}
   }
@@ -310,7 +412,11 @@
 
   async function loadRecent() {
     try {
-      const { data, error } = await supabaseClient.from("announcements").select("id,message,created_at").order("created_at", { ascending: false }).limit(8);
+      const { data, error } = await supabaseClient
+        .from("announcements")
+        .select("id,message,created_at")
+        .order("created_at", { ascending: false })
+        .limit(8);
       if (error) {
         recent = [];
         recentLoaded = "error:" + error.message;
@@ -328,9 +434,13 @@
     if (!recentLoaded) loadRecent();
     const err = typeof recentLoaded === "string" ? recentLoaded.slice(6) : "";
     const list = recent
-      .map((r) => `<div class="pgCard" style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><div style="flex:1"><b>${esc(r.message)}</b><div class="pgSub">${new Date(r.created_at).toLocaleString()}</div></div>
+      .map(
+        (
+          r,
+        ) => `<div class="pgCard" style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><div style="flex:1"><b>${esc(r.message)}</b><div class="pgSub">${new Date(r.created_at).toLocaleString()}</div></div>
         <button class="pgBtn" style="width:auto;margin:0;padding:8px 12px" data-ann-resend="${r.id}">Resend</button>
-        <button class="pgBtn" style="width:auto;margin:0;padding:8px 12px" data-ann-del="${r.id}">Delete</button></div>`)
+        <button class="pgBtn" style="width:auto;margin:0;padding:8px 12px" data-ann-del="${r.id}">Delete</button></div>`,
+      )
       .join("");
     return `<div class="pgBanner">📢 Broadcast a message to every player's screen.<br><span class="pgSub">It appears instantly for everyone who has the game open, and for anyone who opens it in the next 15 minutes. Change how it looks in the ✨ Message FX tab.</span></div>
       <div class="annField" style="grid-template-columns:1fr"><textarea id="annText" maxlength="280" placeholder="Type your announcement… (max 280 characters)">${esc(draft)}</textarea></div>
@@ -343,7 +453,9 @@
   }
 
   async function send(message, style) {
-    const { error } = await supabaseClient.from("announcements").insert({ message, style });
+    const { error } = await supabaseClient
+      .from("announcements")
+      .insert({ message, style });
     if (error) {
       say("❌ Couldn't send: " + (error.message || "error"));
       sfx("error");
@@ -383,7 +495,10 @@
     };
     root.querySelectorAll("[data-ann-del]").forEach((b) => {
       b.onclick = async () => {
-        const { error } = await supabaseClient.from("announcements").delete().eq("id", b.dataset.annDel);
+        const { error } = await supabaseClient
+          .from("announcements")
+          .delete()
+          .eq("id", b.dataset.annDel);
         if (error) return say("❌ " + error.message);
         recentLoaded = false;
         P.rerender();
@@ -392,7 +507,11 @@
     root.querySelectorAll("[data-ann-resend]").forEach((b) => {
       b.onclick = async () => {
         const r = recent.find((x) => String(x.id) === b.dataset.annResend);
-        if (!r || !confirm("Send this announcement again to everyone?\n\n" + r.message)) return;
+        if (
+          !r ||
+          !confirm("Send this announcement again to everyone?\n\n" + r.message)
+        )
+          return;
         if (await send(r.message, fx)) P.rerender();
       };
     });
@@ -417,12 +536,21 @@
     root.querySelectorAll("[data-fx]").forEach((el) => {
       el.onchange = () => {
         const k = el.dataset.fx;
-        fx[k] = el.type === "checkbox" ? el.checked : el.type === "number" ? Number(el.value) : el.value;
+        fx[k] =
+          el.type === "checkbox"
+            ? el.checked
+            : el.type === "number"
+              ? Number(el.value)
+              : el.value;
         fx = clean(fx);
         saveFx();
       };
     });
-    root.querySelector("#annfxPreview").onclick = () => enqueue((draft || "This is how your announcement will look!").slice(0, 280), fx);
+    root.querySelector("#annfxPreview").onclick = () =>
+      enqueue(
+        (draft || "This is how your announcement will look!").slice(0, 280),
+        fx,
+      );
     root.querySelector("#annfxReset").onclick = () => {
       fx = clean(null);
       saveFx();
@@ -434,6 +562,24 @@
     P.addTab("announce", "📢 Announce", renderAnnounce, bindAnnounce, isAdmin);
     P.addTab("msgfx", "✨ Message FX", renderFx, bindFx, isAdmin);
   }
+
+  /* admin-only nav button that opens the Announce tab directly */
+  function ensureAdminButton() {
+    const nav = $id("digitRollNav");
+    if (!nav) return;
+    let b = $id("drAnnNavButton");
+    if (!b) {
+      b = document.createElement("button");
+      b.id = "drAnnNavButton";
+      b.className = "drNavBtn";
+      b.type = "button";
+      b.textContent = "📢 Announce";
+      b.onclick = () => P && P.open("announce");
+      nav.appendChild(b);
+    }
+    b.style.display = isAdmin() ? "" : "none";
+  }
+  setInterval(ensureAdminButton, 1000);
 
   /* ---------- boot ---------- */
   setTimeout(() => {
