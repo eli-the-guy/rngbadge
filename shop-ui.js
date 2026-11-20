@@ -47,15 +47,25 @@
       <span class="drBalanceSub">🔢 ${len} digits per roll • 🧤 Gloves ${s.gloves}/${C.GLOVES.length} • 🍀 Lucky charms ${s.lucky} • ✨ XP ×${drXPMultiplier()} • 🔄 Rebirths ${s.rebirths}</span>
     </div>`;
 
+    const disc =
+      typeof G.drEventCharmDiscount === "function"
+        ? G.drEventCharmDiscount()
+        : 1;
+    const sale =
+      disc < 1
+        ? ` <b style="color:#8ee6ad">(${Math.round((1 - disc) * 100)}% off event!)</b>`
+        : "";
+    const cp = (p) => Math.round(p * disc);
+
     /* ---- number charms ---- */
     let charms = "";
     for (let d = 1; d <= 9; d++) {
       const armed = s.charms.filter((x) => x === d).length;
-      const price = C.NUMBER_CHARM_COSTS[d];
+      const price = cp(C.NUMBER_CHARM_COSTS[d]);
       charms += card(
         `<span class="drBigDigit">${d}</span> Number Charm`,
         `Guarantees a <b>${d}</b> on your next roll. Stack several to guarantee several <b>${d}</b>s. Armed: <b>${armed}</b>.<br><span class="drBalanceSub">Strong badges per roll with this digit: ~${C.CHARM_VALUE[d].toFixed(2)}</span>`,
-        `Cost: <b>${n(price)} XP</b> each`,
+        `Cost: <b>${n(price)} XP</b> each${sale}`,
         buyBtn(
           afford(price)
             ? armed
@@ -128,13 +138,47 @@
     let luck = card(
       "🍀 Lucky Charm",
       `One extra guaranteed badge on your next roll. In stock: <b>${s.lucky}</b>.`,
-      `Cost: <b>${n(C.LUCKY_CHARM_COST)} XP</b>`,
+      `Cost: <b>${n(cp(C.LUCKY_CHARM_COST))} XP</b>${sale}`,
       buyBtn(
-        afford(C.LUCKY_CHARM_COST) ? "Buy" : "Not enough XP",
+        afford(cp(C.LUCKY_CHARM_COST)) ? "Buy" : "Not enough XP",
         "lucky",
         undefined,
-        !afford(C.LUCKY_CHARM_COST),
+        !afford(cp(C.LUCKY_CHARM_COST)),
       ),
+    );
+    luck += card(
+      `🍀 Lucky Charm Bundle (×${C.LUCKY_BUNDLE_QTY})`,
+      `${C.LUCKY_BUNDLE_QTY} lucky charms for 10% less than buying them one by one.`,
+      `Cost: <b>${n(cp(C.LUCKY_BUNDLE_COST))} XP</b>${sale}`,
+      buyBtn(
+        afford(cp(C.LUCKY_BUNDLE_COST))
+          ? "Buy bundle"
+          : balance < cp(C.LUCKY_BUNDLE_COST) && cap < cp(C.LUCKY_BUNDLE_COST)
+            ? "Raise your XP cap first"
+            : "Not enough XP",
+        "luckyBundle",
+        undefined,
+        !afford(cp(C.LUCKY_BUNDLE_COST)),
+      ),
+    );
+    luck += card(
+      "🔁 Auto Charm",
+      "Before each roll, automatically re-buys the number charms you used on your last roll (if you can afford them). Has an on/off switch.",
+      s.autoCharm
+        ? `Status: <b>${s.autoCharmOn ? "ON" : "OFF"}</b>`
+        : `Cost: <b>${n(C.AUTO_CHARM_COST)} XP</b>`,
+      s.autoCharm
+        ? `<button class="drBuy" onclick="drToggleAutoCharm()">${s.autoCharmOn ? "Turn OFF" : "Turn ON"}</button>`
+        : buyBtn(
+            afford(C.AUTO_CHARM_COST)
+              ? "Buy"
+              : balance < C.AUTO_CHARM_COST && cap < C.AUTO_CHARM_COST
+                ? "Raise your XP cap first"
+                : "Not enough XP",
+            "autoCharm",
+            undefined,
+            !afford(C.AUTO_CHARM_COST),
+          ),
     );
     C.GLOVES.forEach((g, i) => {
       const lvl = i + 1;
@@ -331,7 +375,11 @@
     switch (kind) {
       case "charm": {
         if (arg < 1 || arg > 9) return;
-        if (!spend(C.NUMBER_CHARM_COSTS[arg])) return;
+        const dc =
+          typeof G.drEventCharmDiscount === "function"
+            ? G.drEventCharmDiscount()
+            : 1;
+        if (!spend(Math.round(C.NUMBER_CHARM_COSTS[arg] * dc))) return;
         s.charms.push(arg);
         toast(
           `🔢 Number charm ${arg} armed (${s.charms.filter((x) => x === arg).length} for your next roll).`,
@@ -340,9 +388,32 @@
       }
 
       case "lucky": {
-        if (!spend(C.LUCKY_CHARM_COST)) return;
+        const dc =
+          typeof G.drEventCharmDiscount === "function"
+            ? G.drEventCharmDiscount()
+            : 1;
+        if (!spend(Math.round(C.LUCKY_CHARM_COST * dc))) return;
         s.lucky++;
         toast("🍀 Lucky charm ready for your next roll.");
+        break;
+      }
+
+      case "luckyBundle": {
+        const dc =
+          typeof G.drEventCharmDiscount === "function"
+            ? G.drEventCharmDiscount()
+            : 1;
+        if (!spend(Math.round(C.LUCKY_BUNDLE_COST * dc))) return;
+        s.lucky += C.LUCKY_BUNDLE_QTY;
+        toast("🍀 " + C.LUCKY_BUNDLE_QTY + " lucky charms added.");
+        break;
+      }
+
+      case "autoCharm": {
+        if (s.autoCharm || !spend(C.AUTO_CHARM_COST)) return;
+        s.autoCharm = true;
+        s.autoCharmOn = true;
+        toast("🔁 Auto charm unlocked.");
         break;
       }
 

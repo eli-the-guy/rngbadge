@@ -59,6 +59,9 @@
   const HOTKEY_COST = 1500;
   const FAST_REVEAL_COST = 4000;
   const AUTO_ROLL_DELAY = 800; // ms between auto rolls
+  const AUTO_CHARM_COST = 20000;
+  const LUCKY_BUNDLE_QTY = 10;
+  const LUCKY_BUNDLE_COST = 3600; // 10% off 10 singles
 
   const NUM_UPGRADE_COSTS = [500, 1500, 3500, 7000, 10000]; // 5 -> 10 digits
 
@@ -102,6 +105,9 @@
   const fresh = () => ({
     charms: [], // digits 1-9 armed for the next roll
     lucky: 0, // consumable lucky charms in stock
+    autoCharm: false, // re-buys last used number charms
+    autoCharmOn: true,
+    lastCharms: [],
     xpCharm: 0, // permanent XP charm tiers owned (0-8)
     gloves: 0, // permanent lucky gloves level
     numUp: 0, // number upgrades bought
@@ -168,11 +174,13 @@
         : 1;
     const boost =
       typeof G.drPrestigeBoost === "function" ? G.drPrestigeBoost() : 1;
-    return Math.round(charm * boost * 100) / 100;
+    const ev = typeof G.drEventXP === "function" ? G.drEventXP() : 1;
+    return Math.round(charm * boost * ev * 100) / 100;
   };
 
   G.drLuckCount = function () {
-    const count = S.gloves + (S.lucky > 0 ? 1 : 0);
+    const evLuck = typeof G.drEventLuck === "function" ? G.drEventLuck() : 0;
+    const count = S.gloves + (S.lucky > 0 ? 1 : 0) + evLuck;
     if (S.lucky > 0) S.lucky--;
     save();
     return count;
@@ -203,6 +211,7 @@
     }
 
     if (applied.length) {
+      S.lastCharms = applied.slice();
       S.charms = left;
       save();
       toast(
@@ -220,7 +229,41 @@
      ROLL FLOW HELPERS
      ========================================================== */
 
+  /* Auto charm: re-buy the charms used last roll (if affordable) */
+  function autoRearm() {
+    if (!S.autoCharm || !S.autoCharmOn || !S.lastCharms.length) return;
+    const disc =
+      typeof G.drEventCharmDiscount === "function"
+        ? G.drEventCharmDiscount()
+        : 1;
+    let bought = 0;
+    for (const d of S.lastCharms) {
+      const price = Math.round(NUMBER_CHARM_COSTS[d] * disc);
+      if (getXPBalance() < price) break;
+      xpBalance = getXPBalance() - price;
+      xpSpent += price;
+      S.charms.push(d);
+      bought++;
+    }
+    if (bought) {
+      saveShopState();
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+      save();
+      toast(
+        "🔁 Auto charm re-armed " + bought + " charm" + (bought > 1 ? "s" : ""),
+      );
+    }
+  }
+
+  G.drToggleAutoCharm = function () {
+    if (!S.autoCharm) return;
+    S.autoCharmOn = !S.autoCharmOn;
+    save();
+    updateShopUI();
+  };
+
   G.drBeginRoll = function () {
+    autoRearm();
     skipFlag = !!(S.skip && S.auto && S.autoOn);
     const b = $("drSkipBtn");
     if (b) b.disabled = skipFlag;
@@ -448,6 +491,9 @@
       AUTO_STOP_COST,
       HOTKEY_COST,
       FAST_REVEAL_COST,
+      AUTO_CHARM_COST,
+      LUCKY_BUNDLE_QTY,
+      LUCKY_BUNDLE_COST,
       NUM_UPGRADE_COSTS,
       GLOVES,
       XP_CHARMS,

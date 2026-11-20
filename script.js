@@ -835,6 +835,57 @@ function ensureShopUI() {
   updateShopUI();
 }
 
+function drBadgeFilterChange(initial) {
+  const f = (window.drBadgeFilter = window.drBadgeFilter || {
+    q: "",
+    status: "all",
+    sort: "rare",
+  });
+  if (!initial) {
+    f.q = $("drBadgeSearch") ? $("drBadgeSearch").value : "";
+    f.status = $("drBadgeStatus") ? $("drBadgeStatus").value : "all";
+    f.sort = $("drBadgeSort") ? $("drBadgeSort").value : "rare";
+  }
+  const unlocked = getUnlockedBadgeNames();
+  const q = f.q.trim().toLowerCase();
+  let list = Object.values(staticBadgeCatalog);
+  if (f.status === "unlocked") list = list.filter((b) => unlocked.has(b.name));
+  if (f.status === "locked") list = list.filter((b) => !unlocked.has(b.name));
+  if (q)
+    list = list.filter(
+      (b) =>
+        unlocked.has(b.name) &&
+        (b.name.toLowerCase().includes(q) ||
+          String(b.explanation).toLowerCase().includes(q)),
+    );
+  if (f.sort === "az")
+    list.sort((a, b) => {
+      const ua = unlocked.has(a.name),
+        ub = unlocked.has(b.name);
+      if (ua !== ub) return ua ? -1 : 1;
+      return ua
+        ? a.name.localeCompare(b.name)
+        : Number(a.oneIn) - Number(b.oneIn);
+    });
+  else
+    list.sort(
+      (a, b) =>
+        (f.sort === "easy" ? 1 : -1) * (Number(b.oneIn) - Number(a.oneIn)) * -1,
+    );
+  const grid = $("drBadgeGridWrap");
+  if (!grid) return;
+  if ($("drBadgeCount"))
+    $("drBadgeCount").textContent =
+      "Showing " + list.length + " badge" + (list.length === 1 ? "" : "s");
+  grid.innerHTML =
+    list
+      .map((b) => {
+        const isUnlocked = unlocked.has(b.name);
+        return `<div class="drBadgeCard"><h3>${isUnlocked ? escapeHTML(b.name) : "🔒 Locked Badge"}</h3><div class="drRarity">${fmt(b.oneIn)}</div><p>${isUnlocked ? escapeHTML(b.explanation) : "Unlock this badge to reveal its name and description."}</p></div>`;
+      })
+      .join("") || '<p style="color:#aab5ca">No badges match.</p>';
+}
+
 function updateShopUI() {
   if (!$("digitRollShopOverlay")) return;
   const balance = getXPBalance();
@@ -848,12 +899,28 @@ function updateShopUI() {
     const catalog = Object.values(staticBadgeCatalog).sort(
       (a, b) => Number(a.oneIn) - Number(b.oneIn),
     );
-    content.innerHTML = `<div class="drBalance">🏅 Unlocked: ${unlocked.size} / ${catalog.length}</div><div class="drBadgeGrid">${catalog
-      .map((b) => {
-        const isUnlocked = unlocked.has(b.name);
-        return `<div class="drBadgeCard"><h3>${isUnlocked ? escapeHTML(b.name) : "🔒 Locked Badge"}</h3><div class="drRarity">${fmt(b.oneIn)}</div><p>${isUnlocked ? escapeHTML(b.explanation) : "Unlock this badge to reveal its name and description."}</p></div>`;
-      })
-      .join("")}</div>`;
+    const f = (window.drBadgeFilter = window.drBadgeFilter || {
+      q: "",
+      status: "all",
+      sort: "rare",
+    });
+    content.innerHTML = `<div class="drBalance">🏅 Unlocked: ${unlocked.size} / ${catalog.length}</div>
+      <div class="drBadgeTools" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <input id="drBadgeSearch" type="search" placeholder="Search unlocked badges…" value="${escapeHTML(f.q)}" style="flex:2;min-width:180px;padding:10px 12px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff" oninput="drBadgeFilterChange()">
+        <select id="drBadgeStatus" style="flex:1;min-width:120px;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff" onchange="drBadgeFilterChange()">
+          <option value="all" ${f.status === "all" ? "selected" : ""}>All</option>
+          <option value="unlocked" ${f.status === "unlocked" ? "selected" : ""}>Unlocked</option>
+          <option value="locked" ${f.status === "locked" ? "selected" : ""}>Locked</option>
+        </select>
+        <select id="drBadgeSort" style="flex:1;min-width:120px;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff" onchange="drBadgeFilterChange()">
+          <option value="rare" ${f.sort === "rare" ? "selected" : ""}>Rarest first</option>
+          <option value="easy" ${f.sort === "easy" ? "selected" : ""}>Easiest first</option>
+          <option value="az" ${f.sort === "az" ? "selected" : ""}>A–Z</option>
+        </select>
+      </div>
+      <div id="drBadgeCount" class="drRarity" style="margin:0 0 10px"></div>
+      <div id="drBadgeGridWrap" class="drBadgeGrid"></div>`;
+    drBadgeFilterChange(true);
     return;
   }
   if (typeof drRenderShop === "function") {

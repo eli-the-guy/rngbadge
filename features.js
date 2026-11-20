@@ -13,8 +13,24 @@
   const ROMAN = ["", "I", "II", "III", "IV", "V", "VI"];
 
   const TIERS = [
-    "NOVICE", "PLAIN", "BASIC", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC",
-    "DIVINE", "TRANSCENDENT", "CELESTIAL", "ASCENDED", "OMNIPOTENT", "INFINITE", "BEYOND", "ABSOLUTE", "???",
+    "NOVICE",
+    "PLAIN",
+    "BASIC",
+    "COMMON",
+    "UNCOMMON",
+    "RARE",
+    "EPIC",
+    "LEGENDARY",
+    "MYTHIC",
+    "DIVINE",
+    "TRANSCENDENT",
+    "CELESTIAL",
+    "ASCENDED",
+    "OMNIPOTENT",
+    "INFINITE",
+    "BEYOND",
+    "ABSOLUTE",
+    "???",
   ];
   const tierOf = (r) => Math.max(0, TIERS.indexOf(r));
 
@@ -39,7 +55,13 @@
 
   const dayKey = (d) => {
     d = d || new Date();
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    return (
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(d.getDate()).padStart(2, "0")
+    );
   };
   const yesterdayKey = () => {
     const d = new Date();
@@ -52,13 +74,24 @@
      ========================================================== */
 
   const STATS_KEY = "digitRollStats2";
-  let stats = load(STATS_KEY, { rolls: 0, xp: 0, badgeRolls: 0, best: null, rarity: {}, days: {}, first: null, seeded: false });
+  let stats = load(STATS_KEY, {
+    rolls: 0,
+    xp: 0,
+    badgeRolls: 0,
+    best: null,
+    rarity: {},
+    days: {},
+    first: null,
+    seeded: false,
+  });
 
   function seedStats() {
     if (stats.seeded) return;
     stats.seeded = true;
     try {
-      (Array.isArray(history) ? history : []).forEach((r) => addToStats(r, true));
+      (Array.isArray(history) ? history : []).forEach((r) =>
+        addToStats(r, true),
+      );
     } catch (e) {}
     save(STATS_KEY, stats);
   }
@@ -83,7 +116,15 @@
      ========================================================== */
 
   const DAILY_KEY = "digitRollDaily";
-  let daily = load(DAILY_KEY, { date: "", p: [0, 0, 0], done: [false, false, false], names: [], streak: 0, lastClear: "", cleared: false });
+  let daily = load(DAILY_KEY, {
+    date: "",
+    p: [0, 0, 0],
+    done: [false, false, false],
+    names: [],
+    streak: 0,
+    lastClear: "",
+    cleared: false,
+  });
 
   function mulberry(seed) {
     let a = seed >>> 0;
@@ -97,7 +138,8 @@
   }
   const hash = (s) => {
     let h = 2166136261;
-    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    for (let i = 0; i < s.length; i++)
+      h = Math.imul(h ^ s.charCodeAt(i), 16777619);
     return h >>> 0;
   };
 
@@ -113,24 +155,76 @@
   const POOLS = {
     easy: [
       { text: (g) => `Roll ${g} times`, goal: [20, 30, 50], inc: () => 1 },
-      { text: (g) => `Land ${g} rolls with at least one badge`, goal: [15, 25], inc: (r) => (r.badges && r.badges.length ? 1 : 0) },
-      { text: (g) => `Earn ${n(g)} XP`, goal: [2000, 4000], inc: (r) => Number(r.xp || 0) },
-      { text: (g) => `Roll Uncommon or better ${g} times`, goal: [8, 12], inc: (r) => (tierOf(r.rarity) >= 4 ? 1 : 0) },
+      {
+        text: (g) => `Land ${g} rolls with at least one badge`,
+        goal: [15, 25],
+        inc: (r) => (r.badges && r.badges.length ? 1 : 0),
+      },
+      {
+        text: (g) => `Earn ${n(g)} XP`,
+        goal: [2000, 4000],
+        inc: (r) => Number(r.xp || 0),
+      },
+      {
+        text: (g) => `Roll Uncommon or better ${g} times`,
+        goal: [8, 12],
+        inc: (r) => (tierOf(r.rarity) >= 4 ? 1 : 0),
+      },
     ],
     medium: [
       { text: (g) => `Roll ${g} times`, goal: [80, 120], inc: () => 1 },
-      { text: (g) => `Roll Epic or better ${g} times`, goal: [5, 8], inc: (r) => (tierOf(r.rarity) >= 6 ? 1 : 0) },
-      { text: (g) => `Roll Legendary or better ${g} times`, goal: [3, 5], inc: (r) => (tierOf(r.rarity) >= 7 ? 1 : 0) },
-      { text: (g) => `Roll a number with 3+ of the same digit ${g} times`, goal: [2, 3], inc: (r) => (maxCount(r.roll) >= 3 ? 1 : 0) },
-      { text: (g) => `Earn ${n(g)} XP`, goal: [8000, 12000], inc: (r) => Number(r.xp || 0) },
-      { text: (g) => `Find ${g} different badges today`, goal: [10, 14], unique: true },
+      {
+        text: (g) => `Roll Epic or better ${g} times`,
+        goal: [5, 8],
+        inc: (r) => (tierOf(r.rarity) >= 6 ? 1 : 0),
+      },
+      {
+        text: (g) => `Roll Legendary or better ${g} times`,
+        goal: [3, 5],
+        inc: (r) => (tierOf(r.rarity) >= 7 ? 1 : 0),
+      },
+      {
+        text: (g) => `Roll a number with 3+ of the same digit ${g} times`,
+        goal: [2, 3],
+        inc: (r) => (maxCount(r.roll) >= 3 ? 1 : 0),
+      },
+      {
+        text: (g) => `Earn ${n(g)} XP`,
+        goal: [8000, 12000],
+        inc: (r) => Number(r.xp || 0),
+      },
+      {
+        text: (g) => `Find ${g} different badges today`,
+        goal: [10, 14],
+        unique: true,
+      },
     ],
     hard: [
-      { text: (g) => `Roll Mythic or better ${g} times`, goal: [3, 4], inc: (r) => (tierOf(r.rarity) >= 8 ? 1 : 0) },
-      { text: (g) => `Roll Divine or better ${g} time${g > 1 ? "s" : ""}`, goal: [1, 2], inc: (r) => (tierOf(r.rarity) >= 9 ? 1 : 0) },
-      { text: (g) => `Roll Transcendent or better ${g} time${g > 1 ? "s" : ""}`, goal: [1], inc: (r) => (tierOf(r.rarity) >= 10 ? 1 : 0) },
-      { text: (g) => `Find ${g} different badges today`, goal: [20, 25], unique: true },
-      { text: (g) => `Earn ${n(g)} XP`, goal: [25000, 35000], inc: (r) => Number(r.xp || 0) },
+      {
+        text: (g) => `Roll Mythic or better ${g} times`,
+        goal: [3, 4],
+        inc: (r) => (tierOf(r.rarity) >= 8 ? 1 : 0),
+      },
+      {
+        text: (g) => `Roll Divine or better ${g} time${g > 1 ? "s" : ""}`,
+        goal: [1, 2],
+        inc: (r) => (tierOf(r.rarity) >= 9 ? 1 : 0),
+      },
+      {
+        text: (g) => `Roll Transcendent or better ${g} time${g > 1 ? "s" : ""}`,
+        goal: [1],
+        inc: (r) => (tierOf(r.rarity) >= 10 ? 1 : 0),
+      },
+      {
+        text: (g) => `Find ${g} different badges today`,
+        goal: [20, 25],
+        unique: true,
+      },
+      {
+        text: (g) => `Earn ${n(g)} XP`,
+        goal: [25000, 35000],
+        inc: (r) => Number(r.xp || 0),
+      },
       { text: (g) => `Roll ${g} times`, goal: [200, 300], inc: () => 1 },
     ],
   };
@@ -143,7 +237,14 @@
       const pool = POOLS[tier];
       const def = pool[Math.floor(rng() * pool.length)];
       const goal = def.goal[Math.floor(rng() * def.goal.length)];
-      return { tier: LABELS[i], text: def.text(goal), goal, inc: def.inc, unique: !!def.unique, reward: REWARDS[i] };
+      return {
+        tier: LABELS[i],
+        text: def.text(goal),
+        goal,
+        inc: def.inc,
+        unique: !!def.unique,
+        reward: REWARDS[i],
+      };
     });
   }
 
@@ -160,7 +261,9 @@
   }
 
   function currentStreak() {
-    return daily.lastClear === dayKey() || daily.lastClear === yesterdayKey() ? daily.streak : 0;
+    return daily.lastClear === dayKey() || daily.lastClear === yesterdayKey()
+      ? daily.streak
+      : 0;
   }
 
   function giveXP(amount) {
@@ -189,8 +292,11 @@
       if (daily.p[i] >= c.goal) {
         daily.p[i] = c.goal;
         daily.done[i] = true;
-        giveXP(c.reward);
-        say(`🎯 Daily challenge complete: ${c.text} (+${n(c.reward)} XP)`);
+        const reward =
+          c.reward *
+          (typeof G.drEventDaily === "function" ? G.drEventDaily() : 1);
+        giveXP(reward);
+        say(`🎯 Daily challenge complete: ${c.text} (+${n(reward)} XP)`);
         sfx("newbadge");
       }
     });
@@ -201,7 +307,9 @@
       daily.lastClear = dayKey();
       prestige.earned += 1;
       save(PRESTIGE_KEY, prestige);
-      say(`🔥 All daily challenges cleared! +1 ★ prestige point • ${daily.streak}-day streak`);
+      say(
+        `🔥 All daily challenges cleared! +1 ★ prestige point • ${daily.streak}-day streak`,
+      );
       sfx("rebirth");
     }
     save(DAILY_KEY, daily);
@@ -212,15 +320,49 @@
      ========================================================== */
 
   const PRESTIGE_KEY = "digitRollPrestige";
-  let prestige = load(PRESTIGE_KEY, { earned: 0, spent: 0, credited: 0, perks: {} });
+  let prestige = load(PRESTIGE_KEY, {
+    earned: 0,
+    spent: 0,
+    credited: 0,
+    perks: {},
+  });
   prestige.perks = prestige.perks || {};
 
   const PERKS = [
-    { id: "head", name: "🚀 Head Start", costs: [2, 4, 8], desc: (l) => `Every rebirth starts with XP Charm ${ROMAN[l]} (×${[1.5, 2, 3][l - 1]}) already owned.` },
-    { id: "capmem", name: "📦 Cap Memory", costs: [3, 6, 10], desc: (l) => `Every rebirth starts with ${l} XP cap upgrade${l > 1 ? "s" : ""} already bought.` },
-    { id: "digmem", name: "🔢 Digit Memory", costs: [3, 6], desc: (l) => `Every rebirth starts with ${l} number upgrade${l > 1 ? "s" : ""} already bought.` },
-    { id: "skipmem", name: "⏭ Skip Memory", costs: [2], desc: () => "Keep Skip Wait after every rebirth." },
-    { id: "boost", name: "💎 Prestige Boost", costs: [2, 3, 4, 5, 6], desc: (l) => `+${l * 10}% XP on every roll, forever (stacks with XP charms).` },
+    {
+      id: "head",
+      name: "🚀 Head Start",
+      costs: [2, 4, 8],
+      desc: (l) =>
+        `Every rebirth starts with XP Charm ${ROMAN[l]} (×${[1.5, 2, 3][l - 1]}) already owned.`,
+    },
+    {
+      id: "capmem",
+      name: "📦 Cap Memory",
+      costs: [3, 6, 10],
+      desc: (l) =>
+        `Every rebirth starts with ${l} XP cap upgrade${l > 1 ? "s" : ""} already bought.`,
+    },
+    {
+      id: "digmem",
+      name: "🔢 Digit Memory",
+      costs: [3, 6],
+      desc: (l) =>
+        `Every rebirth starts with ${l} number upgrade${l > 1 ? "s" : ""} already bought.`,
+    },
+    {
+      id: "skipmem",
+      name: "⏭ Skip Memory",
+      costs: [2],
+      desc: () => "Keep Skip Wait after every rebirth.",
+    },
+    {
+      id: "boost",
+      name: "💎 Prestige Boost",
+      costs: [2, 3, 4, 5, 6],
+      desc: (l) =>
+        `+${l * 10}% XP on every roll, forever (stacks with XP charms).`,
+    },
   ];
   const perkLvl = (id) => Number(prestige.perks[id] || 0);
   const points = () => prestige.earned - prestige.spent;
@@ -238,7 +380,9 @@
   }
 
   G.drPrestigeBoost = function () {
-    return 1 + 0.1 * perkLvl("boost");
+    const ms =
+      typeof G.drMilestoneBoost === "function" ? G.drMilestoneBoost() : 1;
+    return (1 + 0.1 * perkLvl("boost")) * ms;
   };
 
   /* called by shop-ui when a true rebirth happens */
@@ -250,7 +394,10 @@
     fresh.capLvl = perkLvl("capmem");
     fresh.numUp = perkLvl("digmem");
     fresh.skip = perkLvl("skipmem") > 0;
-    if (gained) say(`★ +${gained} prestige point${gained > 1 ? "s" : ""} for rebirth #${next}`);
+    if (gained)
+      say(
+        `★ +${gained} prestige point${gained > 1 ? "s" : ""} for rebirth #${next}`,
+      );
   };
 
   function buyPerk(id) {
@@ -284,6 +431,11 @@
       addToStats(result, false);
       save(STATS_KEY, stats);
       updateDaily(result);
+      rollHooks.forEach((fn) => {
+        try {
+          fn(result);
+        } catch (e) {}
+      });
       if (open) render();
     } catch (e) {
       console.warn("progress tracking failed", e);
@@ -296,6 +448,8 @@
 
   let open = false;
   let tab = "daily";
+  const extraTabs = [];
+  const rollHooks = [];
 
   function injectCSS() {
     if ($id("pgCSS")) return;
@@ -360,7 +514,9 @@
     ensureOverlay();
     if (t) tab = t;
     open = true;
-    creditRebirths(typeof G.__drShop !== "undefined" ? G.__drShop.S.rebirths : 0);
+    creditRebirths(
+      typeof G.__drShop !== "undefined" ? G.__drShop.S.rebirths : 0,
+    );
     $id("pgOverlay").classList.add("open");
     sfx("open");
     render();
@@ -380,19 +536,34 @@
       ["daily", "🎯 Daily"],
       ["stats", "📈 Stats"],
       ["prestige", "★ Prestige"],
-    ];
+    ].concat(extraTabs.map((t) => [t.key, t.label]));
     $id("pgTabs").innerHTML = tabs
-      .map(([k, l]) => `<button class="pgTab ${tab === k ? "on" : ""}" data-t="${k}" type="button">${l}${k === "prestige" ? ` (${points()})` : ""}</button>`)
+      .map(
+        ([k, l]) =>
+          `<button class="pgTab ${tab === k ? "on" : ""}" data-t="${k}" type="button">${l}${k === "prestige" ? ` (${points()})` : ""}</button>`,
+      )
       .join("");
-    $id("pgTabs").querySelectorAll(".pgTab").forEach((b) => {
-      b.onclick = () => {
-        tab = b.dataset.t;
-        sfx("click");
-        render();
-      };
-    });
-    $id("pgBody").innerHTML = tab === "daily" ? renderDaily() : tab === "stats" ? renderStats() : renderPrestige();
-    $id("pgBody").querySelectorAll("[data-perk]").forEach((b) => (b.onclick = () => buyPerk(b.dataset.perk)));
+    $id("pgTabs")
+      .querySelectorAll(".pgTab")
+      .forEach((b) => {
+        b.onclick = () => {
+          tab = b.dataset.t;
+          sfx("click");
+          render();
+        };
+      });
+    const extra = extraTabs.find((t) => t.key === tab);
+    $id("pgBody").innerHTML = extra
+      ? extra.render()
+      : tab === "daily"
+        ? renderDaily()
+        : tab === "stats"
+          ? renderStats()
+          : renderPrestige();
+    $id("pgBody")
+      .querySelectorAll("[data-perk]")
+      .forEach((b) => (b.onclick = () => buyPerk(b.dataset.perk)));
+    if (extra && extra.bind) extra.bind($id("pgBody"));
   }
 
   function renderDaily() {
@@ -416,7 +587,9 @@
   }
 
   function lineChart(values, color) {
-    const W = 600, H = 150, pad = 18;
+    const W = 600,
+      H = 150,
+      pad = 18;
     const max = Math.max(1, ...values);
     const bw = (W - pad * 2) / values.length;
     const bars = values
@@ -438,19 +611,36 @@
       d.setDate(d.getDate() - i);
       days.push(dayKey(d));
     }
-    const rollsSeries = days.map((d) => (stats.days[d] ? stats.days[d].rolls : 0));
+    const rollsSeries = days.map((d) =>
+      stats.days[d] ? stats.days[d].rolls : 0,
+    );
     const xpSeries = days.map((d) => (stats.days[d] ? stats.days[d].xp : 0));
     const played = Object.keys(stats.days).length;
-    const unlocked = typeof getUnlockedBadgeNames === "function" ? getUnlockedBadgeNames().size : 0;
-    const catalog = typeof staticBadgeCatalog !== "undefined" ? Object.keys(staticBadgeCatalog).length : 0;
+    const unlocked =
+      typeof getUnlockedBadgeNames === "function"
+        ? getUnlockedBadgeNames().size
+        : 0;
+    const catalog =
+      typeof staticBadgeCatalog !== "undefined"
+        ? Object.keys(staticBadgeCatalog).length
+        : 0;
     const rb = G.__drShop ? G.__drShop.S.rebirths : 0;
 
-    const tile = (l, v) => `<div class="pgTile"><span>${l}</span><b>${v}</b></div>`;
+    const tile = (l, v) =>
+      `<div class="pgTile"><span>${l}</span><b>${v}</b></div>`;
     const tiles = [
       tile("Total rolls", n(stats.rolls)),
       tile("Total XP earned", n(stats.xp)),
-      tile("Avg XP / roll", stats.rolls ? n(Math.round(stats.xp / stats.rolls)) : "—"),
-      tile("Rolls with badges", stats.rolls ? Math.round((stats.badgeRolls / stats.rolls) * 100) + "%" : "—"),
+      tile(
+        "Avg XP / roll",
+        stats.rolls ? n(Math.round(stats.xp / stats.rolls)) : "—",
+      ),
+      tile(
+        "Rolls with badges",
+        stats.rolls
+          ? Math.round((stats.badgeRolls / stats.rolls) * 100) + "%"
+          : "—",
+      ),
       tile("Badges unlocked", `${n(unlocked)} / ${n(catalog)}`),
       tile("Days played", n(played)),
       tile("Rebirths", n(rb)),
@@ -461,7 +651,9 @@
       ? `<div class="pgBanner">🏆 Rarest roll: <b>${stats.best.roll}</b> — ${stats.best.rarity} • 1 in ${n(stats.best.oneIn)}</div>`
       : "";
 
-    const rar = Object.entries(stats.rarity).sort((a, b) => tierOf(b[0]) - tierOf(a[0]));
+    const rar = Object.entries(stats.rarity).sort(
+      (a, b) => tierOf(b[0]) - tierOf(a[0]),
+    );
     const top = Math.max(1, ...rar.map((r) => r[1]));
     const rows = rar
       .map(
@@ -493,6 +685,26 @@
       <span class="pgSub">Earn them from true rebirths (rebirth #N gives N points) and by clearing all three daily challenges (+1). Perks are permanent and are <b>not</b> reset by rebirth.</span></div>
       <div class="pgGrid">${cards}</div>`;
   }
+
+  /* ---------- extension API for other scripts ---------- */
+  G.drProgress = {
+    addTab: (key, label, renderFn, bindFn) =>
+      extraTabs.push({ key, label, render: renderFn, bind: bindFn }),
+    onRoll: (fn) => rollHooks.push(fn),
+    rerender: () => render(),
+    isOpen: () => open,
+    stats: () => stats,
+    daily: () => daily,
+    currentStreak,
+    addPoints: (v) => {
+      prestige.earned += v;
+      save(PRESTIGE_KEY, prestige);
+    },
+    open: openPage,
+    tierOf,
+    TIERS,
+    dayKey,
+  };
 
   /* ---------- nav button ---------- */
 
