@@ -371,6 +371,8 @@
   }
 
   let tableMissing = false;
+  let live = "";
+  let tableState = "unknown"; // unknown | ok | missing | blocked
   async function poll(firstLoad) {
     if (tableMissing || typeof supabaseClient === "undefined") return;
     try {
@@ -380,11 +382,15 @@
         .order("created_at", { ascending: false })
         .limit(1);
       if (error) {
-        if (/does not exist|relation|schema cache/i.test(error.message || ""))
+        if (/does not exist|relation|schema cache/i.test(error.message || "")) {
           tableMissing = true;
+          tableState = "missing";
+        } else tableState = "blocked";
         return;
       }
-      if (data && data[0]) receive(data[0], firstLoad ? 15 * 60000 : 5 * 60000);
+      tableState = "ok";
+      if (data && data[0])
+        receive(data[0], firstLoad ? 15 * 60000 : 10 * 60000);
     } catch (e) {}
   }
 
@@ -397,9 +403,12 @@
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "announcements" },
-          (payload) => receive(payload.new, 5 * 60000),
+          (payload) => receive(payload.new, Infinity),
         )
-        .subscribe();
+        .subscribe((status) => {
+          live = status;
+          if (P && P.isOpen()) P.rerender();
+        });
     } catch (e) {}
   }
 
@@ -407,6 +416,7 @@
      ADMIN TABS
      ========================================================== */
 
+  let lastError = "";
   let recent = [];
   let recentLoaded = false;
 
@@ -432,6 +442,7 @@
 
   function renderAnnounce() {
     if (!recentLoaded) loadRecent();
+    if (tableState === "unknown") poll(false);
     const err = typeof recentLoaded === "string" ? recentLoaded.slice(6) : "";
     const list = recent
       .map(
@@ -442,7 +453,9 @@
         <button class="pgBtn" style="width:auto;margin:0;padding:8px 12px" data-ann-del="${r.id}">Delete</button></div>`,
       )
       .join("");
+    const status = `<div class="pgSub" style="margin-bottom:10px">Database table: <b>${tableState === "ok" ? "✅ connected" : tableState === "missing" ? "❌ missing — run announcements-setup.sql" : tableState === "blocked" ? "⚠️ blocked (check policies)" : "checking…"}</b> • Live updates: <b>${live === "SUBSCRIBED" ? "✅ on" : live ? "⚠️ " + esc(live) + " (players get it within ~12s instead)" : "connecting…"}</b>${lastError ? `<br>Last error: ${esc(lastError)}` : ""}</div>`;
     return `<div class="pgBanner">📢 Broadcast a message to every player's screen.<br><span class="pgSub">It appears instantly for everyone who has the game open, and for anyone who opens it in the next 15 minutes. Change how it looks in the ✨ Message FX tab.</span></div>
+      ${status}
       <div class="annField" style="grid-template-columns:1fr"><textarea id="annText" maxlength="280" placeholder="Type your announcement… (max 280 characters)">${esc(draft)}</textarea></div>
       <div class="pgSub" id="annCount">${draft.length} / 280</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
@@ -453,16 +466,36 @@
   }
 
   async function send(message, style) {
-    const { error } = await supabaseClient
-      .from("announcements")
-      .insert({ message, style });
+    let res;
+    try {
+      res = await supabaseClient
+        .from("announcements")
+        .insert({ message, style })
+        .select("id")
+        .single();
+    } catch (e) {
+      res = { error: { message: String(e && e.message ? e.message : e) } };
+    }
+    const { data, error } = res;
     if (error) {
-      say("❌ Couldn't send: " + (error.message || "error"));
+      let why = error.message || "error";
+      if (/does not exist|schema cache|relation/i.test(why))
+        why =
+          "the announcements table doesn't exist yet — run announcements-setup.sql in Supabase.";
+      else if (/row-level security|policy|permission/i.test(why))
+        why =
+          "your account isn't recognised as an admin by the database. Run admin-setup.sql (and add your user id to the admins table if you aren't elicole613@gmail.com).";
+      say("❌ Couldn't send: " + why);
+      lastError = why;
       sfx("error");
+      if (P && P.isOpen()) P.rerender();
       return false;
     }
+    lastError = "";
+    if (data && data.id) markSeen(data.id);
+    enqueue(message, style); // sender sees it immediately
     sfx("admin");
-    say("📡 Announcement sent!");
+    say("📡 Announcement sent to everyone!");
     recentLoaded = false;
     return true;
   }
@@ -586,5 +619,5 @@
     subscribe();
     poll(true);
   }, 2500);
-  setInterval(() => poll(false), 25000);
+  setInterval(() => poll(false), 12000);
 })();

@@ -9,7 +9,18 @@
 
   const G = window;
   const $id = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const me = () => (typeof currentUser !== "undefined" ? currentUser : null);
   const isAdmin = () => typeof G.drIsAdmin === "function" && G.drIsAdmin();
@@ -26,13 +37,12 @@
     const st = document.createElement("style");
     st.id = "drChatCSS";
     st.textContent = `
-      .drBoardRow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px;align-items:start;margin-bottom:22px}
+      .drBoardRow{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:22px}
       .drBoardRow>section{margin-bottom:0!important}
-      @media(max-width:1000px){.drBoardRow{grid-template-columns:1fr}}
       .drChatPanel{position:relative;border:1px solid rgba(255,255,255,.12);border-radius:26px;padding:22px;background:rgba(18,23,34,.72);display:flex;flex-direction:column;min-height:420px;color:#fff}
       .drChatHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
       .drChatHead h2{margin:0;font-size:22px}
-      .drChatList{flex:1;min-height:260px;max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding-right:4px}
+      .drChatList{flex:1;min-height:260px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding-right:4px}
       .drChatMsg{padding:8px 11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);line-height:1.4;word-break:break-word;position:relative}
       .drChatMsg.mine{background:rgba(122,162,255,.14);border-color:rgba(122,162,255,.3)}
       .drChatName{font-weight:850;margin-right:6px}
@@ -99,7 +109,11 @@
     const off = offline;
     input.disabled = !u || off;
     btn.disabled = !u || off;
-    input.placeholder = off ? "Chat is offline" : u ? "Say something…" : "Log in to chat";
+    input.placeholder = off
+      ? "Chat is offline"
+      : u
+        ? "Say something…"
+        : "Log in to chat";
     note.textContent = off
       ? "Chat isn't set up yet (run chat-setup.sql)."
       : u
@@ -122,11 +136,16 @@
     }
     list.innerHTML = messages
       .map((m) => {
-        const name = typeof G.drNameHTML === "function" ? G.drNameHTML({ player_name: m.username, player_id: m.user_id }) : esc(m.username);
+        const name =
+          typeof G.drNameHTML === "function"
+            ? G.drNameHTML({ player_name: m.username, player_id: m.user_id })
+            : esc(m.username);
         const mine = u && m.user_id === u.id;
         const canDel = mine || isAdmin();
         return `<div class="drChatMsg ${mine ? "mine" : ""}"><span class="drChatName">${name}</span><span class="drChatTime">${fmtTime(m.created_at)}</span><div>${esc(m.message)}</div>${
-          canDel ? `<button class="drChatDel" type="button" title="Delete" data-del="${esc(m.id)}">×</button>` : ""
+          canDel
+            ? `<button class="drChatDel" type="button" title="Delete" data-del="${esc(m.id)}">×</button>`
+            : ""
         }</div>`;
       })
       .join("");
@@ -136,13 +155,23 @@
   function merge(rows) {
     const byId = new Map(messages.map((m) => [String(m.id), m]));
     rows.forEach((r) => byId.set(String(r.id), r));
-    messages = [...byId.values()].sort((a, b) => new Date(a.created_at) - new Date(b.created_at) || Number(a.id) - Number(b.id)).slice(-KEEP);
+    messages = [...byId.values()]
+      .sort(
+        (a, b) =>
+          new Date(a.created_at) - new Date(b.created_at) ||
+          Number(a.id) - Number(b.id),
+      )
+      .slice(-KEEP);
   }
 
   async function fetchLatest() {
     if (typeof supabaseClient === "undefined") return;
     try {
-      const { data, error } = await supabaseClient.from("chat_messages").select("id,user_id,username,message,created_at").order("created_at", { ascending: false }).limit(KEEP);
+      const { data, error } = await supabaseClient
+        .from("chat_messages")
+        .select("id,user_id,username,message,created_at")
+        .order("created_at", { ascending: false })
+        .limit(KEEP);
       if (error) {
         if (/does not exist|relation|schema cache/i.test(error.message || "")) {
           offline = true;
@@ -154,9 +183,15 @@
       offline = false;
       const ids = new Set((data || []).map((m) => String(m.id)));
       /* drop messages that were deleted elsewhere */
-      messages = messages.filter((m) => ids.has(String(m.id)) || new Date(m.created_at) < new Date((data[data.length - 1] || {}).created_at || 0));
+      messages = messages.filter(
+        (m) =>
+          ids.has(String(m.id)) ||
+          new Date(m.created_at) <
+            new Date((data[data.length - 1] || {}).created_at || 0),
+      );
       merge(data || []);
-      if (typeof G.drLoadRebirths === "function") await G.drLoadRebirths(messages.map((m) => ({ player_id: m.user_id })));
+      if (typeof G.drLoadRebirths === "function")
+        await G.drLoadRebirths(messages.map((m) => ({ player_id: m.user_id })));
       syncForm();
       render();
     } catch (e) {}
@@ -170,11 +205,16 @@
     if (!text) return;
     if (Date.now() - lastSend < 2000) return say("⏳ Slow down a little.");
     lastSend = Date.now();
-    const username = (typeof profile !== "undefined" && profile && profile.username) || (u.user_metadata && u.user_metadata.username) || "Player";
+    const username =
+      (typeof profile !== "undefined" && profile && profile.username) ||
+      (u.user_metadata && u.user_metadata.username) ||
+      "Player";
     input.value = "";
     wasAtBottom = true;
     try {
-      const { error } = await supabaseClient.from("chat_messages").insert({ user_id: u.id, username, message: text });
+      const { error } = await supabaseClient
+        .from("chat_messages")
+        .insert({ user_id: u.id, username, message: text });
       if (error) {
         input.value = text;
         return say("❌ " + (error.message || "Couldn't send"));
@@ -187,7 +227,10 @@
 
   async function remove(id) {
     try {
-      const { error } = await supabaseClient.from("chat_messages").delete().eq("id", id);
+      const { error } = await supabaseClient
+        .from("chat_messages")
+        .delete()
+        .eq("id", id);
       if (error) return say("❌ " + error.message);
       messages = messages.filter((m) => String(m.id) !== String(id));
       render();
@@ -195,20 +238,31 @@
   }
 
   function subscribe() {
-    if (typeof supabaseClient === "undefined" || !supabaseClient.channel) return;
+    if (typeof supabaseClient === "undefined" || !supabaseClient.channel)
+      return;
     try {
       supabaseClient
         .channel("digit-chat")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, (p) => {
-          merge([p.new]);
-          render();
-        })
-        .on("postgres_changes", { event: "DELETE", schema: "public", table: "chat_messages" }, (p) => {
-          if (p.old && p.old.id != null) {
-            messages = messages.filter((m) => String(m.id) !== String(p.old.id));
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "chat_messages" },
+          (p) => {
+            merge([p.new]);
             render();
-          }
-        })
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "chat_messages" },
+          (p) => {
+            if (p.old && p.old.id != null) {
+              messages = messages.filter(
+                (m) => String(m.id) !== String(p.old.id),
+              );
+              render();
+            }
+          },
+        )
         .subscribe();
     } catch (e) {}
   }
