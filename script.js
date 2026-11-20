@@ -3280,6 +3280,7 @@ async function performRoll() {
 
   history.unshift(result);
   rememberBadges([result]);
+  if (typeof drRecordRoll === "function") drRecordRoll(result);
 
   history = history.slice(0, 30);
 

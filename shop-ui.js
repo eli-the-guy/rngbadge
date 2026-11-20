@@ -476,6 +476,8 @@
     const oldXP = getXPBalance();
     const fresh = SH.fresh();
     fresh.rebirths = next;
+    if (typeof G.drPrestigeOnRebirth === "function")
+      G.drPrestigeOnRebirth(fresh, next);
     SH.S = fresh;
 
     xpBalance = 0;

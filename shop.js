@@ -162,9 +162,13 @@
   /* Called once per roll by applyGuaranteedBadges */
   /* XP multiplier from the best XP charm owned */
   G.drXPMultiplier = function () {
-    return S.xpCharm > 0
-      ? XP_CHARMS[Math.min(S.xpCharm, XP_CHARMS.length) - 1].mult
-      : 1;
+    const charm =
+      S.xpCharm > 0
+        ? XP_CHARMS[Math.min(S.xpCharm, XP_CHARMS.length) - 1].mult
+        : 1;
+    const boost =
+      typeof G.drPrestigeBoost === "function" ? G.drPrestigeBoost() : 1;
+    return Math.round(charm * boost * 100) / 100;
   };
 
   G.drLuckCount = function () {
