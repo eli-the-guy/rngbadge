@@ -131,12 +131,13 @@
      LEADERBOARD TABS
      ========================================================== */
 
-  let lbTab = "top";
+  let lbTab = "daily";
   const TABS = [
-    ["top", "🏆 Top rolls"],
+    ["daily", "📅 Daily"],
+    ["top", "🏆 All-time"],
     ["rebirths", "🔄 Most rebirths"],
     ["badges", "🏅 Most badges"],
-    ["week", "📅 Best this week"],
+    ["week", "🗓️ This week"],
   ];
 
   function injectCSS() {
@@ -209,8 +210,12 @@
     box.innerHTML = '<span class="empty">Loading…</span>';
     const mine = lbTab;
     try {
-      if (mine === "week") {
-        const since = new Date(Date.now() - 7 * 86400000).toISOString();
+      if (mine === "week" || mine === "daily") {
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+        const since = (
+          mine === "daily" ? midnight : new Date(Date.now() - 7 * 86400000)
+        ).toISOString();
         const { data, error } = await supabaseClient
           .from("rolls")
           .select(
@@ -238,7 +243,10 @@
               <div class="globalRoll">${esc(r.roll)}</div>
               <div><div class="rarity ${rarityClass(r.rarity)}">${esc(r.rarity)}</div><div class="small">${fmt(r.one_in)}</div></div></button>`,
             )
-            .join("") || '<span class="empty">No rolls this week yet.</span>';
+            .join("") ||
+          (mine === "daily"
+            ? '<span class="empty">No rolls today yet — be the first!</span>'
+            : '<span class="empty">No rolls this week yet.</span>');
         return;
       }
       const col = mine === "rebirths" ? "rebirths" : "badge_count";
@@ -591,6 +599,7 @@
   /* ---------- boot ---------- */
   setTimeout(() => {
     ensureTabs();
+    if (lbTab !== "top") G.loadLeaderboard();
     ensureShareButton();
     syncShareButton();
   }, 600);
