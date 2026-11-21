@@ -138,6 +138,7 @@
     ["rebirths", "🔄 Most rebirths"],
     ["badges", "🏅 Most badges"],
     ["week", "🗓️ This week"],
+    ["boss", "💀 Boss victors"],
   ];
 
   function injectCSS() {
@@ -210,6 +211,14 @@
     box.innerHTML = '<span class="empty">Loading…</span>';
     const mine = lbTab;
     try {
+      if (mine === "boss") {
+        if (typeof G.drRenderBossVictors === "function")
+          await G.drRenderBossVictors(box, () => lbTab !== mine);
+        else
+          box.innerHTML =
+            '<span class="empty">Boss victors are not available.</span>';
+        return;
+      }
       if (mine === "week" || mine === "daily") {
         const midnight = new Date();
         midnight.setUTCHours(0, 0, 0, 0); // fixed reset: 00:00 UTC for everyone
@@ -294,6 +303,25 @@
       box.innerHTML = '<span class="empty">Leaderboard unavailable.</span>';
     }
   }
+
+  /* lets other scripts (the boss event) jump to a tab and bring it on screen */
+  G.drSelectLeaderboardTab = async function (k, scroll) {
+    if (!TABS.some((t) => t[0] === k)) return;
+    lbTab = k;
+    ensureTabs();
+    const bar = $id("drLbTabs");
+    if (bar)
+      bar
+        .querySelectorAll(".drLbTab")
+        .forEach((x) => x.classList.toggle("on", x.dataset.k === k));
+    if (scroll) {
+      const rows = $id("drLbTabs") || $id("globalRows");
+      if (rows && rows.scrollIntoView)
+        rows.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    if (k === "top") await G.loadLeaderboard();
+    else await renderAlt();
+  };
 
   /* wrap the original loader so the chosen tab survives refreshes */
   const baseLoadLeaderboard = G.loadLeaderboard;

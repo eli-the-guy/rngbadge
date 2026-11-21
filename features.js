@@ -772,6 +772,7 @@
     onRoll: (fn) => rollHooks.push(fn),
     rerender: () => render(),
     isOpen: () => open,
+    close: () => close(),
     stats: () => stats,
     daily: () => daily,
     currentStreak,

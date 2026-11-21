@@ -374,6 +374,10 @@
           ? Object.keys(staticBadgeCatalog).length
           : 0,
       streak: Math.max(P.currentStreak(), P.daily().streak || 0),
+      boss:
+        typeof G.drBossStats === "function"
+          ? G.drBossStats()
+          : { joined: 0, total: 0, golem: 0, titan: 0, reality: 0 },
     };
   };
 
@@ -444,6 +448,76 @@
     ],
     ["gloves", "Lucky One", "Own Lucky Gloves V", (c) => c.sh.gloves >= 5, 1],
     ["stylist", "Stylist", "Own 3 cosmetics", () => ownedCount() >= 3, 0],
+    [
+      "bossjoin",
+      "Brave Fool",
+      "Take part in a boss fight",
+      (c) => c.boss.joined >= 1,
+      1,
+    ],
+    [
+      "bossgolem",
+      "Golem Crusher",
+      "Beat the Stonebound Golem",
+      (c) => c.boss.golem >= 1,
+      2,
+    ],
+    [
+      "bosstitan",
+      "Titan Toppler",
+      "Beat the Titan of the Abyss",
+      (c) => c.boss.titan >= 1,
+      4,
+    ],
+    [
+      "bossreal",
+      "Reality Reaver",
+      "Beat the Reality Breaker",
+      (c) => c.boss.reality >= 1,
+      8,
+    ],
+    [
+      "bossany3",
+      "Boss Hunter",
+      "Beat 3 bosses in total",
+      (c) => c.boss.total >= 3,
+      2,
+    ],
+    [
+      "bossany10",
+      "Boss Slayer",
+      "Beat 10 bosses in total",
+      (c) => c.boss.total >= 10,
+      4,
+    ],
+    [
+      "bossany25",
+      "Boss Legend",
+      "Beat 25 bosses in total",
+      (c) => c.boss.total >= 25,
+      8,
+    ],
+    [
+      "bossgolem5",
+      "Golem Farmer",
+      "Beat the Golem 5 times",
+      (c) => c.boss.golem >= 5,
+      3,
+    ],
+    [
+      "bosstitan3",
+      "Titan Bane",
+      "Beat the Titan 3 times",
+      (c) => c.boss.titan >= 3,
+      5,
+    ],
+    [
+      "bossreal3",
+      "Reality's End",
+      "Beat the Reality Breaker 3 times",
+      (c) => c.boss.reality >= 3,
+      10,
+    ],
   ];
 
   const MILESTONES = [
