@@ -175,6 +175,7 @@
   let tableState = "unknown"; // unknown | ok | missing
   let flushing = false;
   let channel = null;
+  let top = [];
 
   const cfgOf = (e) => (e ? BOSSES[e.boss_type] : null);
   const msLeft = () =>
@@ -208,6 +209,7 @@
     divisor,
     equipped,
     outcome: () => lastOutcome,
+    top: () => top,
     myDamage: () => (ev ? Number(B.dmg[ev.id] || 0) : 0),
     state: () => B,
   };
@@ -327,6 +329,7 @@
       won = true;
       B.wins[done.boss_type] = (B.wins[done.boss_type] || 0) + 1;
       save();
+      if (typeof G.drBossWon === "function") G.drBossWon(done.boss_type);
     }
     if (row.status === "defeated") {
       try {
@@ -356,6 +359,7 @@
       damage: B.dmg[done.id] || 0,
     };
     lastOutcome = outcome;
+    if (typeof G.drBossLog === "function") G.drBossLog(outcome);
     ev = null;
     pendingDmg = 0;
     pendingDq = false;
@@ -436,6 +440,25 @@
   }
   setInterval(() => flush(false), 1500);
 
+  async function fetchTop() {
+    const c = sb();
+    if (!c || !ev || ev.id < 0) return;
+    const id = ev.id;
+    try {
+      const { data } = await c
+        .from("boss_players")
+        .select("username,damage,disqualified")
+        .eq("event_id", id)
+        .order("damage", { ascending: false })
+        .limit(3);
+      if (ev && ev.id === id && Array.isArray(data)) {
+        top = data;
+        notifyFx("update");
+      }
+    } catch (e) {}
+  }
+  setInterval(fetchTop, 6000);
+
   /* ==========================================================
      ROLLS: DAMAGE + CURSES
      ========================================================== */
@@ -477,8 +500,10 @@
     /* damage */
     const oneIn = Number(result && result.oneIn) || 0;
     if (oneIn > 0 && !B.dq[id]) {
-      const dmg = oneIn / divisor();
+      let dmg = oneIn / divisor();
+      if (typeof G.drBossMod === "function") dmg = G.drBossMod(dmg);
       const capped = Math.min(dmg, Number(ev.hp));
+      if (typeof G.drBonusDmg === "function") G.drBonusDmg(capped);
       pendingDmg += capped;
       B.dmg[id] = (B.dmg[id] || 0) + capped;
       notifyFx("damage", {
