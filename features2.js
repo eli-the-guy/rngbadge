@@ -374,6 +374,17 @@
           ? Object.keys(staticBadgeCatalog).length
           : 0,
       streak: Math.max(P.currentStreak(), P.daily().streak || 0),
+      bonus:
+        typeof G.drBonusStats === "function"
+          ? G.drBonusStats()
+          : {
+              chests: 0,
+              chestBest: 0,
+              crates: 0,
+              gold: 0,
+              runes: 0,
+              bossDmg: 0,
+            },
       boss:
         typeof G.drBossStats === "function"
           ? G.drBossStats()
@@ -517,6 +528,83 @@
       "Beat the Reality Breaker 3 times",
       (c) => c.boss.reality >= 3,
       10,
+    ],
+    [
+      "chest1",
+      "Treasure Hunter",
+      "Open a daily chest",
+      (c) => c.bonus.chests >= 1,
+      0,
+    ],
+    [
+      "chest7",
+      "Regular Visitor",
+      "Open 7 daily chests",
+      (c) => c.bonus.chests >= 7,
+      1,
+    ],
+    [
+      "chest30",
+      "Hoard Keeper",
+      "Open 30 daily chests",
+      (c) => c.bonus.chests >= 30,
+      3,
+    ],
+    [
+      "chestweek",
+      "Lucky Week",
+      "Reach a 7-day chest streak",
+      (c) => c.bonus.chestBest >= 7,
+      2,
+    ],
+    [
+      "crate1",
+      "Gambler",
+      "Open a mystery crate",
+      (c) => c.bonus.crates >= 1,
+      0,
+    ],
+    [
+      "crate25",
+      "High Roller",
+      "Open 25 mystery crates",
+      (c) => c.bonus.crates >= 25,
+      2,
+    ],
+    [
+      "crategold",
+      "Golden Touch",
+      "Open a Gold Crate",
+      (c) => c.bonus.gold >= 1,
+      1,
+    ],
+    [
+      "runes3",
+      "Rune Master",
+      "Own all three boss runes",
+      (c) => c.bonus.runes >= 3,
+      3,
+    ],
+    [
+      "bossdmg6",
+      "Boss Basher",
+      "Deal 1,000,000 total boss damage",
+      (c) => c.bonus.bossDmg >= 1e6,
+      1,
+    ],
+    [
+      "bossdmg12",
+      "Boss Wrecker",
+      "Deal 1 trillion total boss damage",
+      (c) => c.bonus.bossDmg >= 1e12,
+      3,
+    ],
+    [
+      "bossfights10",
+      "War Veteran",
+      "Join 10 boss fights",
+      (c) => c.boss.joined >= 10,
+      3,
     ],
   ];
 

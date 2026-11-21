@@ -132,6 +132,8 @@
       .drBsHpTxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 12px system-ui,sans-serif;text-shadow:0 1px 3px #000}
       .drBsMeta{font:700 12px/1.3 system-ui,sans-serif;color:#c7d0e4}
       .drBsMeta b{color:#fff}
+      .drBsTop{font:700 11px/1.3 system-ui,sans-serif;color:#ffd98a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .drBsTop b{color:#fff}
       .drBsMeta .dq{color:#ff6b7a;font-weight:900}
       .drBsCurse{min-width:104px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding-left:10px;border-left:1px solid rgba(255,255,255,.14)}
       .drBsCurseT{font:900 9px system-ui,sans-serif;letter-spacing:.14em;color:#ff7a8a}
@@ -874,6 +876,7 @@
         <div class="drBsName"><span>${esc(cfg.name)}</span><span class="drBsTime">--:--</span></div>
         <div class="drBsHp"><div class="drBsHpTrail"></div><div class="drBsHpFill"></div><div class="drBsHpTxt"></div></div>
         <div class="drBsMeta"></div>
+        <div class="drBsTop"></div>
       </div>
       <div class="drBsCurse"><div class="drBsCurseT">☠ CURSED ROLLS</div>${combos}</div>
       <button class="drBsMute" type="button" title="Boss music on/off">🔊</button>`;
@@ -915,7 +918,20 @@
     if (preview) meta.innerHTML = "<b>Preview</b> — only you can see this.";
     else {
       const w = B.equipped();
-      meta.innerHTML = `You dealt <b>${nf(B.myDamage())}</b> • weapon: <b>${w ? w.icon + " D=" + (w.d || "none") : "bare hands D=10,000"}</b>${B.dq() ? ' • <span class="dq">☠ DISQUALIFIED (no win)</span>' : ""}`;
+      meta.innerHTML = `You dealt <b>${nf(B.myDamage())}</b> • weapon: <b>${w ? w.icon + " D=" + (w.d || "none") : "bare hands D=1,000,000,000,000"}</b>${B.dq() ? ' • <span class="dq">☠ DISQUALIFIED (no win)</span>' : ""}`;
+    }
+    const topEl = hud.querySelector(".drBsTop");
+    if (topEl) {
+      const tp = !preview && B.top ? B.top() : [];
+      topEl.innerHTML = tp.length
+        ? "⚔ " +
+          tp
+            .map(
+              (p, i) =>
+                `${["🥇", "🥈", "🥉"][i]} ${esc(p.username || "Player")} <b>${fmtBig(p.damage)}</b>`,
+            )
+            .join(" • ")
+        : "";
     }
     lastHpShown = hp;
   }

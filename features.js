@@ -1,816 +1,811 @@
 /* ============================================================
-   DIGIT ROLL — PROGRESS (daily challenges, stats, prestige shop)
-   Loaded after shop-ui.js and sound.js.
-   Adds a "🎯 Progress" button to the nav with three tabs.
+   DIGIT ROLL — FEATURES 2
+   Timed events, achievements + titles, badge collection rewards,
+   cosmetics (themes, digit fonts, name effects), full roll log.
+   Loaded after features.js.
    ============================================================ */
 
 (function () {
   "use strict";
 
   const G = window;
+  const P = G.drProgress;
+  if (!P) return;
+
   const $id = (id) => document.getElementById(id);
   const n = (v) => Number(v || 0).toLocaleString();
-  const ROMAN = ["", "I", "II", "III", "IV", "V", "VI"];
+  const esc = (s) =>
+    typeof escapeHTML === "function"
+      ? escapeHTML(String(s))
+      : String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+  const say = (m) => typeof G.toast === "function" && G.toast(m);
+  const sfx = (a, b) => typeof G.drSfx === "function" && G.drSfx(a, b);
 
-  const TIERS = [
-    "NOVICE",
-    "PLAIN",
-    "BASIC",
-    "COMMON",
-    "UNCOMMON",
-    "RARE",
-    "EPIC",
-    "LEGENDARY",
-    "MYTHIC",
-    "DIVINE",
-    "TRANSCENDENT",
-    "CELESTIAL",
-    "ASCENDED",
-    "OMNIPOTENT",
-    "INFINITE",
-    "BEYOND",
-    "ABSOLUTE",
-    "???",
-  ];
-  const tierOf = (r) => Math.max(0, TIERS.indexOf(r));
-
-  function load(key, fallback) {
+  function load(key, fb) {
     try {
       const v = JSON.parse(localStorage.getItem(key));
-      if (v && typeof v === "object") return Object.assign(fallback, v);
+      if (v && typeof v === "object") return Object.assign(fb, v);
     } catch (e) {}
-    return fallback;
+    return fb;
   }
-  function save(key, v) {
+  const save = (key, v) => {
     try {
       localStorage.setItem(key, JSON.stringify(v));
     } catch (e) {}
-  }
-  const sfx = (name, arg) => {
-    if (typeof G.drSfx === "function") G.drSfx(name, arg);
   };
-  const say = (msg) => {
-    if (typeof G.toast === "function") G.toast(msg);
-  };
-
-  const dayKey = (d) => {
-    d = d || new Date();
-    return (
-      d.getFullYear() +
-      "-" +
-      String(d.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(d.getDate()).padStart(2, "0")
-    );
-  };
-  /* Daily challenges reset at the same moment for everyone: 00:00 UTC */
-  const utcKey = (d) => (d || new Date()).toISOString().slice(0, 10);
-  const yesterdayKey = () => utcKey(new Date(Date.now() - 86400000));
-  const resetTimeText = () => {
-    const d = new Date();
-    d.setUTCHours(0, 0, 0, 0);
-    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  };
+  const pushProfile = () =>
+    typeof G.drPushProfile === "function" && G.drPushProfile();
 
   /* ==========================================================
-     STATS (permanent, not limited to the 30-roll history)
+     TIMED EVENTS (every weekend, rotating)
      ========================================================== */
 
-  const STATS_KEY = "digitRollStats2";
-  let stats = load(STATS_KEY, {
-    rolls: 0,
-    xp: 0,
-    badgeRolls: 0,
-    best: null,
-    rarity: {},
-    days: {},
-    first: null,
-    seeded: false,
-  });
-
-  function seedStats() {
-    if (stats.seeded) return;
-    stats.seeded = true;
-    try {
-      (Array.isArray(history) ? history : []).forEach((r) =>
-        addToStats(r, true),
-      );
-    } catch (e) {}
-    save(STATS_KEY, stats);
-  }
-
-  function addToStats(r, seed) {
-    stats.rolls++;
-    stats.xp += Number(r.xp || 0);
-    if (r.badges && r.badges.length) stats.badgeRolls++;
-    stats.rarity[r.rarity] = (stats.rarity[r.rarity] || 0) + 1;
-    if (!stats.best || Number(r.oneIn || 0) > Number(stats.best.oneIn || 0)) {
-      stats.best = { oneIn: r.oneIn, roll: r.roll, rarity: r.rarity };
-    }
-    const day = seed && r.time ? dayKey(new Date(r.time)) : dayKey();
-    if (!stats.first || day < stats.first) stats.first = day;
-    const d = (stats.days[day] = stats.days[day] || { rolls: 0, xp: 0 });
-    d.rolls++;
-    d.xp += Number(r.xp || 0);
-  }
-
-  /* ==========================================================
-     DAILY CHALLENGES
-     ========================================================== */
-
-  const DAILY_KEY = "digitRollDaily";
-  let daily = load(DAILY_KEY, {
-    date: "",
-    p: [0, 0, 0],
-    done: [false, false, false],
-    names: [],
-    streak: 0,
-    lastClear: "",
-    cleared: false,
-  });
-
-  function mulberry(seed) {
-    let a = seed >>> 0;
-    return function () {
-      a = (a + 0x6d2b79f5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  const hash = (s) => {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++)
-      h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-    return h >>> 0;
-  };
-
-  const maxCount = (roll) => {
-    const c = {};
-    let m = 0;
-    for (const ch of String(roll)) m = Math.max(m, (c[ch] = (c[ch] || 0) + 1));
-    return m;
-  };
-
-  /* How rarity really behaves (simulated, 15,000 rolls per length):
-     every extra digit pushes the whole curve up. From 7 digits on, Legendary is the most common
-     tier, Mythic is common, and at 10 digits every roll has a badge. So tier goals can't be fixed
-     numbers: they are chosen from the table below so the expected effort stays about the same
-     for every roll length.
-     CUM[len][tier] = chance a roll is at least that tier, for tiers RARE (index 5) .. "???" (index 17). */
-  const CUM = {
-    5: [
-      0.46, 0.33, 0.2, 0.11, 0.054, 0.027, 0.014, 0.0057, 0.0027, 0.0013,
-      0.00093, 0.0002, 0.0002,
-    ],
-    6: [
-      0.58, 0.44, 0.29, 0.16, 0.086, 0.045, 0.023, 0.011, 0.0052, 0.0024,
-      0.0011, 0.00027, 0.00005,
-    ],
-    7: [
-      0.68, 0.53, 0.38, 0.23, 0.13, 0.071, 0.037, 0.019, 0.0092, 0.0052, 0.0021,
-      0.0012, 0.00033,
-    ],
-    8: [
-      0.78, 0.63, 0.49, 0.32, 0.19, 0.11, 0.063, 0.032, 0.014, 0.0067, 0.0037,
-      0.0019, 0.0008,
-    ],
-    9: [
-      0.85, 0.72, 0.59, 0.41, 0.25, 0.15, 0.085, 0.047, 0.026, 0.013, 0.0062,
-      0.0029, 0.00087,
-    ],
-    10: [
-      0.9, 0.81, 0.69, 0.5, 0.33, 0.21, 0.12, 0.072, 0.04, 0.02, 0.011, 0.0053,
-      0.0022,
-    ],
-    11: [
-      0.93, 0.86, 0.76, 0.59, 0.42, 0.27, 0.17, 0.1, 0.06, 0.031, 0.015, 0.0081,
-      0.0031,
-    ],
-  };
-  const curLen = () =>
-    Math.min(
-      11,
-      Math.max(5, typeof G.drRollLength === "function" ? G.drRollLength() : 5),
-    );
-  const pTier = (len, tier) => CUM[len][tier - 5];
-
-  /* pick the tier whose chance x effort is closest to the wanted goal */
-  function pickTier(effort, goal, len) {
-    let best = 8;
-    let bestErr = Infinity;
-    for (let t = 6; t <= 16; t++) {
-      const err = Math.abs(Math.log((pTier(len, t) * effort) / goal));
-      if (err < bestErr) {
-        bestErr = err;
-        best = t;
-      }
-    }
-    return best;
-  }
-  const tierLabel = (t) => TIERS[t].charAt(0) + TIERS[t].slice(1).toLowerCase();
-  const xpMult = () =>
-    Math.max(
-      1,
-      typeof G.drXPMultiplier === "function" ? G.drXPMultiplier() : 1,
-    );
-
-  /* kinds: tier = "roll <tier> or better N times" (tier chosen from your roll length),
-     rolls, xp (scaled by your XP multiplier), unique badges */
-  const POOLS = {
-    easy: [
-      { kind: "tier", effort: 100, goals: [15, 20, 25] },
-      { kind: "tier", effort: 120, goals: [18, 24] },
-      { kind: "rolls", goals: [60, 90, 120] },
-      { kind: "xp", goals: [8000, 12000] },
-    ],
-    medium: [
-      { kind: "tier", effort: 300, goals: [8, 12] },
-      { kind: "tier", effort: 350, goals: [10, 14] },
-      { kind: "rolls", goals: [250, 350] },
-      { kind: "xp", goals: [30000, 45000] },
-      { kind: "unique", goals: [30, 40] },
-    ],
-    hard: [
-      { kind: "tier", effort: 800, goals: [6, 9] },
-      { kind: "tier", effort: 1000, goals: [8, 12] },
-      { kind: "unique", goals: [55, 70] },
-      { kind: "xp", goals: [100000, 150000] },
-      { kind: "rolls", goals: [600, 900] },
-    ],
-  };
-  const REWARDS = [750, 2500, 7000];
-  const LABELS = ["Easy", "Medium", "Hard"];
-
-  /* Seeded picks are the same for everybody; tier / XP goals are fitted to your roll length. */
-  function buildCfg(i, def, rng) {
-    const goal = def.goals[Math.floor(rng() * def.goals.length)];
-    if (def.kind === "tier")
-      return {
-        kind: "tier",
-        tier: pickTier(def.effort, goal, curLen()),
-        goal,
-        len: curLen(),
-        mult: xpMult(),
-      };
-    if (def.kind === "xp")
-      return {
-        kind: "xp",
-        goal: Math.round(goal * xpMult()),
-        len: curLen(),
-        mult: xpMult(),
-      };
-    return { kind: def.kind, goal, len: curLen(), mult: xpMult() };
-  }
-
-  function todaysChallenges() {
-    ensureDay();
-    const rng = mulberry(hash("digitroll-" + utcKey()));
-    const picks = ["easy", "medium", "hard"].map((tier) => {
-      const pool = POOLS[tier];
-      const def = pool[Math.floor(rng() * pool.length)];
-      return { def, rng: mulberry(Math.floor(rng() * 4294967296)) };
-    });
-    if (!Array.isArray(daily.cfg) || daily.cfg.length !== 3)
-      daily.cfg = [null, null, null];
-    picks.forEach((p, i) => {
-      /* (re)fit while you haven't made progress, so upgrading before you start is fair */
-      const c0 = daily.cfg[i];
-      const stale =
-        !c0 ||
-        (daily.p[i] === 0 &&
-          !daily.done[i] &&
-          (c0.len !== curLen() || c0.mult !== xpMult()));
-      if (stale) daily.cfg[i] = buildCfg(i, p.def, p.rng);
-    });
-    save(DAILY_KEY, daily);
-    return picks.map((p, i) => {
-      const c = daily.cfg[i];
-      const base = {
-        tier: LABELS[i],
-        goal: c.goal,
-        reward: REWARDS[i],
-        unique: c.kind === "unique",
-      };
-      if (c.kind === "tier")
-        return Object.assign(base, {
-          text: `Roll ${tierLabel(c.tier)} or better ${c.goal} times`,
-          inc: (r) => (tierOf(r.rarity) >= c.tier ? 1 : 0),
-        });
-      if (c.kind === "rolls")
-        return Object.assign(base, {
-          text: `Roll ${c.goal} times`,
-          inc: () => 1,
-        });
-      if (c.kind === "xp")
-        return Object.assign(base, {
-          text: `Earn ${n(c.goal)} XP`,
-          inc: (r) => Number(r.xp || 0),
-        });
-      return Object.assign(base, {
-        text: `Find ${c.goal} different badges today`,
-        inc: () => 0,
-      });
-    });
-  }
-
-  function ensureDay() {
-    const today = utcKey();
-    if (daily.date !== today) {
-      daily.date = today;
-      daily.p = [0, 0, 0];
-      daily.done = [false, false, false];
-      daily.names = [];
-      daily.cfg = null;
-      daily.cleared = false;
-      save(DAILY_KEY, daily);
-    }
-  }
-
-  function currentStreak() {
-    return daily.lastClear === utcKey() || daily.lastClear === yesterdayKey()
-      ? daily.streak
-      : 0;
-  }
-
-  function giveXP(amount) {
-    try {
-      const cap = typeof G.drGetCap === "function" ? G.drGetCap() : Infinity;
-      xpBalance = Math.min(cap, getXPBalance() + amount);
-      localStorage.setItem("digitRollXPBalance", String(xpBalance));
-      if (typeof G.updateShopUI === "function") updateShopUI();
-    } catch (e) {}
-  }
-
-  function updateDaily(r) {
-    ensureDay();
-    const ch = todaysChallenges();
-    ch.forEach((c, i) => {
-      if (daily.done[i]) return;
-      if (c.unique) {
-        (r.badges || []).forEach((b) => {
-          const nm = typeof b === "string" ? b : b.name;
-          if (!daily.names.includes(nm)) daily.names.push(nm);
-        });
-        daily.p[i] = daily.names.length;
-      } else {
-        daily.p[i] += c.inc(r) || 0;
-      }
-      if (daily.p[i] >= c.goal) {
-        daily.p[i] = c.goal;
-        daily.done[i] = true;
-        const reward =
-          c.reward *
-          (typeof G.drEventDaily === "function" ? G.drEventDaily() : 1);
-        giveXP(reward);
-        say(`🎯 Daily challenge complete: ${c.text} (+${n(reward)} XP)`);
-        sfx("newbadge");
-      }
-    });
-
-    if (!daily.cleared && daily.done.every(Boolean)) {
-      daily.cleared = true;
-      daily.streak = daily.lastClear === yesterdayKey() ? daily.streak + 1 : 1;
-      daily.lastClear = utcKey();
-      prestige.earned += 1;
-      save(PRESTIGE_KEY, prestige);
-      say(
-        `🔥 All daily challenges cleared! +1 ★ prestige point • ${daily.streak}-day streak`,
-      );
-      sfx("rebirth");
-    }
-    save(DAILY_KEY, daily);
-  }
-
-  /* ==========================================================
-     PRESTIGE SHOP (points survive true rebirths)
-     ========================================================== */
-
-  const PRESTIGE_KEY = "digitRollPrestige";
-  let prestige = load(PRESTIGE_KEY, {
-    earned: 0,
-    spent: 0,
-    credited: 0,
-    perks: {},
-  });
-  prestige.perks = prestige.perks || {};
-
-  const PERKS = [
+  const EVENTS = [
     {
-      id: "head",
-      name: "🚀 Head Start",
-      costs: [2, 4, 8],
-      desc: (l) =>
-        `Every rebirth starts with XP Charm ${ROMAN[l]} (×${[1.5, 2, 3][l - 1]}) already owned.`,
+      id: "xp2",
+      name: "⚡ Double XP Weekend",
+      desc: "All XP from rolls is doubled.",
+      xp: 2,
     },
     {
-      id: "capmem",
-      name: "📦 Cap Memory",
-      costs: [3, 6, 10],
-      desc: (l) =>
-        `Every rebirth starts with ${l} XP cap upgrade${l > 1 ? "s" : ""} already bought.`,
+      id: "sale",
+      name: "🏷️ Charm Sale",
+      desc: "Number charms and lucky charms are 50% off.",
+      charm: 0.5,
     },
     {
-      id: "digmem",
-      name: "🔢 Digit Memory",
-      costs: [3, 6],
-      desc: (l) =>
-        `Every rebirth starts with ${l} number upgrade${l > 1 ? "s" : ""} already bought.`,
+      id: "luck",
+      name: "🍀 Lucky Weekend",
+      desc: "Every roll gets +1 guaranteed badge.",
+      luck: 1,
     },
     {
-      id: "skipmem",
-      name: "⏭ Skip Memory",
-      costs: [2],
-      desc: () => "Keep Skip Wait after every rebirth.",
-    },
-    {
-      id: "boost",
-      name: "💎 Prestige Boost",
-      costs: [2, 3, 4, 5, 6],
-      desc: (l) =>
-        `+${l * 10}% XP on every roll, forever (stacks with XP charms).`,
+      id: "rush",
+      name: "🎯 Daily Rush",
+      desc: "Daily challenge XP rewards are doubled.",
+      daily: 2,
     },
   ];
-  const perkLvl = (id) => Number(prestige.perks[id] || 0);
-  const points = () => prestige.earned - prestige.spent;
 
-  /* credit points for rebirths done so far (rebirth #k gives k points) */
-  function creditRebirths(count) {
-    let changed = false;
-    while (prestige.credited < count) {
-      prestige.credited++;
-      prestige.earned += prestige.credited;
-      changed = true;
-    }
-    if (changed) save(PRESTIGE_KEY, prestige);
-    return changed;
+  const weekIndex = (d) =>
+    Math.floor(
+      (Math.floor(
+        Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000,
+      ) +
+        3) /
+        7,
+    );
+
+  function startOfNextWeekend(from) {
+    const d = new Date(from);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7));
+    return d;
+  }
+  function nextMonday(from) {
+    const d = new Date(from);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+    return d;
   }
 
-  G.drPrestigeBoost = function () {
-    const ms =
-      typeof G.drMilestoneBoost === "function" ? G.drMilestoneBoost() : 1;
-    return (1 + 0.1 * perkLvl("boost")) * ms;
+  function currentEvent() {
+    let forced = null;
+    try {
+      forced = localStorage.getItem("digitRollEventForce");
+    } catch (e) {}
+    if (forced) {
+      const ev = EVENTS.find((e) => e.id === forced);
+      if (ev) return { ev, ends: null, forced: true };
+    }
+    const now = new Date();
+    const dow = now.getDay();
+    if (dow === 6 || dow === 0)
+      return {
+        ev: EVENTS[weekIndex(now) % EVENTS.length],
+        ends: nextMonday(now),
+      };
+    return null;
+  }
+  function nextEvent() {
+    const now = new Date();
+    const start = startOfNextWeekend(now);
+    return { ev: EVENTS[weekIndex(start) % EVENTS.length], starts: start };
+  }
+  G.drForceEvent = function (id) {
+    try {
+      if (id) localStorage.setItem("digitRollEventForce", id);
+      else localStorage.removeItem("digitRollEventForce");
+    } catch (e) {}
+    updateBanner();
+    if (typeof G.updateShopUI === "function") updateShopUI();
   };
 
-  /* called by shop-ui when a true rebirth happens */
-  G.drPrestigeOnRebirth = function (fresh, next) {
-    const before = prestige.earned;
-    creditRebirths(next);
-    const gained = prestige.earned - before;
-    fresh.xpCharm = Math.min(3, perkLvl("head"));
-    fresh.capLvl = perkLvl("capmem");
-    fresh.numUp = perkLvl("digmem");
-    fresh.skip = perkLvl("skipmem") > 0;
-    if (gained)
-      say(
-        `★ +${gained} prestige point${gained > 1 ? "s" : ""} for rebirth #${next}`,
-      );
+  const evVal = (key, dflt) => {
+    const c = currentEvent();
+    return c && c.ev[key] != null ? c.ev[key] : dflt;
+  };
+  G.drEventXP = () => evVal("xp", 1);
+  G.drEventCharmDiscount = () => evVal("charm", 1);
+  G.drEventLuck = () => evVal("luck", 0);
+  G.drEventDaily = () => evVal("daily", 1);
+
+  const dur = (ms) => {
+    const m = Math.max(0, Math.floor(ms / 60000));
+    const d = Math.floor(m / 1440);
+    const h = Math.floor((m % 1440) / 60);
+    return d ? `${d}d ${h}h` : h ? `${h}h ${m % 60}m` : `${m}m`;
   };
 
-  function buyPerk(id) {
-    const p = PERKS.find((x) => x.id === id);
-    if (!p) return;
-    const lvl = perkLvl(id);
-    if (lvl >= p.costs.length) return;
-    const cost = p.costs[lvl];
-    if (points() < cost) {
-      say("Not enough prestige points.");
-      sfx("error");
+  function updateBanner() {
+    let bar = $id("drEventBanner");
+    const cur = currentEvent();
+    if (!cur) {
+      if (bar) bar.remove();
       return;
     }
-    prestige.spent += cost;
-    prestige.perks[id] = lvl + 1;
-    save(PRESTIGE_KEY, prestige);
-    sfx("buy");
-    say(`★ ${p.name} ${ROMAN[lvl + 1] || lvl + 1} bought.`);
-    /* perks that matter right now */
-    if (id === "boost" && typeof G.updateShopUI === "function") updateShopUI();
-    render();
+    if (!bar) {
+      const st = document.createElement("style");
+      st.textContent = `#drEventBanner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9000;padding:8px 16px;border-radius:999px;background:linear-gradient(90deg,rgba(122,162,255,.92),rgba(142,230,173,.92));color:#0b1020;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.4);white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+      @media(max-width:650px){#drEventBanner{top:auto;bottom:70px;font-size:12px}}`;
+      document.head.appendChild(st);
+      bar = document.createElement("div");
+      bar.id = "drEventBanner";
+      bar.onclick = () => P.open("events");
+      document.body.appendChild(bar);
+    }
+    bar.textContent = `${cur.ev.name} — ${cur.ev.desc}${cur.ends ? " • ends in " + dur(cur.ends - Date.now()) : ""}`;
   }
+  setInterval(updateBanner, 30000);
+
+  function renderEvents() {
+    const cur = currentEvent();
+    const nx = nextEvent();
+    const list = EVENTS.map(
+      (e) =>
+        `<div class="pgCard ${cur && cur.ev.id === e.id ? "done" : ""}"><h3>${e.name}</h3><p>${e.desc}</p></div>`,
+    ).join("");
+    return `<div class="pgBanner">${
+      cur
+        ? `Active now: <b>${cur.ev.name}</b><br><span class="pgSub">${cur.ev.desc}${cur.ends ? " Ends in " + dur(cur.ends - Date.now()) + "." : ""}</span>`
+        : `No event right now.<br><span class="pgSub">Next: <b>${nx.ev.name}</b> starts Saturday (in ${dur(nx.starts - Date.now())}).</span>`
+    }</div>
+    <p class="pgSub">A different event runs every weekend and rotates through this list.</p>
+    <div class="pgGrid">${list}</div>`;
+  }
+  P.addTab("events", "📅 Events", renderEvents);
 
   /* ==========================================================
-     RECORDING (called from script.js for every roll)
+     COSMETICS
      ========================================================== */
 
-  G.drRecordRoll = function (result) {
-    try {
-      seedStats();
-      addToStats(result, false);
-      save(STATS_KEY, stats);
-      updateDaily(result);
-      rollHooks.forEach((fn) => {
-        try {
-          fn(result);
-        } catch (e) {}
-      });
-      if (open) render();
-    } catch (e) {
-      console.warn("progress tracking failed", e);
-    }
+  const COS_KEY = "digitRollCosmetics";
+  const cos = load(COS_KEY, { owned: {}, eq: { theme: "", font: "", fx: "" } });
+  cos.eq = Object.assign({ theme: "", font: "", fx: "" }, cos.eq);
+
+  const COSMETICS = {
+    theme: [
+      { id: "neon", name: "Neon Grid", cost: 3000 },
+      { id: "sunset", name: "Sunset", cost: 3000 },
+      { id: "matrix", name: "Matrix", cost: 4000 },
+      { id: "ice", name: "Ice", cost: 4000 },
+      { id: "gold", name: "Gold", cost: 6000 },
+    ],
+    font: [
+      { id: "mono", name: "Typewriter", cost: 1500 },
+      { id: "serif", name: "Classic Serif", cost: 1500 },
+      { id: "round", name: "Rounded", cost: 2000 },
+      { id: "impact", name: "Heavy", cost: 2500 },
+      { id: "script", name: "Script", cost: 3000 },
+    ],
+    fx: [
+      { id: "glow", name: "Glow", cost: 2500 },
+      { id: "pulse", name: "Pulse", cost: 2500 },
+      { id: "sparkle", name: "Sparkle", cost: 4000 },
+      { id: "glitch", name: "Glitch", cost: 4000 },
+      { id: "aura", name: "Aura", cost: 6000 },
+    ],
+  };
+  const KIND_LABEL = {
+    theme: "🖼️ Roll Box Themes",
+    font: "🔤 Digit Fonts",
+    fx: "✨ Name Effects",
   };
 
-  /* ==========================================================
-     UI
-     ========================================================== */
-
-  let open = false;
-  let tab = "daily";
-  const extraTabs = [];
-  const rollHooks = [];
-
-  function injectCSS() {
-    if ($id("pgCSS")) return;
+  function injectCosCSS() {
+    if ($id("cosCSS")) return;
     const st = document.createElement("style");
-    st.id = "pgCSS";
+    st.id = "cosCSS";
     st.textContent = `
-      .pgOv{position:fixed;inset:0;z-index:9997;display:none;padding:30px 18px;overflow:auto;background:rgba(0,0,0,.76);backdrop-filter:blur(12px)}
-      .pgOv.open{display:block}
-      .pgPage{width:min(960px,100%);margin:50px auto;background:rgba(18,23,34,.97);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:26px;box-shadow:0 30px 100px rgba(0,0,0,.55);color:#fff}
-      .pgHead{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:16px}
-      .pgTitle{font-size:28px;font-weight:900}
-      .pgClose{border:0;background:rgba(255,255,255,.08);color:#fff;width:40px;height:40px;border-radius:12px;cursor:pointer;font-size:22px}
-      .pgTabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-      .pgTab{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;padding:9px 16px;border-radius:12px;cursor:pointer;font-weight:800}
-      .pgTab.on{background:rgba(142,230,173,.18);border-color:rgba(142,230,173,.5)}
-      .pgBanner{padding:14px 16px;border-radius:16px;background:rgba(142,230,173,.08);border:1px solid rgba(142,230,173,.18);margin-bottom:16px;font-weight:800;line-height:1.5}
-      .pgSub{color:#aab5ca;font-weight:600;font-size:14px}
-      .pgGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-      .pgCard{padding:16px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
-      .pgCard h3{margin:0 0 6px;font-size:17px}
-      .pgCard p{margin:6px 0;color:#aab5ca;line-height:1.45}
-      .pgCard.done{border-color:rgba(142,230,173,.5);background:rgba(142,230,173,.07)}
-      .pgTag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.1);margin-bottom:8px}
-      .pgBar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:10px 0 4px}
-      .pgBar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7aa2ff,#8ee6ad)}
-      .pgBtn{width:100%;border:0;border-radius:11px;padding:11px;cursor:pointer;font-weight:850;background:rgba(142,230,173,.16);color:#fff;margin-top:10px}
-      .pgBtn:disabled{opacity:.45;cursor:not-allowed}
-      .pgH{margin:24px 0 10px;font-size:18px;font-weight:900}
-      .pgTiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-      .pgTile{padding:14px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
-      .pgTile b{display:block;font-size:22px;margin-top:4px}
-      .pgTile span{color:#aab5ca;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-      .pgChart{width:100%;height:150px;display:block}
-      .pgRow{display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center;margin:5px 0;font-size:13px;font-weight:700}
-      @media(max-width:650px){.pgPage{margin:20px auto;padding:18px}.pgRow{grid-template-columns:90px 1fr 56px}}
+      body.drTheme-neon .number{border-color:#22d3ee!important;box-shadow:0 0 0 1px #22d3ee,0 0 30px rgba(34,211,238,.45),inset 0 0 40px rgba(34,211,238,.12)!important;background-image:linear-gradient(rgba(34,211,238,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.08) 1px,transparent 1px)!important;background-size:26px 26px!important}
+      body.drTheme-sunset .number{border-color:#fb923c!important;background-image:linear-gradient(135deg,rgba(251,146,60,.25),rgba(236,72,153,.22),rgba(99,102,241,.22))!important;box-shadow:0 0 30px rgba(236,72,153,.3)!important}
+      body.drTheme-matrix .number{border-color:#22c55e!important;background-color:#020a04!important;background-image:repeating-linear-gradient(0deg,rgba(34,197,94,.08) 0 2px,transparent 2px 5px)!important;box-shadow:0 0 28px rgba(34,197,94,.35)!important}
+      body.drTheme-ice .number{border-color:#bae6fd!important;background-image:linear-gradient(160deg,rgba(186,230,253,.22),rgba(125,211,252,.06) 60%,rgba(255,255,255,.14))!important;box-shadow:0 0 30px rgba(125,211,252,.35)!important}
+      body.drTheme-gold .number{border-color:#facc15!important;background-image:linear-gradient(120deg,rgba(250,204,21,.22),rgba(255,255,255,.08),rgba(250,204,21,.22))!important;box-shadow:0 0 34px rgba(250,204,21,.4)!important;animation:drGoldSheen 4s linear infinite;background-size:220% 100%!important}
+      @keyframes drGoldSheen{to{background-position:-220% 0}}
+      body.drFont-mono .number{font-family:"Courier New",ui-monospace,monospace!important}
+      body.drFont-serif .number{font-family:Georgia,"Times New Roman",serif!important}
+      body.drFont-round .number{font-family:"Trebuchet MS","Arial Rounded MT Bold",sans-serif!important}
+      body.drFont-impact .number{font-family:Impact,"Arial Black",sans-serif!important;letter-spacing:.06em}
+      body.drFont-script .number{font-family:"Brush Script MT","Segoe Script",cursive!important}
+      .drNm{display:inline-block}
+      .drNm-glow{text-shadow:0 0 8px currentColor,0 0 18px currentColor}
+      .drNm-pulse{animation:drNmPulse 1.6s ease-in-out infinite}
+      @keyframes drNmPulse{0%,100%{text-shadow:0 0 2px currentColor}50%{text-shadow:0 0 14px currentColor,0 0 26px currentColor}}
+      .drNm-sparkle{position:relative}
+      .drNm-sparkle::after{content:"✦";position:absolute;right:-.9em;top:-.3em;font-size:.8em;color:#fde68a;animation:drNmSpark 1.4s ease-in-out infinite}
+      @keyframes drNmSpark{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(90deg)}}
+      .drNm-glitch{animation:drNmGlitch 2.4s steps(1) infinite}
+      @keyframes drNmGlitch{0%,90%,100%{text-shadow:none}92%{text-shadow:2px 0 #f0f,-2px 0 #0ff}95%{text-shadow:-2px 1px #f0f,2px -1px #0ff}}
+      .drNm-aura{text-shadow:0 0 6px currentColor,0 0 14px currentColor,0 0 30px currentColor;animation:drNmAura 3s ease-in-out infinite}
+      @keyframes drNmAura{50%{text-shadow:0 0 10px currentColor,0 0 24px currentColor,0 0 46px currentColor}}
+      .pgSw{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+      .pgSw .pgBtn{margin:0;flex:1;min-width:100px}
+      .pgBtn.on{background:rgba(122,162,255,.3);outline:1px solid rgba(122,162,255,.7)}
+      @media (prefers-reduced-motion:reduce){.drNm{animation:none!important}.drNm-sparkle::after{animation:none;opacity:1}}
     `;
     document.head.appendChild(st);
   }
 
-  function ensureOverlay() {
-    injectCSS();
-    if ($id("pgOverlay")) return;
-    const ov = document.createElement("div");
-    ov.id = "pgOverlay";
-    ov.className = "pgOv";
-    ov.innerHTML = `<div class="pgPage" role="dialog" aria-modal="true">
-        <div class="pgHead"><div class="pgTitle">🎯 Progress</div><button class="pgClose" id="pgClose" type="button">×</button></div>
-        <div class="pgTabs" id="pgTabs"></div>
-        <div id="pgBody"></div>
-      </div>`;
-    document.body.appendChild(ov);
-    ov.addEventListener("click", (e) => {
-      if (e.target === ov) close();
-    });
-    $id("pgClose").onclick = close;
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && open) close();
-    });
+  function applyCosmetics() {
+    injectCosCSS();
+    const cl = document.body.classList;
+    [...cl]
+      .filter((c) => /^dr(Theme|Font)-/.test(c))
+      .forEach((c) => cl.remove(c));
+    if (cos.eq.theme) cl.add("drTheme-" + cos.eq.theme);
+    if (cos.eq.font) cl.add("drFont-" + cos.eq.font);
   }
+  G.drGetNameFx = () => cos.eq.fx || "";
 
-  function openPage(t) {
-    ensureOverlay();
-    if (t) tab = t;
-    open = true;
-    creditRebirths(
-      typeof G.__drShop !== "undefined" ? G.__drShop.S.rebirths : 0,
-    );
-    $id("pgOverlay").classList.add("open");
-    sfx("open");
-    render();
-  }
-  function close() {
-    open = false;
-    const ov = $id("pgOverlay");
-    if (ov) ov.classList.remove("open");
-    sfx("close");
-  }
-  G.drOpenProgress = openPage;
-
-  function render() {
-    if (!open) return;
-    ensureDay();
-    const tabs = [
-      ["daily", "🎯 Daily"],
-      ["stats", "📈 Stats"],
-      ["prestige", "★ Prestige"],
-    ].concat(
-      extraTabs
-        .filter((t) => !t.visible || t.visible())
-        .map((t) => [t.key, t.label]),
-    );
-    if (!tabs.some((t) => t[0] === tab)) tab = "daily";
-    $id("pgTabs").innerHTML = tabs
-      .map(
-        ([k, l]) =>
-          `<button class="pgTab ${tab === k ? "on" : ""}" data-t="${k}" type="button">${l}${k === "prestige" ? ` (${points()})` : ""}</button>`,
-      )
-      .join("");
-    $id("pgTabs")
-      .querySelectorAll(".pgTab")
-      .forEach((b) => {
-        b.onclick = () => {
-          tab = b.dataset.t;
-          sfx("click");
-          render();
-        };
-      });
-    const extra = extraTabs.find((t) => t.key === tab);
-    $id("pgBody").innerHTML = extra
-      ? extra.render()
-      : tab === "daily"
-        ? renderDaily()
-        : tab === "stats"
-          ? renderStats()
-          : renderPrestige();
-    $id("pgBody")
-      .querySelectorAll("[data-perk]")
-      .forEach((b) => (b.onclick = () => buyPerk(b.dataset.perk)));
-    if (extra && extra.bind) extra.bind($id("pgBody"));
-  }
-
-  function renderDaily() {
-    const ch = todaysChallenges();
-    const streak = currentStreak();
-    const cards = ch
-      .map((c, i) => {
-        const pct = Math.min(100, Math.round((daily.p[i] / c.goal) * 100));
-        return `<div class="pgCard ${daily.done[i] ? "done" : ""}">
-          <span class="pgTag">${c.tier}</span>
-          <h3>${c.text}</h3>
-          <div class="pgBar"><i style="width:${pct}%"></i></div>
-          <p>${n(daily.p[i])} / ${n(c.goal)} ${daily.done[i] ? "✓ Complete" : ""}</p>
-          <p>Reward: <b>${n(c.reward)} XP</b> (limited by your XP cap)</p>
-        </div>`;
-      })
-      .join("");
-    return `<div class="pgBanner">New challenges every day at <b>${resetTimeText()}</b> your time (00:00 UTC, same moment for everyone).<br>
-        <span class="pgSub">Clear all three for +1 ★ prestige point. 🔥 Streak: <b>${streak}</b> day${streak === 1 ? "" : "s"}${daily.cleared ? " • Today cleared ✓" : ""}</span></div>
-      <div class="pgGrid">${cards}</div>`;
-  }
-
-  function lineChart(values, color) {
-    const W = 600,
-      H = 150,
-      pad = 18;
-    const max = Math.max(1, ...values);
-    const bw = (W - pad * 2) / values.length;
-    const bars = values
-      .map((v, i) => {
-        const h = (v / max) * (H - pad * 2);
-        return `<rect x="${(pad + i * bw + 3).toFixed(1)}" y="${(H - pad - h).toFixed(1)}" width="${(bw - 6).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${color}"><title>${n(v)}</title></rect>`;
-      })
-      .join("");
-    return `<svg class="pgChart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-      <line x1="${pad}" y1="${H - pad}" x2="${W - pad}" y2="${H - pad}" stroke="rgba(255,255,255,.2)"/>
-      <text x="${pad}" y="12" fill="#aab5ca" font-size="11">max ${n(max)}</text>${bars}</svg>`;
-  }
-
-  function renderStats() {
-    seedStats();
-    const days = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      days.push(dayKey(d));
+  function spendXP(cost) {
+    if (getXPBalance() < cost) {
+      say("Not enough XP.");
+      sfx("error");
+      return false;
     }
-    const rollsSeries = days.map((d) =>
-      stats.days[d] ? stats.days[d].rolls : 0,
-    );
-    const xpSeries = days.map((d) => (stats.days[d] ? stats.days[d].xp : 0));
-    const played = Object.keys(stats.days).length;
-    const unlocked =
-      typeof getUnlockedBadgeNames === "function"
-        ? getUnlockedBadgeNames().size
-        : 0;
-    const catalog =
-      typeof staticBadgeCatalog !== "undefined"
-        ? Object.keys(staticBadgeCatalog).length
-        : 0;
-    const rb = G.__drShop ? G.__drShop.S.rebirths : 0;
-
-    const tile = (l, v) =>
-      `<div class="pgTile"><span>${l}</span><b>${v}</b></div>`;
-    const tiles = [
-      tile("Total rolls", n(stats.rolls)),
-      tile("Total XP earned", n(stats.xp)),
-      tile(
-        "Avg XP / roll",
-        stats.rolls ? n(Math.round(stats.xp / stats.rolls)) : "—",
-      ),
-      tile(
-        "Rolls with badges",
-        stats.rolls
-          ? Math.round((stats.badgeRolls / stats.rolls) * 100) + "%"
-          : "—",
-      ),
-      tile("Badges unlocked", `${n(unlocked)} / ${n(catalog)}`),
-      tile("Days played", n(played)),
-      tile("Rebirths", n(rb)),
-      tile("Daily streak", n(currentStreak())),
-    ].join("");
-
-    const best = stats.best
-      ? `<div class="pgBanner">🏆 Rarest roll: <b>${stats.best.roll}</b> — ${stats.best.rarity} • 1 in ${n(stats.best.oneIn)}</div>`
-      : "";
-
-    const rar = Object.entries(stats.rarity).sort(
-      (a, b) => tierOf(b[0]) - tierOf(a[0]),
-    );
-    const top = Math.max(1, ...rar.map((r) => r[1]));
-    const rows = rar
-      .map(
-        ([name, c]) =>
-          `<div class="pgRow"><span>${name}</span><div class="pgBar" style="margin:0"><i style="width:${Math.max(2, (c / top) * 100)}%"></i></div><span>${n(c)}</span></div>`,
-      )
-      .join("");
-
-    return `${best}<div class="pgTiles">${tiles}</div>
-      <div class="pgH">Rolls per day (last 14 days)</div>${lineChart(rollsSeries, "#7aa2ff")}
-      <div class="pgH">XP earned per day (last 14 days)</div>${lineChart(xpSeries, "#8ee6ad")}
-      <div class="pgH">Rarity breakdown</div>${rows || '<p class="pgSub">Roll a few times to see your breakdown.</p>'}`;
-  }
-
-  function renderPrestige() {
-    const cards = PERKS.map((p) => {
-      const lvl = perkLvl(p.id);
-      const maxed = lvl >= p.costs.length;
-      const cost = p.costs[lvl];
-      const can = !maxed && points() >= cost;
-      return `<div class="pgCard ${maxed ? "done" : ""}">
-        <h3>${p.name}</h3>
-        <p>${p.desc(maxed ? lvl : lvl + 1)}</p>
-        <p>Level <b>${lvl}</b> / ${p.costs.length}${maxed ? "" : ` • Cost: <b>${cost} ★</b>`}</p>
-        <button class="pgBtn" data-perk="${p.id}" ${can ? "" : "disabled"}>${maxed ? "✓ Maxed" : can ? "Buy" : "Not enough ★"}</button>
-      </div>`;
-    }).join("");
-    return `<div class="pgBanner">★ Prestige points: <b>${points()}</b><br>
-      <span class="pgSub">Earn them from true rebirths (rebirth #N gives N points) and by clearing all three daily challenges (+1). Perks are permanent and are <b>not</b> reset by rebirth.</span></div>
-      <div class="pgGrid">${cards}</div>`;
-  }
-
-  /* ---------- extension API for other scripts ---------- */
-  G.drProgress = {
-    addTab: (key, label, renderFn, bindFn, visibleFn) =>
-      extraTabs.push({
-        key,
-        label,
-        render: renderFn,
-        bind: bindFn,
-        visible: visibleFn,
-      }),
-    onRoll: (fn) => rollHooks.push(fn),
-    rerender: () => render(),
-    isOpen: () => open,
-    close: () => close(),
-    stats: () => stats,
-    daily: () => daily,
-    currentStreak,
-    addPoints: (v) => {
-      prestige.earned += v;
-      save(PRESTIGE_KEY, prestige);
-    },
-    open: openPage,
-    tierOf,
-    TIERS,
-    dayKey,
-  };
-
-  /* ---------- nav button ---------- */
-
-  function ensureButton() {
-    const nav = $id("digitRollNav");
-    if (!nav) return false;
-    if (!$id("pgNavButton")) {
-      const b = document.createElement("button");
-      b.id = "pgNavButton";
-      b.className = "drNavBtn";
-      b.type = "button";
-      b.textContent = "🎯 Progress";
-      b.onclick = () => openPage();
-      nav.insertBefore(b, nav.children[2] || null);
-    }
+    xpBalance = getXPBalance() - cost;
+    xpSpent += cost;
+    saveShopState();
+    localStorage.setItem("digitRollXPBalance", String(xpBalance));
+    if (typeof G.updateShopUI === "function") updateShopUI();
     return true;
   }
 
-  let tries = 0;
-  const boot = setInterval(() => {
-    tries++;
-    if (ensureButton() || tries > 40) clearInterval(boot);
-  }, 150);
+  const ownedCount = () => Object.keys(cos.owned).length;
 
-  /* make sure nothing breaks when other pages close */
-  seedStats();
-  ensureDay();
-  creditRebirths(G.__drShop ? G.__drShop.S.rebirths : 0);
+  function renderCosmetics() {
+    const bal = getXPBalance();
+    const cap = typeof G.drGetCap === "function" ? G.drGetCap() : 0;
+    let html = `<div class="pgBanner">💰 XP: ${n(bal)} / ${n(cap)}<br><span class="pgSub">Cosmetics are permanent and are not reset by rebirth. Name effects are shown to everyone on the leaderboard (needs features-setup.sql for other players to see them).</span></div>`;
+    Object.keys(COSMETICS).forEach((kind) => {
+      const cards = COSMETICS[kind]
+        .map((it) => {
+          const key = kind + ":" + it.id;
+          const owned = !!cos.owned[key];
+          const eq = cos.eq[kind] === it.id;
+          const btn = owned
+            ? `<button class="pgBtn ${eq ? "on" : ""}" data-eq="${kind}:${it.id}">${eq ? "✓ Equipped" : "Equip"}</button>`
+            : `<button class="pgBtn" data-buy="${kind}:${it.id}" ${bal >= it.cost ? "" : "disabled"}>${bal >= it.cost ? "Buy" : bal < it.cost && cap < it.cost ? "Raise your XP cap first" : "Not enough XP"}</button>`;
+          const demo =
+            kind === "fx"
+              ? `<p>Preview: <span class="drNm drNm-${it.id}" style="color:#a855f7;font-weight:900">PlayerName</span></p>`
+              : "";
+          return `<div class="pgCard ${eq ? "done" : ""}"><h3>${it.name}</h3>${demo}<p>${owned ? "Owned" : "Cost: <b>" + n(it.cost) + " XP</b>"}</p>${btn}</div>`;
+        })
+        .join("");
+      const none = cos.eq[kind]
+        ? `<button class="pgBtn" data-eq="${kind}:" style="max-width:220px">Remove ${kind === "fx" ? "effect" : kind === "font" ? "font" : "theme"}</button>`
+        : "";
+      html += `<div class="pgH">${KIND_LABEL[kind]}</div><div class="pgGrid">${cards}</div>${none}`;
+    });
+    return html;
+  }
+
+  function bindCosmetics(root) {
+    root.querySelectorAll("[data-buy]").forEach((b) => {
+      b.onclick = () => {
+        const [kind, id] = b.dataset.buy.split(":");
+        const it = COSMETICS[kind].find((x) => x.id === id);
+        if (!it || cos.owned[b.dataset.buy] || !spendXP(it.cost)) return;
+        cos.owned[b.dataset.buy] = true;
+        cos.eq[kind] = id;
+        save(COS_KEY, cos);
+        applyCosmetics();
+        sfx("buy");
+        say("🎨 " + it.name + " bought and equipped.");
+        if (kind === "fx") pushProfile();
+        checkAll();
+        P.rerender();
+      };
+    });
+    root.querySelectorAll("[data-eq]").forEach((b) => {
+      b.onclick = () => {
+        const [kind, id] = b.dataset.eq.split(":");
+        cos.eq[kind] = id || "";
+        save(COS_KEY, cos);
+        applyCosmetics();
+        sfx("click");
+        if (kind === "fx") pushProfile();
+        if (typeof G.loadLeaderboard === "function") G.loadLeaderboard();
+        P.rerender();
+      };
+    });
+  }
+  P.addTab("style", "🎨 Style", renderCosmetics, bindCosmetics);
+
+  /* ==========================================================
+     ACHIEVEMENTS, TITLES, COLLECTION MILESTONES
+     ========================================================== */
+
+  const ACH_KEY = "digitRollAch";
+  const ach = load(ACH_KEY, { done: {}, title: "", milestones: {} });
+
+  const maxTier = (s) =>
+    Object.keys(s.rarity || {}).reduce(
+      (m, k) => (s.rarity[k] > 0 ? Math.max(m, P.tierOf(k)) : m),
+      0,
+    );
+  const ctx = () => {
+    const s = P.stats();
+    return {
+      s,
+      rolls: s.rolls,
+      xp: s.xp,
+      tier: maxTier(s),
+      rb: G.__drShop ? G.__drShop.S.rebirths : 0,
+      sh: G.__drShop ? G.__drShop.S : {},
+      unl:
+        typeof getUnlockedBadgeNames === "function"
+          ? getUnlockedBadgeNames().size
+          : 0,
+      cat:
+        typeof staticBadgeCatalog !== "undefined"
+          ? Object.keys(staticBadgeCatalog).length
+          : 0,
+      streak: Math.max(P.currentStreak(), P.daily().streak || 0),
+      bonus:
+        typeof G.drBonusStats === "function"
+          ? G.drBonusStats()
+          : {
+              chests: 0,
+              chestBest: 0,
+              crates: 0,
+              gold: 0,
+              runes: 0,
+              bossDmg: 0,
+            },
+      boss:
+        typeof G.drBossStats === "function"
+          ? G.drBossStats()
+          : { joined: 0, total: 0, golem: 0, titan: 0, reality: 0 },
+    };
+  };
+
+  const ACHS = [
+    ["rookie", "Rookie", "Roll 100 times", (c) => c.rolls >= 100, 0],
+    ["veteran", "Veteran", "Roll 1,000 times", (c) => c.rolls >= 1000, 1],
+    ["grinder", "Grinder", "Roll 10,000 times", (c) => c.rolls >= 10000, 2],
+    ["rich", "Rich", "Earn 100,000 XP in total", (c) => c.xp >= 100000, 1],
+    [
+      "tycoon",
+      "Tycoon",
+      "Earn 1,000,000 XP in total",
+      (c) => c.xp >= 1000000,
+      2,
+    ],
+    ["epic", "Epic Finder", "Roll an Epic", (c) => c.tier >= 6, 0],
+    ["legend", "Legend", "Roll a Legendary", (c) => c.tier >= 7, 0],
+    ["myth", "Mythbreaker", "Roll a Mythic", (c) => c.tier >= 8, 1],
+    ["divine", "Blessed", "Roll a Divine", (c) => c.tier >= 9, 2],
+    ["trans", "Transcendent", "Roll a Transcendent", (c) => c.tier >= 10, 3],
+    [
+      "beyond",
+      "Beyond Reason",
+      "Roll an Ascended or higher",
+      (c) => c.tier >= 12,
+      3,
+    ],
+    ["absolute", "The Absolute", "Roll an Absolute", (c) => c.tier >= 16, 5],
+    ["reborn", "Reborn", "Do 1 true rebirth", (c) => c.rb >= 1, 0],
+    ["phoenix", "Phoenix", "Do 3 true rebirths", (c) => c.rb >= 3, 2],
+    ["rainbow", "Rainbow Soul", "Do 8 true rebirths", (c) => c.rb >= 8, 5],
+    ["collector", "Collector", "Unlock 25 badges", (c) => c.unl >= 25, 0],
+    ["hoarder", "Hoarder", "Unlock 100 badges", (c) => c.unl >= 100, 1],
+    [
+      "complete",
+      "Completionist",
+      "Unlock every badge",
+      (c) => c.cat > 0 && c.unl >= c.cat,
+      5,
+    ],
+    [
+      "streak3",
+      "Dedicated",
+      "Reach a 3-day daily streak",
+      (c) => c.streak >= 3,
+      0,
+    ],
+    [
+      "streak7",
+      "Devoted",
+      "Reach a 7-day daily streak",
+      (c) => c.streak >= 7,
+      2,
+    ],
+    [
+      "streak30",
+      "Unstoppable",
+      "Reach a 30-day daily streak",
+      (c) => c.streak >= 30,
+      5,
+    ],
+    [
+      "multi",
+      "Multiplier",
+      "Own XP Charm VIII (×10)",
+      (c) => c.sh.xpCharm >= 8,
+      1,
+    ],
+    ["gloves", "Lucky One", "Own Lucky Gloves V", (c) => c.sh.gloves >= 5, 1],
+    ["stylist", "Stylist", "Own 3 cosmetics", () => ownedCount() >= 3, 0],
+    [
+      "bossjoin",
+      "Brave Fool",
+      "Take part in a boss fight",
+      (c) => c.boss.joined >= 1,
+      1,
+    ],
+    [
+      "bossgolem",
+      "Golem Crusher",
+      "Beat the Stonebound Golem",
+      (c) => c.boss.golem >= 1,
+      2,
+    ],
+    [
+      "bosstitan",
+      "Titan Toppler",
+      "Beat the Titan of the Abyss",
+      (c) => c.boss.titan >= 1,
+      4,
+    ],
+    [
+      "bossreal",
+      "Reality Reaver",
+      "Beat the Reality Breaker",
+      (c) => c.boss.reality >= 1,
+      8,
+    ],
+    [
+      "bossany3",
+      "Boss Hunter",
+      "Beat 3 bosses in total",
+      (c) => c.boss.total >= 3,
+      2,
+    ],
+    [
+      "bossany10",
+      "Boss Slayer",
+      "Beat 10 bosses in total",
+      (c) => c.boss.total >= 10,
+      4,
+    ],
+    [
+      "bossany25",
+      "Boss Legend",
+      "Beat 25 bosses in total",
+      (c) => c.boss.total >= 25,
+      8,
+    ],
+    [
+      "bossgolem5",
+      "Golem Farmer",
+      "Beat the Golem 5 times",
+      (c) => c.boss.golem >= 5,
+      3,
+    ],
+    [
+      "bosstitan3",
+      "Titan Bane",
+      "Beat the Titan 3 times",
+      (c) => c.boss.titan >= 3,
+      5,
+    ],
+    [
+      "bossreal3",
+      "Reality's End",
+      "Beat the Reality Breaker 3 times",
+      (c) => c.boss.reality >= 3,
+      10,
+    ],
+    [
+      "chest1",
+      "Treasure Hunter",
+      "Open a daily chest",
+      (c) => c.bonus.chests >= 1,
+      0,
+    ],
+    [
+      "chest7",
+      "Regular Visitor",
+      "Open 7 daily chests",
+      (c) => c.bonus.chests >= 7,
+      1,
+    ],
+    [
+      "chest30",
+      "Hoard Keeper",
+      "Open 30 daily chests",
+      (c) => c.bonus.chests >= 30,
+      3,
+    ],
+    [
+      "chestweek",
+      "Lucky Week",
+      "Reach a 7-day chest streak",
+      (c) => c.bonus.chestBest >= 7,
+      2,
+    ],
+    [
+      "crate1",
+      "Gambler",
+      "Open a mystery crate",
+      (c) => c.bonus.crates >= 1,
+      0,
+    ],
+    [
+      "crate25",
+      "High Roller",
+      "Open 25 mystery crates",
+      (c) => c.bonus.crates >= 25,
+      2,
+    ],
+    [
+      "crategold",
+      "Golden Touch",
+      "Open a Gold Crate",
+      (c) => c.bonus.gold >= 1,
+      1,
+    ],
+    [
+      "runes3",
+      "Rune Master",
+      "Own all three boss runes",
+      (c) => c.bonus.runes >= 3,
+      3,
+    ],
+    [
+      "bossdmg6",
+      "Boss Basher",
+      "Deal 1,000,000 total boss damage",
+      (c) => c.bonus.bossDmg >= 1e6,
+      1,
+    ],
+    [
+      "bossdmg12",
+      "Boss Wrecker",
+      "Deal 1 trillion total boss damage",
+      (c) => c.bonus.bossDmg >= 1e12,
+      3,
+    ],
+    [
+      "bossfights10",
+      "War Veteran",
+      "Join 10 boss fights",
+      (c) => c.boss.joined >= 10,
+      3,
+    ],
+  ];
+
+  const MILESTONES = [
+    { pct: 25, pts: 1, boost: 0.05 },
+    { pct: 50, pts: 2, boost: 0.05 },
+    { pct: 75, pts: 3, boost: 0.05 },
+    { pct: 100, pts: 5, boost: 0.1 },
+  ];
+  G.drMilestoneBoost = () =>
+    1 +
+    MILESTONES.reduce((s, m) => s + (ach.milestones[m.pct] ? m.boost : 0), 0);
+  G.drGetTitle = () =>
+    ach.title && ach.done[ach.title]
+      ? ACHS.find((a) => a[0] === ach.title)[1]
+      : "";
+
+  let checking = false;
+  function checkAll() {
+    if (checking) return;
+    checking = true;
+    try {
+      const c = ctx();
+      let changed = false;
+      ACHS.forEach(([id, title, desc, test, pts]) => {
+        if (ach.done[id]) return;
+        let ok = false;
+        try {
+          ok = test(c);
+        } catch (e) {}
+        if (!ok) return;
+        ach.done[id] = Date.now();
+        changed = true;
+        if (pts) P.addPoints(pts);
+        say(
+          `🏆 Achievement: ${title}${pts ? " (+" + pts + " ★)" : ""} — title unlocked!`,
+        );
+        sfx("newbadge");
+      });
+      const pct = c.cat ? (c.unl / c.cat) * 100 : 0;
+      MILESTONES.forEach((m) => {
+        if (ach.milestones[m.pct] || pct < m.pct) return;
+        ach.milestones[m.pct] = Date.now();
+        changed = true;
+        P.addPoints(m.pts);
+        say(
+          `🏅 Badge collection ${m.pct}%! +${m.pts} ★ and +${Math.round(m.boost * 100)}% XP forever.`,
+        );
+        sfx("rebirth");
+      });
+      if (changed) {
+        save(ACH_KEY, ach);
+        pushProfile();
+        if (P.isOpen()) P.rerender();
+        if (typeof G.updateShopUI === "function") updateShopUI();
+      }
+    } finally {
+      checking = false;
+    }
+  }
+  P.onRoll(checkAll);
+  setInterval(checkAll, 15000);
+
+  function renderGoals() {
+    checkAll();
+    const c = ctx();
+    const pct = c.cat ? Math.min(100, (c.unl / c.cat) * 100) : 0;
+    const ms = MILESTONES.map((m) => {
+      const got = !!ach.milestones[m.pct];
+      return `<div class="pgCard ${got ? "done" : ""}"><span class="pgTag">${m.pct}% of badges</span><h3>${got ? "✓ Reached" : "Locked"}</h3><p>Reward: +${m.pts} ★ and +${Math.round(m.boost * 100)}% XP permanently.</p></div>`;
+    }).join("");
+    const cards = ACHS.map(([id, title, desc, , pts]) => {
+      const done = !!ach.done[id];
+      const eq = ach.title === id;
+      return `<div class="pgCard ${done ? "done" : ""}"><h3>${done ? "🏆" : "🔒"} ${esc(title)}</h3><p>${esc(desc)}${pts ? ` • +${pts} ★` : ""}</p>${
+        done
+          ? `<button class="pgBtn ${eq ? "on" : ""}" data-title="${id}">${eq ? "✓ Title equipped" : "Equip title"}</button>`
+          : ""
+      }</div>`;
+    }).join("");
+    return `<div class="pgBanner">Badge collection: <b>${n(c.unl)} / ${n(c.cat)}</b> (${pct.toFixed(1)}%) • Achievements: <b>${Object.keys(ach.done).length} / ${ACHS.length}</b><br>
+      <span class="pgSub">Equip a title to show it next to your name on the leaderboard.</span>
+      <div class="pgBar"><i style="width:${pct}%"></i></div></div>
+      ${ach.title ? `<button class="pgBtn" data-title="" style="max-width:220px;margin:0 0 14px">Remove title</button>` : ""}
+      <div class="pgH">Collection milestones</div><div class="pgGrid">${ms}</div>
+      <div class="pgH">Achievements</div><div class="pgGrid">${cards}</div>`;
+  }
+  function bindGoals(root) {
+    root.querySelectorAll("[data-title]").forEach((b) => {
+      b.onclick = () => {
+        ach.title = b.dataset.title;
+        save(ACH_KEY, ach);
+        sfx("click");
+        pushProfile();
+        if (typeof G.loadLeaderboard === "function") G.loadLeaderboard();
+        P.rerender();
+      };
+    });
+  }
+  P.addTab("goals", "🏆 Goals", renderGoals, bindGoals);
+
+  /* ==========================================================
+     FULL ROLL LOG (last 500 rolls, paged)
+     ========================================================== */
+
+  const LOG_KEY = "digitRollLog";
+  let log = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(LOG_KEY));
+    if (Array.isArray(raw)) log = raw;
+  } catch (e) {}
+
+  function seedLog() {
+    if (log.length || !Array.isArray(history)) return;
+    log = history.map((r) => ({
+      r: r.roll,
+      o: r.oneIn,
+      k: r.rarity,
+      x: r.xp,
+      t: r.time || Date.now(),
+      b: (r.badges || [])
+        .map((b) => (typeof b === "string" ? b : b.name))
+        .slice(0, 8),
+    }));
+  }
+  seedLog();
+
+  P.onRoll((r) => {
+    log.unshift({
+      r: r.roll,
+      o: r.oneIn,
+      k: r.rarity,
+      x: r.xp,
+      t: r.time || Date.now(),
+      b: (r.badges || [])
+        .map((b) => (typeof b === "string" ? b : b.name))
+        .slice(0, 8),
+    });
+    if (log.length > 500) log.length = 500;
+    save(LOG_KEY, log);
+  });
+  G.drGetLog = () => log;
+
+  const logState = { page: 0, min: 0 };
+  const PAGE = 20;
+
+  function renderLog() {
+    const rows = log.filter((e) => P.tierOf(e.k) >= logState.min);
+    const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+    logState.page = Math.min(logState.page, pages - 1);
+    const slice = rows.slice(logState.page * PAGE, logState.page * PAGE + PAGE);
+    const opts = ["All rarities"].concat(
+      P.TIERS.slice(3, 17).map((t) => t + "+"),
+    );
+    const sel = `<select id="pgLogMin" style="padding:9px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff">${opts
+      .map(
+        (o, i) =>
+          `<option value="${i === 0 ? 0 : i + 2}" ${logState.min === (i === 0 ? 0 : i + 2) ? "selected" : ""}>${o}</option>`,
+      )
+      .join("")}</select>`;
+    const list = slice
+      .map(
+        (
+          e,
+        ) => `<div class="pgCard" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px">
+          <div><b style="font-size:20px;letter-spacing:.06em">${esc(e.r)}</b> <span class="rarity ${typeof rarityClass === "function" ? rarityClass(e.k) : ""}">${esc(e.k)}</span>
+          <div class="pgSub">1 in ${n(e.o)} • +${n(e.x)} XP • ${new Date(e.t).toLocaleString()}${e.b && e.b.length ? " • 🏅 " + e.b.map(esc).join(", ") : ""}</div></div>
+          <button class="pgBtn" style="margin:0;width:auto;padding:9px 14px" data-share="${log.indexOf(e)}">📤 Share</button></div>`,
+      )
+      .join("");
+    return `<div class="pgBanner" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">Showing ${rows.length} of your last ${log.length} rolls ${sel}</div>
+      ${list || '<p class="pgSub">No rolls match.</p>'}
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;margin-top:12px">
+        <button class="pgBtn" id="pgLogPrev" style="width:auto;margin:0;padding:9px 18px" ${logState.page <= 0 ? "disabled" : ""}>← Prev</button>
+        <span class="pgSub">Page ${logState.page + 1} / ${pages}</span>
+        <button class="pgBtn" id="pgLogNext" style="width:auto;margin:0;padding:9px 18px" ${logState.page >= pages - 1 ? "disabled" : ""}>Next →</button></div>`;
+  }
+  function bindLog(root) {
+    const sel = root.querySelector("#pgLogMin");
+    if (sel)
+      sel.onchange = () => {
+        logState.min = Number(sel.value);
+        logState.page = 0;
+        P.rerender();
+      };
+    const pv = root.querySelector("#pgLogPrev");
+    const nx = root.querySelector("#pgLogNext");
+    if (pv) pv.onclick = () => (logState.page--, P.rerender());
+    if (nx) nx.onclick = () => (logState.page++, P.rerender());
+    root.querySelectorAll("[data-share]").forEach((b) => {
+      b.onclick = () => {
+        const e = log[Number(b.dataset.share)];
+        if (e && typeof G.drShareRoll === "function") G.drShareRoll(e);
+        else say("Share isn't available yet.");
+      };
+    });
+  }
+  P.addTab("log", "📜 Log", renderLog, bindLog);
+
+  /* ---------- boot ---------- */
+  applyCosmetics();
+  updateBanner();
+  setTimeout(checkAll, 1500);
 })();
