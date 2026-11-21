@@ -11,9 +11,27 @@
 
   const G = window;
   const $id = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const nf = (v) => Math.round(Number(v) || 0).toLocaleString();
-  const RM = () => !!(G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const nf = (v) => {
+    v = Number(v) || 0;
+    if (Math.abs(v) >= 1e15) return v.toExponential(2).replace("e+", " × 10^");
+    return Math.round(v).toLocaleString();
+  };
+  const RM = () =>
+    !!(
+      G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const M = () => G.drBossMusic || {};
@@ -25,9 +43,27 @@
 
   const FIG = { golem: "🗿", titan: "🤖", reality: "👁️" };
   const TAUNTS = {
-    golem: ["GRRRMMMM…", "CRUSH.", "YOU ARE PEBBLES.", "STONE DOES NOT FORGET.", "ROLL AND BE BROKEN."],
-    titan: ["KNEEL.", "BEHOLD THE ABYSS.", "I AM THE STORM.", "YOUR DIGITS ARE DUST.", "COUNT YOUR LAST XP."],
-    reality: ["1 + 1 = ?", "NUMBERS ARE LIES.", "I UNMAKE THE DIGITS.", "THERE IS NO ROLL.", "NaN NaN NaN"],
+    golem: [
+      "GRRRMMMM…",
+      "CRUSH.",
+      "YOU ARE PEBBLES.",
+      "STONE DOES NOT FORGET.",
+      "ROLL AND BE BROKEN.",
+    ],
+    titan: [
+      "KNEEL.",
+      "BEHOLD THE ABYSS.",
+      "I AM THE STORM.",
+      "YOUR DIGITS ARE DUST.",
+      "COUNT YOUR LAST XP.",
+    ],
+    reality: [
+      "1 + 1 = ?",
+      "NUMBERS ARE LIES.",
+      "I UNMAKE THE DIGITS.",
+      "THERE IS NO ROLL.",
+      "NaN NaN NaN",
+    ],
   };
 
   let ev = null;
@@ -152,10 +188,35 @@
 
   function add(p) {
     if (parts.length > 700) parts.shift();
-    parts.push(Object.assign({ x: 0, y: 0, vx: 0, vy: 0, g: 0, life: 1, max: 1, size: 6, color: "#fff", rot: 0, vr: 0, shape: "rect", drag: 1, alpha: 1 }, p, { max: p.life || 1 }));
+    parts.push(
+      Object.assign(
+        {
+          x: 0,
+          y: 0,
+          vx: 0,
+          vy: 0,
+          g: 0,
+          life: 1,
+          max: 1,
+          size: 6,
+          color: "#fff",
+          rot: 0,
+          vr: 0,
+          shape: "rect",
+          drag: 1,
+          alpha: 1,
+        },
+        p,
+        { max: p.life || 1 },
+      ),
+    );
   }
   function fx(dur, draw, delay) {
-    const o = { t0: performance.now() + (delay || 0) * 1000, dur: dur * 1000, draw };
+    const o = {
+      t0: performance.now() + (delay || 0) * 1000,
+      dur: dur * 1000,
+      draw,
+    };
     fxs.push(o);
     loop();
     return o;
@@ -186,7 +247,8 @@
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.rot += p.vr * dt;
-        const a = Math.max(0, Math.min(1, p.life / Math.min(0.6, p.max))) * p.alpha;
+        const a =
+          Math.max(0, Math.min(1, p.life / Math.min(0.6, p.max))) * p.alpha;
         cx.save();
         cx.globalAlpha = a;
         cx.translate(p.x, p.y);
@@ -227,7 +289,8 @@
       const a = rnd(0, Math.PI * 2);
       const sp = rnd(o.min || 120, o.max || 520);
       add({
-        x, y,
+        x,
+        y,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp - (o.up || 0),
         g: o.g === undefined ? 900 : o.g,
@@ -247,7 +310,10 @@
     const segs = 14;
     for (let i = 1; i < segs; i++) {
       const t = i / segs;
-      pts.push([x1 + (x2 - x1) * t + rnd(-38, 38), y1 + (y2 - y1) * t + rnd(-14, 14)]);
+      pts.push([
+        x1 + (x2 - x1) * t + rnd(-38, 38),
+        y1 + (y2 - y1) * t + rnd(-14, 14),
+      ]);
     }
     pts.push([x2, y2]);
     fx(life || 0.35, (c, p) => {
@@ -267,16 +333,20 @@
   }
 
   function ring(x, y, color, dur, maxR, delay) {
-    fx(dur, (c, p) => {
-      c.globalAlpha = 1 - p;
-      c.strokeStyle = color;
-      c.lineWidth = 12 * (1 - p) + 2;
-      c.shadowColor = color;
-      c.shadowBlur = 20;
-      c.beginPath();
-      c.arc(x, y, maxR * p, 0, 7);
-      c.stroke();
-    }, delay);
+    fx(
+      dur,
+      (c, p) => {
+        c.globalAlpha = 1 - p;
+        c.strokeStyle = color;
+        c.lineWidth = 12 * (1 - p) + 2;
+        c.shadowColor = color;
+        c.shadowBlur = 20;
+        c.beginPath();
+        c.arc(x, y, maxR * p, 0, 7);
+        c.stroke();
+      },
+      delay,
+    );
   }
 
   function flash(color, a, ms) {
@@ -284,7 +354,10 @@
     d.className = "drBsFlash";
     d.style.background = color;
     document.body.appendChild(d);
-    d.animate([{ opacity: a }, { opacity: 0 }], { duration: ms, easing: "ease-out" }).onfinish = () => d.remove();
+    d.animate([{ opacity: a }, { opacity: 0 }], {
+      duration: ms,
+      easing: "ease-out",
+    }).onfinish = () => d.remove();
   }
 
   function invert(ms) {
@@ -297,7 +370,10 @@
   function shake(el, ms, amp) {
     if (!el || RM() || !el.animate) return;
     const f = [];
-    for (let i = 0; i < 10; i++) f.push({ transform: `translate(${rnd(-amp, amp)}px,${rnd(-amp, amp)}px) rotate(${rnd(-amp / 14, amp / 14)}deg)` });
+    for (let i = 0; i < 10; i++)
+      f.push({
+        transform: `translate(${rnd(-amp, amp)}px,${rnd(-amp, amp)}px) rotate(${rnd(-amp / 14, amp / 14)}deg)`,
+      });
     f.push({ transform: "none" });
     el.animate(f, { duration: ms, easing: "ease-out" });
   }
@@ -307,24 +383,30 @@
   };
 
   function hugeText(text, x0, y0, x1, y1, size, dur, color, delay, shakeAmt) {
-    return fx(dur, (c, p, w, h, t) => {
-      const e = 1 - Math.pow(1 - Math.min(1, p * 1.6), 3);
-      const x = (x0 + (x1 - x0) * e) * w;
-      const y = (y0 + (y1 - y0) * e) * h;
-      c.globalAlpha = Math.min(1, p * 5) * (p > 0.9 ? (1 - p) * 10 : 1);
-      c.font = `${size}px serif`;
-      c.textAlign = "center";
-      c.textBaseline = "middle";
-      c.shadowColor = color;
-      c.shadowBlur = 60;
-      const sx = shakeAmt ? rnd(-shakeAmt, shakeAmt) : 0;
-      const sy = shakeAmt ? rnd(-shakeAmt, shakeAmt) : 0;
-      c.fillText(text, x + sx, y + sy);
-    }, delay);
+    return fx(
+      dur,
+      (c, p, w, h, t) => {
+        const e = 1 - Math.pow(1 - Math.min(1, p * 1.6), 3);
+        const x = (x0 + (x1 - x0) * e) * w;
+        const y = (y0 + (y1 - y0) * e) * h;
+        c.globalAlpha = Math.min(1, p * 5) * (p > 0.9 ? (1 - p) * 10 : 1);
+        c.font = `${size}px serif`;
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.shadowColor = color;
+        c.shadowBlur = 60;
+        const sx = shakeAmt ? rnd(-shakeAmt, shakeAmt) : 0;
+        const sy = shakeAmt ? rnd(-shakeAmt, shakeAmt) : 0;
+        c.fillText(text, x + sx, y + sy);
+      },
+      delay,
+    );
   }
 
   function boardShards(colors, reverse, n) {
-    const r = boardEl ? boardEl.getBoundingClientRect() : { left: W * 0.15, top: H * 0.2, width: W * 0.7, height: H * 0.5 };
+    const r = boardEl
+      ? boardEl.getBoundingClientRect()
+      : { left: W * 0.15, top: H * 0.2, width: W * 0.7, height: H * 0.5 };
     for (let i = 0; i < (n || 46); i++) {
       add({
         x: r.left + Math.random() * r.width,
@@ -346,7 +428,8 @@
     removeCracks();
     const panel = boardEl;
     if (!panel) return;
-    if (getComputedStyle(panel).position === "static") panel.style.position = "relative";
+    if (getComputedStyle(panel).position === "static")
+      panel.style.position = "relative";
     const rect = panel.getBoundingClientRect();
     const w = rect.width;
     const h = Math.min(rect.height, 520);
@@ -415,17 +498,27 @@
             y -= rnd(30, 70);
             pts.push([x, y]);
           }
-          fx(2.4, (c, p) => {
-            c.strokeStyle = "#ffcf94";
-            c.shadowColor = "#ff9a3c";
-            c.shadowBlur = 14;
-            c.lineWidth = 4;
-            c.globalAlpha = p > 0.85 ? (1 - p) * 6 : 1;
-            c.beginPath();
-            const n = Math.max(2, Math.floor(pts.length * Math.min(1, p * 1.6)));
-            for (let i = 0; i < n; i++) i ? c.lineTo(pts[i][0], pts[i][1]) : c.moveTo(pts[i][0], pts[i][1]);
-            c.stroke();
-          }, k * 0.08);
+          fx(
+            2.4,
+            (c, p) => {
+              c.strokeStyle = "#ffcf94";
+              c.shadowColor = "#ff9a3c";
+              c.shadowBlur = 14;
+              c.lineWidth = 4;
+              c.globalAlpha = p > 0.85 ? (1 - p) * 6 : 1;
+              c.beginPath();
+              const n = Math.max(
+                2,
+                Math.floor(pts.length * Math.min(1, p * 1.6)),
+              );
+              for (let i = 0; i < n; i++)
+                i
+                  ? c.lineTo(pts[i][0], pts[i][1])
+                  : c.moveTo(pts[i][0], pts[i][1]);
+              c.stroke();
+            },
+            k * 0.08,
+          );
         }
       });
       const punch = (xf, big) => {
@@ -433,11 +526,29 @@
         msfx("thud");
         shakeAll(700, big ? 26 : 16);
         flash("#fff2dc", big ? 0.5 : 0.3, 380);
-        burst(x, H * 0.9, big ? 130 : 80, { colors: ["#8a6a4a", "#6b5238", "#b48a5d", "#3d2f22"], up: 700, min: 120, max: 700 });
-        burst(x, H * 0.85, 22, { colors: ["rgba(214,170,120,.5)"], shape: "circle", g: -30, s0: 24, s1: 56, l0: 1.2, l1: 2.4, min: 20, max: 160, drag: 0.97 });
+        burst(x, H * 0.9, big ? 130 : 80, {
+          colors: ["#8a6a4a", "#6b5238", "#b48a5d", "#3d2f22"],
+          up: 700,
+          min: 120,
+          max: 700,
+        });
+        burst(x, H * 0.85, 22, {
+          colors: ["rgba(214,170,120,.5)"],
+          shape: "circle",
+          g: -30,
+          s0: 24,
+          s1: 56,
+          l0: 1.2,
+          l1: 2.4,
+          min: 20,
+          max: 160,
+          drag: 0.97,
+        });
         // stone slab thrusting up
         fx(1.1, (c, p) => {
-          const rise = Math.sin(Math.min(1, p * 1.5) * Math.PI) * (big ? H * 0.5 : H * 0.34);
+          const rise =
+            Math.sin(Math.min(1, p * 1.5) * Math.PI) *
+            (big ? H * 0.5 : H * 0.34);
           c.fillStyle = "#6b5238";
           c.strokeStyle = "#2c2118";
           c.lineWidth = 5;
@@ -461,7 +572,20 @@
         boardShards(["#3a3128", "#59463a", "#7d6650", "#1c1814"], false, 60);
         addCracks(cfg.color);
       });
-      later(4300, () => hugeText(FIG.golem, 0.5, 1.2, 0.5, 0.46, Math.min(W, H) * 0.7, 3.4, "#ffb35c", 0, 4));
+      later(4300, () =>
+        hugeText(
+          FIG.golem,
+          0.5,
+          1.2,
+          0.5,
+          0.46,
+          Math.min(W, H) * 0.7,
+          3.4,
+          "#ffb35c",
+          0,
+          4,
+        ),
+      );
     },
 
     titan(S) {
@@ -507,18 +631,49 @@
             c.stroke();
           });
         });
-        burst(W / 2, H * 0.12, 90, { colors: ["#bfe6ff", "#38bdf8", "#fff"], shape: "circle", s0: 2, s1: 6, up: 100, g: 700, min: 80, max: 600 });
+        burst(W / 2, H * 0.12, 90, {
+          colors: ["#bfe6ff", "#38bdf8", "#fff"],
+          shape: "circle",
+          s0: 2,
+          s1: 6,
+          up: 100,
+          g: 700,
+          min: 80,
+          max: 600,
+        });
       });
       later(3500, () => {
         msfx("zap");
-        [0, 0.18, 0.36].forEach((d, i) => ring(W / 2, H * 0.5, i === 1 ? "#fff" : "#38bdf8", 1.4, Math.max(W, H) * 0.75, d));
+        [0, 0.18, 0.36].forEach((d, i) =>
+          ring(
+            W / 2,
+            H * 0.5,
+            i === 1 ? "#fff" : "#38bdf8",
+            1.4,
+            Math.max(W, H) * 0.75,
+            d,
+          ),
+        );
         bolt(W / 2, 0, W / 2, H * 0.55, "#fff", 0.6, 10);
         flash("#fff", 0.8, 500);
         boardShards(["#0f2438", "#1d4a6e", "#7fcaff", "#e8f6ff"], false, 60);
         addCracks(cfg.color);
         shakeAll(1000, 24);
       });
-      later(4100, () => hugeText(FIG.titan, 0.5, -0.2, 0.5, 0.46, Math.min(W, H) * 0.65, 3.2, "#38bdf8", 0, 2));
+      later(4100, () =>
+        hugeText(
+          FIG.titan,
+          0.5,
+          -0.2,
+          0.5,
+          0.46,
+          Math.min(W, H) * 0.65,
+          3.2,
+          "#38bdf8",
+          0,
+          2,
+        ),
+      );
     },
 
     reality(S) {
@@ -574,17 +729,50 @@
         flash("#ff39c8", 0.5, 500);
         shakeAll(1200, 22);
         // glass shards of reality fly out
-        burst(W / 2, H / 2, 120, { colors: ["#ff39c8", "#00ffe1", "#ffffff", "#7a00ff"], shape: "tri", s0: 8, s1: 34, g: 0, min: 150, max: 900, l0: 1.4, l1: 3, drag: 0.992 });
+        burst(W / 2, H / 2, 120, {
+          colors: ["#ff39c8", "#00ffe1", "#ffffff", "#7a00ff"],
+          shape: "tri",
+          s0: 8,
+          s1: 34,
+          g: 0,
+          min: 150,
+          max: 900,
+          l0: 1.4,
+          l1: 3,
+          drag: 0.992,
+        });
         // the board's pieces float upward - gravity is broken
         boardShards(["#1a1030", "#3b1a5c", "#ff39c8", "#00ffe1"], true, 70);
         addCracks(cfg.color);
       });
       later(3900, () => {
         msfx("glitch");
-        hugeText(FIG.reality, 0.5, 0.5, 0.5, 0.46, Math.min(W, H) * 0.75, 3.2, "#ff00aa", 0, 8);
+        hugeText(
+          FIG.reality,
+          0.5,
+          0.5,
+          0.5,
+          0.46,
+          Math.min(W, H) * 0.75,
+          3.2,
+          "#ff00aa",
+          0,
+          8,
+        );
         // digit rain made of the digits it will curse
         for (let i = 0; i < 90; i++) {
-          add({ x: rnd(0, W), y: rnd(-H * 0.4, 0), vx: 0, vy: rnd(300, 900), g: 0, life: rnd(1.2, 2.4), size: rnd(14, 34), color: pick(["#00ffe1", "#ff39c8", "#ffffff"]), shape: "text", text: String(Math.floor(rnd(0, 10))) });
+          add({
+            x: rnd(0, W),
+            y: rnd(-H * 0.4, 0),
+            vx: 0,
+            vy: rnd(300, 900),
+            g: 0,
+            life: rnd(1.2, 2.4),
+            size: rnd(14, 34),
+            color: pick(["#00ffe1", "#ff39c8", "#ffffff"]),
+            shape: "text",
+            text: String(Math.floor(rnd(0, 10))),
+          });
         }
       });
     },
@@ -598,7 +786,11 @@
       const p = Math.min(1, (performance.now() - t0) / ms);
       el.textContent = text
         .split("")
-        .map((ch, i) => (ch === " " || i < text.length * p ? ch : chars[Math.floor(Math.random() * chars.length)]))
+        .map((ch, i) =>
+          ch === " " || i < text.length * p
+            ? ch
+            : chars[Math.floor(Math.random() * chars.length)],
+        )
         .join("");
       if (p < 1) requestAnimationFrame(step);
     };
@@ -671,7 +863,10 @@
     hud.style.setProperty("--bc", cfg.color);
     if (!animate) hud.style.animationDuration = ".01s";
     const combos = (ev.combos || [])
-      .map((c) => `<div class="drBsCombo">${(c || []).map((d) => `<span class="drBsChip">${esc(d)}</span>`).join("")}</div>`)
+      .map(
+        (c) =>
+          `<div class="drBsCombo">${(c || []).map((d) => `<span class="drBsChip">${esc(d)}</span>`).join("")}</div>`,
+      )
       .join("");
     hud.innerHTML = `
       <div class="drBsFig"><span>${FIG[cfg.key]}</span></div>
@@ -684,7 +879,8 @@
       <button class="drBsMute" type="button" title="Boss music on/off">🔊</button>`;
     document.body.appendChild(hud);
     const mb = hud.querySelector(".drBsMute");
-    const syncMute = () => (mb.textContent = M().isOn && M().isOn() ? "🔊" : "🔇");
+    const syncMute = () =>
+      (mb.textContent = M().isOn && M().isOn() ? "🔊" : "🔇");
     syncMute();
     mb.onclick = () => {
       M().toggle && M().toggle();
@@ -704,13 +900,16 @@
     const B = G.drBoss;
     const preview = !!ev.preview;
     const hp = preview ? ev.hp : B.hp();
-    const left = preview ? Math.max(0, new Date(ev.ends_at).getTime() - Date.now()) : B.msLeft();
+    const left = preview
+      ? Math.max(0, new Date(ev.ends_at).getTime() - Date.now())
+      : B.msLeft();
     const pct = Math.max(0, Math.min(100, (hp / ev.max_hp) * 100));
     const fill = hud.querySelector(".drBsHpFill");
     const trail = hud.querySelector(".drBsHpTrail");
     fill.style.width = pct + "%";
     trail.style.width = pct + "%";
-    hud.querySelector(".drBsHpTxt").textContent = `${nf(hp)} / ${nf(ev.max_hp)}  (${pct < 1 && pct > 0 ? "<1" : Math.round(pct)}%)`;
+    hud.querySelector(".drBsHpTxt").textContent =
+      `${nf(hp)} / ${nf(ev.max_hp)}  (${pct < 1 && pct > 0 ? "<1" : Math.round(pct)}%)`;
     hud.querySelector(".drBsTime").textContent = fmtTime(left);
     const meta = hud.querySelector(".drBsMeta");
     if (preview) meta.innerHTML = "<b>Preview</b> — only you can see this.";
@@ -734,6 +933,7 @@
 
   function fmtBig(n) {
     n = Math.round(n);
+    if (n >= 1e15) return n.toExponential(1).replace("e+", "e");
     if (n >= 1e12) return (n / 1e12).toFixed(1) + "T";
     if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
     if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
@@ -769,8 +969,24 @@
         // stomp
         msfx("thud");
         shakeAll(800, 18);
-        burst(rnd(W * 0.2, W * 0.8), H - 10, 40, { colors: ["#8a6a4a", "#b48a5d"], up: 500, s0: 4, s1: 14 });
-        burst(W / 2, H - 20, 12, { colors: ["rgba(214,170,120,.4)"], shape: "circle", g: -20, s0: 22, s1: 50, l0: 1.4, l1: 2.4, min: 30, max: 200, drag: 0.97 });
+        burst(rnd(W * 0.2, W * 0.8), H - 10, 40, {
+          colors: ["#8a6a4a", "#b48a5d"],
+          up: 500,
+          s0: 4,
+          s1: 14,
+        });
+        burst(W / 2, H - 20, 12, {
+          colors: ["rgba(214,170,120,.4)"],
+          shape: "circle",
+          g: -20,
+          s0: 22,
+          s1: 50,
+          l0: 1.4,
+          l1: 2.4,
+          min: 30,
+          max: 200,
+          drag: 0.97,
+        });
         say(pick(TAUNTS.golem));
       },
       () => {
@@ -787,11 +1003,23 @@
           document.body.appendChild(r);
           const anim = r.animate(
             [
-              { transform: `translate(${fromLeft ? -100 : W + 100}px,${y0}px) rotate(0deg) scale(.8)` },
-              { transform: `translate(${W / 2 + rnd(-200, 200)}px,${y0 - rnd(120, 300)}px) rotate(${fromLeft ? 360 : -360}deg) scale(1.3)`, offset: 0.5 },
-              { transform: `translate(${fromLeft ? W + 100 : -100}px,${y0 + rnd(0, 200)}px) rotate(${fromLeft ? 720 : -720}deg) scale(.9)` },
+              {
+                transform: `translate(${fromLeft ? -100 : W + 100}px,${y0}px) rotate(0deg) scale(.8)`,
+              },
+              {
+                transform: `translate(${W / 2 + rnd(-200, 200)}px,${y0 - rnd(120, 300)}px) rotate(${fromLeft ? 360 : -360}deg) scale(1.3)`,
+                offset: 0.5,
+              },
+              {
+                transform: `translate(${fromLeft ? W + 100 : -100}px,${y0 + rnd(0, 200)}px) rotate(${fromLeft ? 720 : -720}deg) scale(.9)`,
+              },
             ],
-            { duration: 1700 + i * 240, delay: i * 320, easing: "ease-in-out", fill: "both" },
+            {
+              duration: 1700 + i * 240,
+              delay: i * 320,
+              easing: "ease-in-out",
+              fill: "both",
+            },
           );
           anim.onfinish = () => r.remove();
         }
@@ -799,7 +1027,18 @@
       },
       () => {
         // rockfall from the ceiling
-        for (let i = 0; i < 40; i++) add({ x: rnd(0, W), y: rnd(-200, 0), vy: rnd(200, 500), g: 900, life: rnd(1.4, 2.4), size: rnd(8, 26), color: pick(["#8a6a4a", "#6b5238", "#3d2f22"]), rot: rnd(0, 6), vr: rnd(-5, 5) });
+        for (let i = 0; i < 40; i++)
+          add({
+            x: rnd(0, W),
+            y: rnd(-200, 0),
+            vy: rnd(200, 500),
+            g: 900,
+            life: rnd(1.4, 2.4),
+            size: rnd(8, 26),
+            color: pick(["#8a6a4a", "#6b5238", "#3d2f22"]),
+            rot: rnd(0, 6),
+            vr: rnd(-5, 5),
+          });
         loop();
         msfx("thud");
         shake(boardEl, 700, 10);
@@ -849,7 +1088,13 @@
       },
       () => {
         // spark storm
-        burst(rnd(0, W), rnd(0, H * 0.5), 60, { colors: ["#bfe6ff", "#38bdf8", "#fff"], shape: "circle", s0: 2, s1: 5, g: 500 });
+        burst(rnd(0, W), rnd(0, H * 0.5), 60, {
+          colors: ["#bfe6ff", "#38bdf8", "#fff"],
+          shape: "circle",
+          s0: 2,
+          s1: 5,
+          g: 500,
+        });
         say(pick(TAUNTS.titan));
         flash("#7fcaff", 0.18, 400);
       },
@@ -862,7 +1107,12 @@
           for (let i = 0; i < 24; i++) {
             c.globalAlpha = rnd(0.2, 0.6) * (1 - p);
             c.fillStyle = pick(["#ff00aa", "#00ffe1", "#fff", "#7a00ff"]);
-            c.fillRect(rnd(-60, 60), Math.random() * h, w * rnd(0.2, 1), rnd(3, 30));
+            c.fillRect(
+              rnd(-60, 60),
+              Math.random() * h,
+              w * rnd(0.2, 1),
+              rnd(3, 30),
+            );
           }
         });
         invert(70);
@@ -871,13 +1121,29 @@
       () => {
         // digit rain of the cursed digits
         const digs = (ev.combos || []).flat().map(String);
-        for (let i = 0; i < 70; i++) add({ x: rnd(0, W), y: rnd(-H * 0.3, 0), vy: rnd(300, 800), life: rnd(1.4, 2.6), size: rnd(14, 34), color: pick(["#00ffe1", "#ff39c8", "#fff"]), shape: "text", text: digs.length ? pick(digs) : "?" });
+        for (let i = 0; i < 70; i++)
+          add({
+            x: rnd(0, W),
+            y: rnd(-H * 0.3, 0),
+            vy: rnd(300, 800),
+            life: rnd(1.4, 2.6),
+            size: rnd(14, 34),
+            color: pick(["#00ffe1", "#ff39c8", "#fff"]),
+            shape: "text",
+            text: digs.length ? pick(digs) : "?",
+          });
         loop();
         say(pick(TAUNTS.reality));
       },
       () => {
         // fake error dialogs
-        const msgs = ["REALITY.EXE has stopped responding", "XP = NaN", "Cannot find your digits", "Division by zero: 1 / 0", "Unexpected 7 at line ∞"];
+        const msgs = [
+          "REALITY.EXE has stopped responding",
+          "XP = NaN",
+          "Cannot find your digits",
+          "Division by zero: 1 / 0",
+          "Unexpected 7 at line ∞",
+        ];
         for (let i = 0; i < 3; i++)
           setTimeout(() => {
             if (!running) return;
@@ -915,15 +1181,18 @@
   function scheduleStunt() {
     clearTimeout(stuntTimer);
     if (!ev || !cfg) return;
-    stuntTimer = setTimeout(() => {
-      if (!ev || !cfg || stage) return scheduleStunt();
-      if (!document.hidden && !RM()) {
-        try {
-          pick(STUNTS[cfg.key])();
-        } catch (e) {}
-      }
-      scheduleStunt();
-    }, rnd(4500, 9500));
+    stuntTimer = setTimeout(
+      () => {
+        if (!ev || !cfg || stage) return scheduleStunt();
+        if (!document.hidden && !RM()) {
+          try {
+            pick(STUNTS[cfg.key])();
+          } catch (e) {}
+        }
+        scheduleStunt();
+      },
+      rnd(4500, 9500),
+    );
   }
 
   /* ==========================================================
@@ -961,17 +1230,36 @@
     let p = "";
     if (o.status === "defeated") {
       h2 = `${c.icon} ${esc(c.short)} DEFEATED!`;
-      p = o.won ? `You survived and landed the win! Your victory has been added to the <b>Boss victors</b> board.` : o.dq ? `The boss fell — but you were <b>disqualified</b> when your XP hit 0, so no win counts for you.` : `The boss fell, but you didn't deal any damage, so no win counts.`;
+      p = o.won
+        ? `You survived and landed the win! Your victory has been added to the <b>Boss victors</b> board.`
+        : o.dq
+          ? `The boss fell — but you were <b>disqualified</b> when your XP hit 0, so no win counts for you.`
+          : `The boss fell, but you didn't deal any damage, so no win counts.`;
     } else {
       h2 = `${c.icon} ${esc(c.short)} ${o.status === "expired" ? "ESCAPED" : "VANISHED"}`;
-      p = o.status === "expired" ? "Time ran out. The boss slipped away… for now." : "An admin ended the event.";
+      p =
+        o.status === "expired"
+          ? "Time ran out. The boss slipped away… for now."
+          : "An admin ended the event.";
     }
     box.innerHTML = `<div class="drBsResBox"><h2>${h2}</h2><p>${p}</p><p class="small">Total damage you dealt: <b>${nf(o.damage || 0)}</b></p><button type="button">Close</button></div>`;
     document.body.appendChild(box);
     box.querySelector("button").onclick = () => box.remove();
     setTimeout(() => box.isConnected && box.remove(), 14000);
     if (o.status === "defeated") {
-      for (let i = 0; i < 160; i++) add({ x: rnd(0, W), y: -20, vx: rnd(-120, 120), vy: rnd(100, 500), g: 300, life: rnd(2, 4), size: rnd(6, 14), color: pick([c.color, "#fff", "#ffd54a", "#8ee6ad"]), rot: rnd(0, 6), vr: rnd(-8, 8) });
+      for (let i = 0; i < 160; i++)
+        add({
+          x: rnd(0, W),
+          y: -20,
+          vx: rnd(-120, 120),
+          vy: rnd(100, 500),
+          g: 300,
+          life: rnd(2, 4),
+          size: rnd(6, 14),
+          color: pick([c.color, "#fff", "#ffd54a", "#8ee6ad"]),
+          rot: rnd(0, 6),
+          vr: rnd(-8, 8),
+        });
       loop();
     }
   }
@@ -1011,7 +1299,10 @@
       if (!hud) return;
       floater(o.amount);
       const fill = hud.querySelector(".drBsHpFill");
-      if (fill) fill.animate([{ filter: "brightness(2.2)" }, { filter: "none" }], { duration: 260 });
+      if (fill)
+        fill.animate([{ filter: "brightness(2.2)" }, { filter: "none" }], {
+          duration: 260,
+        });
       if (o.crit) {
         shake(hud, 400, 7);
         flash("#fff", 0.12, 200);
@@ -1033,7 +1324,15 @@
       document.body.appendChild(t);
       setTimeout(() => t.remove(), 1700);
       const r = hud.getBoundingClientRect();
-      burst(r.left + r.width * 0.85, r.top + r.height / 2, 30, { colors: ["#ff3355", "#ffb3c0", "#000"], shape: "circle", s0: 3, s1: 8, g: 200, min: 60, max: 300 });
+      burst(r.left + r.width * 0.85, r.top + r.height / 2, 30, {
+        colors: ["#ff3355", "#ffb3c0", "#000"],
+        shape: "circle",
+        s0: 3,
+        s1: 8,
+        g: 200,
+        min: 60,
+        max: 300,
+      });
       loop();
       msfx("curse");
     },
@@ -1045,7 +1344,13 @@
       const prev = ev;
       endAll();
       if (o && o.preview) return;
-      if (o && o.cfg && (o.status === "defeated" || o.status === "expired" || o.status === "cancelled")) {
+      if (
+        o &&
+        o.cfg &&
+        (o.status === "defeated" ||
+          o.status === "expired" ||
+          o.status === "cancelled")
+      ) {
         ensureCanvas();
         showResult(o);
       }

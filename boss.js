@@ -9,33 +9,114 @@
 
   const G = window;
   const $id = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const nf = (v) => Math.round(Number(v) || 0).toLocaleString();
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+  const nf = (v) => {
+    v = Number(v) || 0;
+    if (Math.abs(v) >= 1e15) return v.toExponential(2).replace("e+", " × 10^");
+    return Math.round(v).toLocaleString();
+  };
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const sfx = (n, a) => typeof G.drSfx === "function" && G.drSfx(n, a);
   const me = () => (typeof currentUser !== "undefined" ? currentUser : null);
   const isAdmin = () => typeof G.drIsAdmin === "function" && G.drIsAdmin();
   const P = G.drProgress;
-  const sb = () => (typeof supabaseClient !== "undefined" ? supabaseClient : null);
+  const sb = () =>
+    typeof supabaseClient !== "undefined" ? supabaseClient : null;
 
   /* ==========================================================
      CONFIG
      ========================================================== */
 
   const BOSSES = {
-    golem: { key: "golem", name: "THE STONEBOUND GOLEM", short: "Golem", icon: "🗿", hp: 100000, color: "#d6a273", size: 4, count: 1, blurb: "1 cursed roll of 4 digits" },
-    titan: { key: "titan", name: "TITAN OF THE ABYSS", short: "TITAN", icon: "⚡", hp: 1000000000, color: "#38bdf8", size: 3, count: 3, blurb: "3 cursed rolls of 3 digits" },
-    reality: { key: "reality", name: "REALITY BREAKER", short: "Reality Breaker", icon: "🌀", hp: 1000000000000, color: "#f43f5e", size: 3, count: 5, blurb: "5 cursed rolls of 3 digits" },
+    golem: {
+      key: "golem",
+      name: "THE STONEBOUND GOLEM",
+      short: "Golem",
+      icon: "🗿",
+      hp: 1e55,
+      color: "#d6a273",
+      size: 4,
+      count: 1,
+      blurb: "1 cursed roll of 4 digits",
+    },
+    titan: {
+      key: "titan",
+      name: "TITAN OF THE ABYSS",
+      short: "TITAN",
+      icon: "⚡",
+      hp: 1e59,
+      color: "#38bdf8",
+      size: 3,
+      count: 3,
+      blurb: "3 cursed rolls of 3 digits",
+    },
+    reality: {
+      key: "reality",
+      name: "REALITY BREAKER",
+      short: "Reality Breaker",
+      icon: "🌀",
+      hp: 1e62,
+      color: "#f43f5e",
+      size: 3,
+      count: 5,
+      blurb: "5 cursed rolls of 3 digits",
+    },
   };
   const ORDER = ["golem", "titan", "reality"];
   const DEFAULT_D = 10000;
 
   const WEAPONS = [
-    { id: "gun", icon: "🔫", name: "Stormcaller Repeater", d: 100, cost: 5000, tag: "Rolls hit 1/100 as hard" },
-    { id: "sword", icon: "🗡️", name: "Dawnbreaker Blade", d: 1000, cost: 10000, tag: "Rolls hit 1/1,000 as hard" },
-    { id: "laser", icon: "🔆", name: "Solar Lance (Hyper Laser)", d: 10, cost: 50000, tag: "Rolls hit 1/10 as hard" },
-    { id: "slayr", icon: "☄️", name: "GOD SLAYR", d: 5, cost: 100000, tag: "Rolls hit 1/5 as hard" },
-    { id: "tooth", icon: "🦷", name: "BREAKER'S TOOTH", d: 0, cost: 1000000, tag: "Every roll hits for its FULL 1-in-N value" },
+    {
+      id: "gun",
+      icon: "🔫",
+      name: "Stormcaller Repeater",
+      d: 100,
+      cost: 5000,
+      tag: "Rolls hit 1/100 as hard",
+    },
+    {
+      id: "sword",
+      icon: "🗡️",
+      name: "Dawnbreaker Blade",
+      d: 1000,
+      cost: 10000,
+      tag: "Rolls hit 1/1,000 as hard",
+    },
+    {
+      id: "laser",
+      icon: "🔆",
+      name: "Solar Lance (Hyper Laser)",
+      d: 10,
+      cost: 50000,
+      tag: "Rolls hit 1/10 as hard",
+    },
+    {
+      id: "slayr",
+      icon: "☄️",
+      name: "GOD SLAYR",
+      d: 5,
+      cost: 100000,
+      tag: "Rolls hit 1/5 as hard",
+    },
+    {
+      id: "tooth",
+      icon: "🦷",
+      name: "BREAKER'S TOOTH",
+      d: 0,
+      cost: 1000000,
+      tag: "Every roll hits for its FULL 1-in-N value",
+    },
   ];
   const WARD_COST = 25000;
   const WIND_COST = 40000;
@@ -45,11 +126,24 @@
      ========================================================== */
 
   const KEY = "digitRollBoss";
-  const fresh = () => ({ weapons: [], ward: false, wind: false, joined: [], wins: { golem: 0, titan: 0, reality: 0 }, seen: 0, dq: {}, windUsed: {}, dmg: {} });
+  const fresh = () => ({
+    weapons: [],
+    ward: false,
+    wind: false,
+    joined: [],
+    wins: { golem: 0, titan: 0, reality: 0 },
+    seen: 0,
+    dq: {},
+    windUsed: {},
+    dmg: {},
+  });
   let B = fresh();
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || "null");
-    if (raw && typeof raw === "object") B = Object.assign(fresh(), raw, { wins: Object.assign(fresh().wins, raw.wins || {}) });
+    if (raw && typeof raw === "object")
+      B = Object.assign(fresh(), raw, {
+        wins: Object.assign(fresh().wins, raw.wins || {}),
+      });
   } catch (e) {}
   const save = () => {
     try {
@@ -83,8 +177,10 @@
   let channel = null;
 
   const cfgOf = (e) => (e ? BOSSES[e.boss_type] : null);
-  const msLeft = () => (ev ? Math.max(0, new Date(ev.ends_at).getTime() - Date.now()) : 0);
-  const shownHp = () => (ev ? Math.max(0, Number(ev.hp) - Math.floor(pendingDmg)) : 0);
+  const msLeft = () =>
+    ev ? Math.max(0, new Date(ev.ends_at).getTime() - Date.now()) : 0;
+  const shownHp = () =>
+    ev ? Math.max(0, Number(ev.hp) - Math.floor(pendingDmg)) : 0;
   const amDq = () => !!(ev && B.dq[ev.id]);
 
   const FX = () => G.drBossFx || {};
@@ -135,9 +231,19 @@
       await c.rpc("boss_tick");
     } catch (e) {}
     try {
-      const { data, error } = await c.from("boss_events").select("*").eq("status", "active").order("id", { ascending: false }).limit(1);
+      const { data, error } = await c
+        .from("boss_events")
+        .select("*")
+        .eq("status", "active")
+        .order("id", { ascending: false })
+        .limit(1);
       if (error) {
-        tableState = /relation|does not exist|schema cache|could not find/i.test(error.message || "") ? "missing" : tableState;
+        tableState =
+          /relation|does not exist|schema cache|could not find/i.test(
+            error.message || "",
+          )
+            ? "missing"
+            : tableState;
         return;
       }
       tableState = "ok";
@@ -173,8 +279,10 @@
     // everybody goes to the leaderboard, on the Boss victors tab
     try {
       if (typeof G.closeDigitRollPages === "function") G.closeDigitRollPages();
-      if (P && P.isOpen && P.isOpen() && typeof P.close === "function") P.close();
-      if (typeof G.drSelectLeaderboardTab === "function") G.drSelectLeaderboardTab("boss", true);
+      if (P && P.isOpen && P.isOpen() && typeof P.close === "function")
+        P.close();
+      if (typeof G.drSelectLeaderboardTab === "function")
+        G.drSelectLeaderboardTab("boss", true);
     } catch (e) {}
     notifyFx("start", { ev, cfg, cutscene: withCutscene });
     try {
@@ -183,7 +291,14 @@
     } catch (e) {}
     if (withCutscene && typeof G.drShowAnnouncement === "function") {
       const mins = Math.max(1, Math.round(msLeft() / 60000));
-      setTimeout(() => G.drShowAnnouncement(`⚠️ ${cfg.name} has awoken! Defeat it within ${mins} minute${mins === 1 ? "" : "s"} — beware its cursed rolls!`, { icon: cfg.icon, color: cfg.color, glow: true }), 600);
+      setTimeout(
+        () =>
+          G.drShowAnnouncement(
+            `⚠️ ${cfg.name} has awoken! Defeat it within ${mins} minute${mins === 1 ? "" : "s"} — beware its cursed rolls!`,
+            { icon: cfg.icon, color: cfg.color, glow: true },
+          ),
+        600,
+      );
     }
     refreshAll();
   }
@@ -194,12 +309,21 @@
     let row = done;
     const c = sb();
     try {
-      const { data } = await c.from("boss_events").select("*").eq("id", done.id).limit(1);
+      const { data } = await c
+        .from("boss_events")
+        .select("*")
+        .eq("id", done.id)
+        .limit(1);
       if (data && data[0]) row = data[0];
     } catch (e) {}
     await flush(true);
     let won = false;
-    if (row.status === "defeated" && me() && !B.dq[done.id] && (B.dmg[done.id] || 0) > 0) {
+    if (
+      row.status === "defeated" &&
+      me() &&
+      !B.dq[done.id] &&
+      (B.dmg[done.id] || 0) > 0
+    ) {
       won = true;
       B.wins[done.boss_type] = (B.wins[done.boss_type] || 0) + 1;
       save();
@@ -208,15 +332,29 @@
       try {
         const u = me();
         if (u) {
-          const { data } = await c.from("boss_victories").select("boss_type,wins").eq("user_id", u.id);
+          const { data } = await c
+            .from("boss_victories")
+            .select("boss_type,wins")
+            .eq("user_id", u.id);
           (data || []).forEach((r) => {
-            if (BOSSES[r.boss_type]) B.wins[r.boss_type] = Math.max(B.wins[r.boss_type] || 0, Number(r.wins) || 0);
+            if (BOSSES[r.boss_type])
+              B.wins[r.boss_type] = Math.max(
+                B.wins[r.boss_type] || 0,
+                Number(r.wins) || 0,
+              );
           });
           save();
         }
       } catch (e) {}
     }
-    const outcome = { status: row.status, won, dq: !!B.dq[done.id], cfg: cfgOf(done), ev: done, damage: B.dmg[done.id] || 0 };
+    const outcome = {
+      status: row.status,
+      won,
+      dq: !!B.dq[done.id],
+      cfg: cfgOf(done),
+      ev: done,
+      damage: B.dmg[done.id] || 0,
+    };
     lastOutcome = outcome;
     ev = null;
     pendingDmg = 0;
@@ -227,12 +365,16 @@
     } catch (e) {}
     notifyFx("end", outcome);
     refreshAll();
-    if (typeof G.loadLeaderboard === "function") setTimeout(() => G.loadLeaderboard(), 800);
+    if (typeof G.loadLeaderboard === "function")
+      setTimeout(() => G.loadLeaderboard(), 800);
   }
 
   function refreshAll() {
     if (P && P.isOpen && P.isOpen()) P.rerender();
-    if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+    if (typeof G.updateShopUI === "function")
+      try {
+        G.updateShopUI();
+      } catch (e) {}
   }
 
   function listen() {
@@ -241,12 +383,16 @@
     try {
       channel = c
         .channel("boss-events")
-        .on("postgres_changes", { event: "*", schema: "public", table: "boss_events" }, (p) => {
-          const row = p.new;
-          if (!row || !row.id) return;
-          if (row.status === "active") adopt(row);
-          else if (ev && ev.id === row.id) finishCurrent();
-        })
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "boss_events" },
+          (p) => {
+            const row = p.new;
+            if (!row || !row.id) return;
+            if (row.status === "active") adopt(row);
+            else if (ev && ev.id === row.id) finishCurrent();
+          },
+        )
         .subscribe();
     } catch (e) {}
   }
@@ -266,11 +412,16 @@
     pendingDmg -= whole;
     const dq = pendingDq || !!B.dq[id];
     try {
-      const { data, error } = await c.rpc("boss_report", { p_event: id, p_damage: whole, p_dq: dq });
+      const { data, error } = await c.rpc("boss_report", {
+        p_event: id,
+        p_damage: whole,
+        p_dq: dq,
+      });
       if (error) throw error;
       pendingDq = false;
       if (data && ev && ev.id === id) {
-        if (typeof data.hp !== "undefined") ev.hp = Math.min(Number(ev.hp), Number(data.hp));
+        if (typeof data.hp !== "undefined")
+          ev.hp = Math.min(Number(ev.hp), Number(data.hp));
         if (data.status && data.status !== "active") {
           flushing = false;
           await finishCurrent();
@@ -330,7 +481,11 @@
       const capped = Math.min(dmg, Number(ev.hp));
       pendingDmg += capped;
       B.dmg[id] = (B.dmg[id] || 0) + capped;
-      notifyFx("damage", { amount: capped, hp: shownHp(), crit: capped >= Number(ev.max_hp) * 0.02 });
+      notifyFx("damage", {
+        amount: capped,
+        hp: shownHp(),
+        crit: capped >= Number(ev.max_hp) * 0.02,
+      });
       if (!me()) {
         if (!G.__drBossSignin) {
           G.__drBossSignin = true;
@@ -343,7 +498,8 @@
     const hits = [];
     (ev.combos || []).forEach((combo, i) => {
       const digs = (combo || []).map(String);
-      if (digs.length && digs.every((d) => rollDigits.indexOf(d) >= 0)) hits.push(i);
+      if (digs.length && digs.every((d) => rollDigits.indexOf(d) >= 0))
+        hits.push(i);
     });
     if (hits.length) {
       setTimeout(() => {
@@ -358,17 +514,28 @@
           last = applyCurse(loss);
         });
         sfx("curse");
-        notifyFx("curse", { loss: total, hits, after: last ? last.after : 0, revived: last && last.revived });
-        if (last && last.revived) say("💫 Second Wind! Your Phoenix Ember pulled you back from 0 XP.");
+        notifyFx("curse", {
+          loss: total,
+          hits,
+          after: last ? last.after : 0,
+          revived: last && last.revived,
+        });
+        if (last && last.revived)
+          say("💫 Second Wind! Your Phoenix Ember pulled you back from 0 XP.");
         if (last && last.after <= 0 && !B.dq[id]) {
           B.dq[id] = true;
           pendingDq = true;
           save();
-          say("☠️ Your XP hit 0 — you are disqualified from winning this boss.");
+          say(
+            "☠️ Your XP hit 0 — you are disqualified from winning this boss.",
+          );
           notifyFx("dq", { cfg });
           flush(true);
         }
-        if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+        if (typeof G.updateShopUI === "function")
+          try {
+            G.updateShopUI();
+          } catch (e) {}
       }, 40);
     }
     save();
@@ -385,24 +552,58 @@
     const eq = equipped();
     let h = `<h3 class="drSection">💀 BOSS ITEMS</h3>
       <div class="drSectionSub">Your rolls deal <b>(1 in N) ÷ D</b> damage to bosses. Default D is <b>${nf(DEFAULT_D)}</b>; weapons lower it. The best weapon you own is used automatically. Weapons survive true rebirth.${eq ? ` Equipped: <b>${eq.icon} ${esc(eq.name)}</b>` : ""}</div><div class="drShopGrid">`;
-    const card = (title, desc, price, btn) => `<div class="drShopItem"><h3>${title}</h3><p>${desc}</p><p>${price}</p>${btn}</div>`;
+    const card = (title, desc, price, btn) =>
+      `<div class="drShopItem"><h3>${title}</h3><p>${desc}</p><p>${price}</p>${btn}</div>`;
     WEAPONS.forEach((w) => {
       const owned = B.weapons.indexOf(w.id) >= 0;
       const can = balance >= w.cost;
-      const label = owned ? "✓ Owned" : can ? "Buy" : w.cost > cap ? "Raise your XP cap first" : "Not enough XP";
-      h += card(`${w.icon} ${esc(w.name)}`, `D = <b>${w.d === 0 ? "none" : nf(w.d)}</b>. ${esc(w.tag)}.`, `Cost: <b>${nf(w.cost)} XP</b>`, `<button class="drBuy" ${owned || !can ? "disabled" : ""} onclick="drBossBuy('${w.id}')">${label}</button>`);
+      const label = owned
+        ? "✓ Owned"
+        : can
+          ? "Buy"
+          : w.cost > cap
+            ? "Raise your XP cap first"
+            : "Not enough XP";
+      h += card(
+        `${w.icon} ${esc(w.name)}`,
+        `D = <b>${w.d === 0 ? "none" : nf(w.d)}</b>. ${esc(w.tag)}.`,
+        `Cost: <b>${nf(w.cost)} XP</b>`,
+        `<button class="drBuy" ${owned || !can ? "disabled" : ""} onclick="drBossBuy('${w.id}')">${label}</button>`,
+      );
     });
-    h += card("🛡️ Hex Ward", "Curses drain only <b>half</b> as much XP (minimum 50).", `Cost: <b>${nf(WARD_COST)} XP</b>`, `<button class="drBuy" ${B.ward || balance < WARD_COST ? "disabled" : ""} onclick="drBossBuy('ward')">${B.ward ? "✓ Owned" : balance >= WARD_COST ? "Buy" : "Not enough XP"}</button>`);
-    h += card("🔥 Phoenix Ember", "Once per boss fight, if a curse would drop you to 0 XP, you're pulled back to 1,000 XP and stay in the fight.", `Cost: <b>${nf(WIND_COST)} XP</b>`, `<button class="drBuy" ${B.wind || balance < WIND_COST ? "disabled" : ""} onclick="drBossBuy('wind')">${B.wind ? "✓ Owned" : balance >= WIND_COST ? "Buy" : "Not enough XP"}</button>`);
+    h += card(
+      "🛡️ Hex Ward",
+      "Curses drain only <b>half</b> as much XP (minimum 50).",
+      `Cost: <b>${nf(WARD_COST)} XP</b>`,
+      `<button class="drBuy" ${B.ward || balance < WARD_COST ? "disabled" : ""} onclick="drBossBuy('ward')">${B.ward ? "✓ Owned" : balance >= WARD_COST ? "Buy" : "Not enough XP"}</button>`,
+    );
+    h += card(
+      "🔥 Phoenix Ember",
+      "Once per boss fight, if a curse would drop you to 0 XP, you're pulled back to 1,000 XP and stay in the fight.",
+      `Cost: <b>${nf(WIND_COST)} XP</b>`,
+      `<button class="drBuy" ${B.wind || balance < WIND_COST ? "disabled" : ""} onclick="drBossBuy('wind')">${B.wind ? "✓ Owned" : balance >= WIND_COST ? "Buy" : "Not enough XP"}</button>`,
+    );
     return h + "</div>";
   }
 
   G.drBossBuy = function (id) {
     const w = WEAPONS.find((x) => x.id === id);
-    const cost = w ? w.cost : id === "ward" ? WARD_COST : id === "wind" ? WIND_COST : 0;
+    const cost = w
+      ? w.cost
+      : id === "ward"
+        ? WARD_COST
+        : id === "wind"
+          ? WIND_COST
+          : 0;
     if (!cost) return;
-    if ((w && B.weapons.indexOf(id) >= 0) || (id === "ward" && B.ward) || (id === "wind" && B.wind)) return;
-    if (typeof getXPBalance !== "function" || getXPBalance() < cost) return say("Not enough XP.");
+    if (
+      (w && B.weapons.indexOf(id) >= 0) ||
+      (id === "ward" && B.ward) ||
+      (id === "wind" && B.wind)
+    )
+      return;
+    if (typeof getXPBalance !== "function" || getXPBalance() < cost)
+      return say("Not enough XP.");
     xpBalance = getXPBalance() - cost;
     xpSpent += cost;
     try {
@@ -414,7 +615,13 @@
     else B.wind = true;
     save();
     sfx("buy");
-    say(w ? `${w.icon} ${w.name} acquired! Boss damage divisor is now ${w.d === 0 ? "none" : nf(w.d)}.` : id === "ward" ? "🛡️ Hex Ward acquired." : "🔥 Phoenix Ember acquired.");
+    say(
+      w
+        ? `${w.icon} ${w.name} acquired! Boss damage divisor is now ${w.d === 0 ? "none" : nf(w.d)}.`
+        : id === "ward"
+          ? "🛡️ Hex Ward acquired."
+          : "🔥 Phoenix Ember acquired.",
+    );
     if (typeof G.updateShopUI === "function") G.updateShopUI();
   };
 
@@ -438,10 +645,19 @@
     const c = sb();
     if (!c) return;
     try {
-      const { data, error } = await c.from("boss_victories").select("user_id,boss_type,username,wins").order("wins", { ascending: false }).limit(300);
+      const { data, error } = await c
+        .from("boss_victories")
+        .select("user_id,boss_type,username,wins")
+        .order("wins", { ascending: false })
+        .limit(300);
       if (stale && stale()) return;
       if (error) {
-        box.innerHTML = /relation|does not exist|schema cache|could not find/i.test(error.message || "") ? '<span class="empty">Bosses need the database update (boss-setup.sql).</span>' : `<span class="empty">${esc(error.message)}</span>`;
+        box.innerHTML =
+          /relation|does not exist|schema cache|could not find/i.test(
+            error.message || "",
+          )
+            ? '<span class="empty">Bosses need the database update (boss-setup.sql).</span>'
+            : `<span class="empty">${esc(error.message)}</span>`;
         return;
       }
       const by = { golem: [], titan: [], reality: [] };
@@ -452,12 +668,18 @@
         const rows = by[k]
           .slice(0, 25)
           .map((r, i) => {
-            const nm = typeof G.drNameHTML === "function" ? G.drNameHTML({ player_name: r.username || "Player", player_id: r.user_id }) : esc(r.username);
+            const nm =
+              typeof G.drNameHTML === "function"
+                ? G.drNameHTML({
+                    player_name: r.username || "Player",
+                    player_id: r.user_id,
+                  })
+                : esc(r.username);
             return `<div class="drBvRow"><span class="drBvRank">#${i + 1}</span><span class="drBvName">${nm}</span><b>×${nf(r.wins)}</b></div>`;
           })
           .join("");
         return `<div class="drBvCol ${live === k ? "live" : ""}" style="--bc:${cfg.color}">
-          <div class="drBvHead"><span>${cfg.icon}</span><b>${esc(cfg.short)}</b>${live === k ? '<em>LIVE</em>' : ""}</div>
+          <div class="drBvHead"><span>${cfg.icon}</span><b>${esc(cfg.short)}</b>${live === k ? "<em>LIVE</em>" : ""}</div>
           <div class="drBvSub">${by[k].length} survivor${by[k].length === 1 ? "" : "s"} • ${nf(cfg.hp)} HP</div>
           ${rows || '<div class="empty" style="padding:10px 4px">Nobody has survived this boss yet.</div>'}</div>`;
       }).join("");
@@ -533,7 +755,9 @@
       };
     });
     const m = root.querySelector("#bossMin");
-    if (m) m.oninput = () => (minutes = Math.max(1, Math.min(240, Number(m.value) || 15)));
+    if (m)
+      m.oninput = () =>
+        (minutes = Math.max(1, Math.min(240, Number(m.value) || 15)));
     const go = root.querySelector("#bossGo");
     if (go)
       go.onclick = async () => {
@@ -541,8 +765,14 @@
         if (!c) return;
         go.disabled = true;
         adminMsg = "Releasing…";
-        const { error } = await c.rpc("boss_spawn", { p_type: pick, p_minutes: minutes, p_cap: 100 });
-        adminMsg = error ? "Could not release: " + error.message : "Released! Players are being pulled in.";
+        const { error } = await c.rpc("boss_spawn", {
+          p_type: pick,
+          p_minutes: minutes,
+          p_cap: 100,
+        });
+        adminMsg = error
+          ? "Could not release: " + error.message
+          : "Released! Players are being pulled in.";
         await fetchActive();
         P.rerender();
       };
@@ -558,7 +788,8 @@
         P.rerender();
       };
   }
-  if (P && typeof P.addTab === "function") P.addTab("boss", "💀 Boss", renderAdmin, bindAdmin, isAdmin);
+  if (P && typeof P.addTab === "function")
+    P.addTab("boss", "💀 Boss", renderAdmin, bindAdmin, isAdmin);
 
   /* local-only preview of a cutscene for admins */
   G.drBossPreview = function (type) {
@@ -571,7 +802,9 @@
       max_hp: cfg.hp,
       hp: cfg.hp,
       combos: Array.from({ length: cfg.count }, () => {
-        const pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+        const pool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(
+          () => Math.random() - 0.5,
+        );
         return pool.slice(0, cfg.size);
       }),
       status: "active",
@@ -584,7 +817,11 @@
       if (typeof m.start === "function") m.start(type);
       setTimeout(() => m.stop && m.stop(false), 25000);
     } catch (e) {}
-    setTimeout(() => notifyFx("end", { status: "preview", preview: true, cfg, ev: fake }), 25000);
+    setTimeout(
+      () =>
+        notifyFx("end", { status: "preview", preview: true, cfg, ev: fake }),
+      25000,
+    );
   };
 
   /* ==========================================================
@@ -611,7 +848,9 @@
     const c = sb();
     if (!c) return;
     try {
-      const { count, error } = await c.from("profiles").select("id", { count: "exact", head: true });
+      const { count, error } = await c
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
       if (!error && typeof count === "number") accounts = count;
     } catch (e) {}
     paintStats();
@@ -621,8 +860,11 @@
     const c = sb();
     if (!c) return;
     try {
-      const key = (me() && me().id) || "anon-" + Math.random().toString(36).slice(2, 10);
-      const ch = c.channel("digitroll-online", { config: { presence: { key } } });
+      const key =
+        (me() && me().id) || "anon-" + Math.random().toString(36).slice(2, 10);
+      const ch = c.channel("digitroll-online", {
+        config: { presence: { key } },
+      });
       ch.on("presence", { event: "sync" }, () => {
         try {
           online = Object.keys(ch.presenceState()).length;
