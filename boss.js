@@ -44,7 +44,7 @@
       name: "THE STONEBOUND GOLEM",
       short: "Golem",
       icon: "🗿",
-      hp: 1e55,
+      hp: 1000000000000,
       color: "#d6a273",
       size: 4,
       count: 1,
@@ -55,7 +55,7 @@
       name: "TITAN OF THE ABYSS",
       short: "TITAN",
       icon: "⚡",
-      hp: 1e59,
+      hp: 10000000000000000,
       color: "#38bdf8",
       size: 3,
       count: 3,
@@ -66,7 +66,7 @@
       name: "REALITY BREAKER",
       short: "Reality Breaker",
       icon: "🌀",
-      hp: 1e62,
+      hp: 10000000000000000000,
       color: "#f43f5e",
       size: 3,
       count: 5,
@@ -74,48 +74,48 @@
     },
   };
   const ORDER = ["golem", "titan", "reality"];
-  const DEFAULT_D = 10000;
+  const DEFAULT_D = 1000000000000;
 
   const WEAPONS = [
     {
       id: "gun",
       icon: "🔫",
       name: "Stormcaller Repeater",
-      d: 100,
+      d: 100000000000,
       cost: 5000,
-      tag: "Rolls hit 1/100 as hard",
+      tag: "Rolls hit 1/100,000,000,000 as hard",
     },
     {
       id: "sword",
       icon: "🗡️",
       name: "Dawnbreaker Blade",
-      d: 1000,
+      d: 1000000000000,
       cost: 10000,
-      tag: "Rolls hit 1/1,000 as hard",
+      tag: "Rolls hit 1/1,000,000,000,000 as hard",
     },
     {
       id: "laser",
       icon: "🔆",
       name: "Solar Lance (Hyper Laser)",
-      d: 10,
+      d: 10000000000,
       cost: 50000,
-      tag: "Rolls hit 1/10 as hard",
+      tag: "Rolls hit 1/10,000,000,000 as hard",
     },
     {
       id: "slayr",
       icon: "☄️",
       name: "GOD SLAYR",
-      d: 5,
+      d: 5000000000,
       cost: 100000,
-      tag: "Rolls hit 1/5 as hard",
+      tag: "Rolls hit 1/5,000,000,000 as hard",
     },
     {
       id: "tooth",
       icon: "🦷",
       name: "BREAKER'S TOOTH",
-      d: 0,
+      d: 1000,
       cost: 1000000,
-      tag: "Every roll hits for its FULL 1-in-N value",
+      tag: "Rolls hit 1/1,000 as hard",
     },
   ];
   const WARD_COST = 25000;
