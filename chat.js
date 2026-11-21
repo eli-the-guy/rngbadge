@@ -27,6 +27,105 @@
   const MAX_LEN = 200;
   const KEEP = 80;
 
+  /* ==========================================================
+     AUTO-MOD (mirrors the server-side trigger in chat-setup.sql)
+     ========================================================== */
+
+  const DEFAULT_WORDS = [
+    "fuck",
+    "shit",
+    "bitch",
+    "asshole",
+    "cunt",
+    "dick",
+    "pussy",
+    "bastard",
+    "whore",
+    "slut",
+    "retard",
+    "porn",
+  ];
+  let words = DEFAULT_WORDS.slice();
+  let wordsFromDb = false;
+  const LEET = {
+    0: "o",
+    1: "i",
+    3: "e",
+    4: "a",
+    5: "s",
+    7: "t",
+    "@": "a",
+    $: "s",
+    "!": "i",
+  };
+  const collapse = (s) => s.replace(/(.)\1+/g, "$1");
+
+  function tokensOf(text) {
+    const t = text
+      .toLowerCase()
+      .replace(/[013457@$!]/g, (ch) => LEET[ch])
+      .replace(/[^a-z]+/g, " ")
+      .trim();
+    const joined = t.replace(/\b([a-z]) (?=[a-z]\b)/g, "$1"); // "f u c k" -> "fuck"
+    return t.split(" ").concat(joined.split(" ")).filter(Boolean);
+  }
+  function hasBadLanguage(text) {
+    const toks = tokensOf(text).map(collapse);
+    return words.some((w) => {
+      const cw = collapse(w);
+      return toks.some(
+        (t) =>
+          t === cw ||
+          (t.startsWith(cw) &&
+            /^(s|es|ed|ing|er|in|y)$/.test(t.slice(cw.length))),
+      );
+    });
+  }
+  const LINK_RE =
+    /(https?:\/\/|www\.|discord\.gg|\b[a-z0-9-]+\.(com|net|org|gg|io|ly|xyz|me|co)\b)/i;
+  let lastText = "";
+  let lastTextAt = 0;
+  let strikes = [];
+  let muteUntil = 0;
+
+  /* returns "" when ok, otherwise a reason */
+  function checkMessage(text) {
+    if (hasBadLanguage(text)) return "language";
+    if (LINK_RE.test(text)) return "links";
+    const letters = text.replace(/[^A-Za-z]/g, "").length;
+    const upper = text.replace(/[^A-Z]/g, "").length;
+    if (letters >= 12 && upper / letters > 0.7) return "caps";
+    if (/(.)\1{7,}/.test(text)) return "spam";
+    if (text.toLowerCase() === lastText && Date.now() - lastTextAt < 30000)
+      return "duplicate";
+    return "";
+  }
+  const REASON_TEXT = {
+    language: "Please keep the chat clean.",
+    links: "Links aren't allowed in chat.",
+    caps: "Please don't shout (too many capital letters).",
+    spam: "That looks like spam.",
+    duplicate: "You already sent that.",
+    slow: "Slow down a little.",
+  };
+
+  async function loadWords() {
+    if (typeof supabaseClient === "undefined") return;
+    try {
+      const { data, error } = await supabaseClient
+        .from("chat_blocked_words")
+        .select("word")
+        .order("word");
+      if (!error && data) {
+        words = data.map((r) => r.word);
+        wordsFromDb = true;
+        if (typeof G.drProgress !== "undefined" && G.drProgress.isOpen())
+          G.drProgress.rerender();
+        render();
+      }
+    } catch (e) {}
+  }
+
   let messages = []; // oldest -> newest
   let offline = false;
   let lastSend = 0;
@@ -107,8 +206,9 @@
     if (!input) return;
     const u = me();
     const off = offline;
-    input.disabled = !u || off;
-    btn.disabled = !u || off;
+    const muted = Date.now() < muteUntil;
+    input.disabled = !u || off || muted;
+    btn.disabled = !u || off || muted;
     input.placeholder = off
       ? "Chat is offline"
       : u
@@ -116,9 +216,13 @@
         : "Log in to chat";
     note.textContent = off
       ? "Chat isn't set up yet (run chat-setup.sql)."
-      : u
-        ? "Be kind. Messages are public. Max " + MAX_LEN + " characters."
-        : "You can read the chat, but you need an account to post.";
+      : muted
+        ? "🛡️ Auto-mod: you're muted for " +
+          Math.ceil((muteUntil - Date.now()) / 1000) +
+          "s."
+        : u
+          ? "Be kind. Messages are public. Max " + MAX_LEN + " characters."
+          : "You can read the chat, but you need an account to post.";
   }
 
   const fmtTime = (iso) => {
@@ -142,7 +246,13 @@
             : esc(m.username);
         const mine = u && m.user_id === u.id;
         const canDel = mine || isAdmin();
-        return `<div class="drChatMsg ${mine ? "mine" : ""}"><span class="drChatName">${name}</span><span class="drChatTime">${fmtTime(m.created_at)}</span><div>${esc(m.message)}</div>${
+        return `<div class="drChatMsg ${mine ? "mine" : ""}"><span class="drChatName">${name}</span><span class="drChatTime">${fmtTime(m.created_at)}</span><div>${
+          hasBadLanguage(m.message)
+            ? isAdmin()
+              ? esc(m.message) + ' <i style="color:#f59e0b">🛡️ flagged</i>'
+              : '<i style="color:#8391ab">🛡️ message removed by auto-mod</i>'
+            : esc(m.message)
+        }</div>${
           canDel
             ? `<button class="drChatDel" type="button" title="Delete" data-del="${esc(m.id)}">×</button>`
             : ""
@@ -203,6 +313,22 @@
     if (!u || !input) return;
     const text = input.value.replace(/\s+/g, " ").trim().slice(0, MAX_LEN);
     if (!text) return;
+    if (Date.now() < muteUntil) return syncForm();
+    if (!isAdmin()) {
+      const why = checkMessage(text);
+      if (why) {
+        strikes = strikes.filter((t) => Date.now() - t < 60000);
+        strikes.push(Date.now());
+        say("🛡️ Auto-mod: " + REASON_TEXT[why]);
+        if (strikes.length >= 3) {
+          muteUntil = Date.now() + 60000;
+          strikes = [];
+          say("🛡️ Too many blocked messages — muted for 60 seconds.");
+          syncForm();
+        }
+        return;
+      }
+    }
     if (Date.now() - lastSend < 2000) return say("⏳ Slow down a little.");
     lastSend = Date.now();
     const username =
@@ -217,8 +343,15 @@
         .insert({ user_id: u.id, username, message: text });
       if (error) {
         input.value = text;
+        const m = /automod: (\w+)/.exec(error.message || "");
+        if (m)
+          return say(
+            "🛡️ Auto-mod: " + (REASON_TEXT[m[1]] || "message blocked."),
+          );
         return say("❌ " + (error.message || "Couldn't send"));
       }
+      lastText = text.toLowerCase();
+      lastTextAt = Date.now();
       fetchLatest();
     } catch (e) {
       input.value = text;
@@ -267,11 +400,66 @@
     } catch (e) {}
   }
 
+  /* ---------- admin: Chat Mod tab ---------- */
+  function renderMod() {
+    const chips = words
+      .map(
+        (w) =>
+          `<span class="pgTag" style="margin:3px;font-size:13px;text-transform:none;letter-spacing:0">${esc(w)} <a href="#" data-rmword="${esc(w)}" style="color:#f87171;text-decoration:none;margin-left:6px" title="Remove">×</a></span>`,
+      )
+      .join("");
+    return `<div class="pgBanner">🛡️ Chat auto-mod is <b>on</b>.<br><span class="pgSub">Blocked automatically (server-side, admins are exempt): blocked words (also catches l33t speak, repeated letters and spaced-out words), links, shouting in ALL CAPS, repeated-character spam, duplicate messages within 30s, and more than 1 message per 2s. Three blocked messages in a minute mutes a player for 60s. Blocked words in old messages are hidden for non-admins.</span></div>
+      <div class="pgSub" style="margin-bottom:8px">Word list: <b>${wordsFromDb ? "✅ loaded from database" : "⚠️ using built-in list (run chat-setup.sql to manage it here)"}</b> — ${words.length} words</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <input id="modAdd" type="text" placeholder="Add words, separated by commas" style="flex:1;min-width:200px;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff">
+        <button class="pgBtn" id="modAddBtn" style="width:auto;margin:0;padding:10px 18px" ${wordsFromDb ? "" : "disabled"}>Add</button></div>
+      <div>${chips || '<span class="pgSub">No words.</span>'}</div>`;
+  }
+  function bindMod(root) {
+    const add = root.querySelector("#modAddBtn");
+    if (add)
+      add.onclick = async () => {
+        const list = [
+          ...new Set(
+            root
+              .querySelector("#modAdd")
+              .value.toLowerCase()
+              .split(/[,\s]+/)
+              .map((w) => w.replace(/[^a-z]/g, ""))
+              .filter((w) => w.length >= 2 && w.length <= 30),
+          ),
+        ];
+        if (!list.length) return;
+        const { error } = await supabaseClient
+          .from("chat_blocked_words")
+          .upsert(list.map((word) => ({ word })));
+        if (error) return say("❌ " + error.message);
+        say("🛡️ Added " + list.length + " word(s).");
+        loadWords();
+      };
+    root.querySelectorAll("[data-rmword]").forEach((a) => {
+      a.onclick = async (e) => {
+        e.preventDefault();
+        const { error } = await supabaseClient
+          .from("chat_blocked_words")
+          .delete()
+          .eq("word", a.dataset.rmword);
+        if (error) return say("❌ " + error.message);
+        loadWords();
+      };
+    });
+  }
+  if (G.drProgress)
+    G.drProgress.addTab("chatmod", "🛡️ Chat Mod", renderMod, bindMod, isAdmin);
+
   /* ---------- boot ---------- */
   let lastUser = null;
   function boot() {
     if (!buildPanel()) return setTimeout(boot, 400);
     render();
+    loadWords();
+    setInterval(loadWords, 300000);
+    setInterval(syncForm, 1000);
     fetchLatest();
     subscribe();
     setInterval(fetchLatest, 15000);

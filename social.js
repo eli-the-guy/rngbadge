@@ -212,10 +212,15 @@
     try {
       if (mine === "week" || mine === "daily") {
         const midnight = new Date();
-        midnight.setHours(0, 0, 0, 0);
+        midnight.setUTCHours(0, 0, 0, 0); // fixed reset: 00:00 UTC for everyone
         const since = (
           mine === "daily" ? midnight : new Date(Date.now() - 7 * 86400000)
         ).toISOString();
+        const resetAt = new Date(midnight.getTime() + 86400000);
+        const note =
+          mine === "daily"
+            ? `<div class="small" style="padding:0 4px 8px;color:#8391ab">Resets daily at ${resetAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} your time (00:00 UTC).</div>`
+            : "";
         const { data, error } = await supabaseClient
           .from("rolls")
           .select(
@@ -231,7 +236,7 @@
         window.currentLeaderboardRows = rows;
         if (typeof G.drLoadRebirths === "function")
           await G.drLoadRebirths(rows);
-        box.innerHTML =
+        const body =
           rows
             .map(
               (
@@ -247,6 +252,7 @@
           (mine === "daily"
             ? '<span class="empty">No rolls today yet — be the first!</span>'
             : '<span class="empty">No rolls this week yet.</span>');
+        box.innerHTML = note + body;
         return;
       }
       const col = mine === "rebirths" ? "rebirths" : "badge_count";

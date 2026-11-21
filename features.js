@@ -63,10 +63,13 @@
       String(d.getDate()).padStart(2, "0")
     );
   };
-  const yesterdayKey = () => {
+  /* Daily challenges reset at the same moment for everyone: 00:00 UTC */
+  const utcKey = (d) => (d || new Date()).toISOString().slice(0, 10);
+  const yesterdayKey = () => utcKey(new Date(Date.now() - 86400000));
+  const resetTimeText = () => {
     const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return dayKey(d);
+    d.setUTCHours(0, 0, 0, 0);
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   };
 
   /* ==========================================================
@@ -150,118 +153,183 @@
     return m;
   };
 
-  /* calibrated from simulated rolls (5 digits): badge 83%, Uncommon+ 55%,
-     Epic+ 32%, Mythic+ 11%, Divine+ 6%, Transcendent+ 3%, 3-of-a-digit 7% */
-  const POOLS = {
-    easy: [
-      { text: (g) => `Roll ${g} times`, goal: [20, 30, 50], inc: () => 1 },
-      {
-        text: (g) => `Land ${g} rolls with at least one badge`,
-        goal: [15, 25],
-        inc: (r) => (r.badges && r.badges.length ? 1 : 0),
-      },
-      {
-        text: (g) => `Earn ${n(g)} XP`,
-        goal: [2000, 4000],
-        inc: (r) => Number(r.xp || 0),
-      },
-      {
-        text: (g) => `Roll Uncommon or better ${g} times`,
-        goal: [8, 12],
-        inc: (r) => (tierOf(r.rarity) >= 4 ? 1 : 0),
-      },
+  /* How rarity really behaves (simulated, 15,000 rolls per length):
+     every extra digit pushes the whole curve up. From 7 digits on, Legendary is the most common
+     tier, Mythic is common, and at 10 digits every roll has a badge. So tier goals can't be fixed
+     numbers: they are chosen from the table below so the expected effort stays about the same
+     for every roll length.
+     CUM[len][tier] = chance a roll is at least that tier, for tiers RARE (index 5) .. "???" (index 17). */
+  const CUM = {
+    5: [
+      0.46, 0.33, 0.2, 0.11, 0.054, 0.027, 0.014, 0.0057, 0.0027, 0.0013,
+      0.00093, 0.0002, 0.0002,
     ],
-    medium: [
-      { text: (g) => `Roll ${g} times`, goal: [80, 120], inc: () => 1 },
-      {
-        text: (g) => `Roll Epic or better ${g} times`,
-        goal: [5, 8],
-        inc: (r) => (tierOf(r.rarity) >= 6 ? 1 : 0),
-      },
-      {
-        text: (g) => `Roll Legendary or better ${g} times`,
-        goal: [3, 5],
-        inc: (r) => (tierOf(r.rarity) >= 7 ? 1 : 0),
-      },
-      {
-        text: (g) => `Roll a number with 3+ of the same digit ${g} times`,
-        goal: [2, 3],
-        inc: (r) => (maxCount(r.roll) >= 3 ? 1 : 0),
-      },
-      {
-        text: (g) => `Earn ${n(g)} XP`,
-        goal: [8000, 12000],
-        inc: (r) => Number(r.xp || 0),
-      },
-      {
-        text: (g) => `Find ${g} different badges today`,
-        goal: [10, 14],
-        unique: true,
-      },
+    6: [
+      0.58, 0.44, 0.29, 0.16, 0.086, 0.045, 0.023, 0.011, 0.0052, 0.0024,
+      0.0011, 0.00027, 0.00005,
     ],
-    hard: [
-      {
-        text: (g) => `Roll Mythic or better ${g} times`,
-        goal: [3, 4],
-        inc: (r) => (tierOf(r.rarity) >= 8 ? 1 : 0),
-      },
-      {
-        text: (g) => `Roll Divine or better ${g} time${g > 1 ? "s" : ""}`,
-        goal: [1, 2],
-        inc: (r) => (tierOf(r.rarity) >= 9 ? 1 : 0),
-      },
-      {
-        text: (g) => `Roll Transcendent or better ${g} time${g > 1 ? "s" : ""}`,
-        goal: [1],
-        inc: (r) => (tierOf(r.rarity) >= 10 ? 1 : 0),
-      },
-      {
-        text: (g) => `Find ${g} different badges today`,
-        goal: [20, 25],
-        unique: true,
-      },
-      {
-        text: (g) => `Earn ${n(g)} XP`,
-        goal: [25000, 35000],
-        inc: (r) => Number(r.xp || 0),
-      },
-      { text: (g) => `Roll ${g} times`, goal: [200, 300], inc: () => 1 },
+    7: [
+      0.68, 0.53, 0.38, 0.23, 0.13, 0.071, 0.037, 0.019, 0.0092, 0.0052, 0.0021,
+      0.0012, 0.00033,
+    ],
+    8: [
+      0.78, 0.63, 0.49, 0.32, 0.19, 0.11, 0.063, 0.032, 0.014, 0.0067, 0.0037,
+      0.0019, 0.0008,
+    ],
+    9: [
+      0.85, 0.72, 0.59, 0.41, 0.25, 0.15, 0.085, 0.047, 0.026, 0.013, 0.0062,
+      0.0029, 0.00087,
+    ],
+    10: [
+      0.9, 0.81, 0.69, 0.5, 0.33, 0.21, 0.12, 0.072, 0.04, 0.02, 0.011, 0.0053,
+      0.0022,
+    ],
+    11: [
+      0.93, 0.86, 0.76, 0.59, 0.42, 0.27, 0.17, 0.1, 0.06, 0.031, 0.015, 0.0081,
+      0.0031,
     ],
   };
-  const REWARDS = [500, 1500, 4000];
+  const curLen = () =>
+    Math.min(
+      11,
+      Math.max(5, typeof G.drRollLength === "function" ? G.drRollLength() : 5),
+    );
+  const pTier = (len, tier) => CUM[len][tier - 5];
+
+  /* pick the tier whose chance x effort is closest to the wanted goal */
+  function pickTier(effort, goal, len) {
+    let best = 8;
+    let bestErr = Infinity;
+    for (let t = 6; t <= 16; t++) {
+      const err = Math.abs(Math.log((pTier(len, t) * effort) / goal));
+      if (err < bestErr) {
+        bestErr = err;
+        best = t;
+      }
+    }
+    return best;
+  }
+  const tierLabel = (t) => TIERS[t].charAt(0) + TIERS[t].slice(1).toLowerCase();
+  const xpMult = () =>
+    Math.max(
+      1,
+      typeof G.drXPMultiplier === "function" ? G.drXPMultiplier() : 1,
+    );
+
+  /* kinds: tier = "roll <tier> or better N times" (tier chosen from your roll length),
+     rolls, xp (scaled by your XP multiplier), unique badges */
+  const POOLS = {
+    easy: [
+      { kind: "tier", effort: 100, goals: [15, 20, 25] },
+      { kind: "tier", effort: 120, goals: [18, 24] },
+      { kind: "rolls", goals: [60, 90, 120] },
+      { kind: "xp", goals: [8000, 12000] },
+    ],
+    medium: [
+      { kind: "tier", effort: 300, goals: [8, 12] },
+      { kind: "tier", effort: 350, goals: [10, 14] },
+      { kind: "rolls", goals: [250, 350] },
+      { kind: "xp", goals: [30000, 45000] },
+      { kind: "unique", goals: [30, 40] },
+    ],
+    hard: [
+      { kind: "tier", effort: 800, goals: [6, 9] },
+      { kind: "tier", effort: 1000, goals: [8, 12] },
+      { kind: "unique", goals: [55, 70] },
+      { kind: "xp", goals: [100000, 150000] },
+      { kind: "rolls", goals: [600, 900] },
+    ],
+  };
+  const REWARDS = [750, 2500, 7000];
   const LABELS = ["Easy", "Medium", "Hard"];
 
+  /* Seeded picks are the same for everybody; tier / XP goals are fitted to your roll length. */
+  function buildCfg(i, def, rng) {
+    const goal = def.goals[Math.floor(rng() * def.goals.length)];
+    if (def.kind === "tier")
+      return {
+        kind: "tier",
+        tier: pickTier(def.effort, goal, curLen()),
+        goal,
+        len: curLen(),
+        mult: xpMult(),
+      };
+    if (def.kind === "xp")
+      return {
+        kind: "xp",
+        goal: Math.round(goal * xpMult()),
+        len: curLen(),
+        mult: xpMult(),
+      };
+    return { kind: def.kind, goal, len: curLen(), mult: xpMult() };
+  }
+
   function todaysChallenges() {
-    const rng = mulberry(hash("digitroll-" + dayKey()));
-    return ["easy", "medium", "hard"].map((tier, i) => {
+    ensureDay();
+    const rng = mulberry(hash("digitroll-" + utcKey()));
+    const picks = ["easy", "medium", "hard"].map((tier) => {
       const pool = POOLS[tier];
       const def = pool[Math.floor(rng() * pool.length)];
-      const goal = def.goal[Math.floor(rng() * def.goal.length)];
-      return {
+      return { def, rng: mulberry(Math.floor(rng() * 4294967296)) };
+    });
+    if (!Array.isArray(daily.cfg) || daily.cfg.length !== 3)
+      daily.cfg = [null, null, null];
+    picks.forEach((p, i) => {
+      /* (re)fit while you haven't made progress, so upgrading before you start is fair */
+      const c0 = daily.cfg[i];
+      const stale =
+        !c0 ||
+        (daily.p[i] === 0 &&
+          !daily.done[i] &&
+          (c0.len !== curLen() || c0.mult !== xpMult()));
+      if (stale) daily.cfg[i] = buildCfg(i, p.def, p.rng);
+    });
+    save(DAILY_KEY, daily);
+    return picks.map((p, i) => {
+      const c = daily.cfg[i];
+      const base = {
         tier: LABELS[i],
-        text: def.text(goal),
-        goal,
-        inc: def.inc,
-        unique: !!def.unique,
+        goal: c.goal,
         reward: REWARDS[i],
+        unique: c.kind === "unique",
       };
+      if (c.kind === "tier")
+        return Object.assign(base, {
+          text: `Roll ${tierLabel(c.tier)} or better ${c.goal} times`,
+          inc: (r) => (tierOf(r.rarity) >= c.tier ? 1 : 0),
+        });
+      if (c.kind === "rolls")
+        return Object.assign(base, {
+          text: `Roll ${c.goal} times`,
+          inc: () => 1,
+        });
+      if (c.kind === "xp")
+        return Object.assign(base, {
+          text: `Earn ${n(c.goal)} XP`,
+          inc: (r) => Number(r.xp || 0),
+        });
+      return Object.assign(base, {
+        text: `Find ${c.goal} different badges today`,
+        inc: () => 0,
+      });
     });
   }
 
   function ensureDay() {
-    const today = dayKey();
+    const today = utcKey();
     if (daily.date !== today) {
       daily.date = today;
       daily.p = [0, 0, 0];
       daily.done = [false, false, false];
       daily.names = [];
+      daily.cfg = null;
       daily.cleared = false;
       save(DAILY_KEY, daily);
     }
   }
 
   function currentStreak() {
-    return daily.lastClear === dayKey() || daily.lastClear === yesterdayKey()
+    return daily.lastClear === utcKey() || daily.lastClear === yesterdayKey()
       ? daily.streak
       : 0;
   }
@@ -304,7 +372,7 @@
     if (!daily.cleared && daily.done.every(Boolean)) {
       daily.cleared = true;
       daily.streak = daily.lastClear === yesterdayKey() ? daily.streak + 1 : 1;
-      daily.lastClear = dayKey();
+      daily.lastClear = utcKey();
       prestige.earned += 1;
       save(PRESTIGE_KEY, prestige);
       say(
@@ -586,7 +654,7 @@
         </div>`;
       })
       .join("");
-    return `<div class="pgBanner">New challenges every day at midnight.<br>
+    return `<div class="pgBanner">New challenges every day at <b>${resetTimeText()}</b> your time (00:00 UTC, same moment for everyone).<br>
         <span class="pgSub">Clear all three for +1 ★ prestige point. 🔥 Streak: <b>${streak}</b> day${streak === 1 ? "" : "s"}${daily.cleared ? " • Today cleared ✓" : ""}</span></div>
       <div class="pgGrid">${cards}</div>`;
   }
