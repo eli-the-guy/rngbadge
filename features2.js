@@ -404,19 +404,90 @@
       (c) => c.xp >= 1000000,
       2,
     ],
-    ["epic", "Epic Finder", "Roll an Epic", (c) => c.tier >= 6, 0],
-    ["legend", "Legend", "Roll a Legendary", (c) => c.tier >= 7, 0],
-    ["myth", "Mythbreaker", "Roll a Mythic", (c) => c.tier >= 8, 1],
-    ["divine", "Blessed", "Roll a Divine", (c) => c.tier >= 9, 2],
-    ["trans", "Transcendent", "Roll a Transcendent", (c) => c.tier >= 10, 3],
+    [
+      "epic",
+      "Epic Finder",
+      "Roll an Epic",
+      (c) => c.tier >= P.TIERS.indexOf("EPIC"),
+      0,
+    ],
+    [
+      "legend",
+      "Legend",
+      "Roll a Legendary",
+      (c) => c.tier >= P.TIERS.indexOf("LEGENDARY"),
+      0,
+    ],
+    [
+      "myth",
+      "Mythbreaker",
+      "Roll a Mythic",
+      (c) => c.tier >= P.TIERS.indexOf("MYTHIC"),
+      1,
+    ],
+    [
+      "divine",
+      "Blessed",
+      "Roll a Divine",
+      (c) => c.tier >= P.TIERS.indexOf("DIVINE"),
+      2,
+    ],
+    [
+      "trans",
+      "Transcendent",
+      "Roll a Transcendent",
+      (c) => c.tier >= P.TIERS.indexOf("TRANSCENDENT"),
+      3,
+    ],
     [
       "beyond",
       "Beyond Reason",
       "Roll an Ascended or higher",
-      (c) => c.tier >= 12,
+      (c) => c.tier >= P.TIERS.indexOf("ASCENDED"),
       3,
     ],
-    ["absolute", "The Absolute", "Roll an Absolute", (c) => c.tier >= 16, 5],
+    [
+      "absolute",
+      "The Absolute",
+      "Roll an Absolute",
+      (c) => c.tier >= P.TIERS.indexOf("ABSOLUTE"),
+      5,
+    ],
+    [
+      "forbidden",
+      "Forbidden Knowledge",
+      "Roll a Forbidden",
+      (c) => c.tier >= P.TIERS.indexOf("FORBIDDEN"),
+      6,
+    ],
+    [
+      "paradox",
+      "Paradox Walker",
+      "Roll a Paradox",
+      (c) => c.tier >= P.TIERS.indexOf("PARADOX"),
+      7,
+    ],
+    [
+      "oblivion",
+      "Into Oblivion",
+      "Roll an Oblivion",
+      (c) => c.tier >= P.TIERS.indexOf("OBLIVION"),
+      8,
+    ],
+    [
+      "genesis",
+      "In the Beginning",
+      "Roll a Genesis",
+      (c) => c.tier >= P.TIERS.indexOf("GENESIS"),
+      10,
+    ],
+    [
+      "omega",
+      "The Last Roll",
+      "Roll an Omega",
+      (c) => c.tier >= P.TIERS.indexOf("OMEGA"),
+      15,
+    ],
     ["reborn", "Reborn", "Do 1 true rebirth", (c) => c.rb >= 1, 0],
     ["phoenix", "Phoenix", "Do 3 true rebirths", (c) => c.rb >= 3, 2],
     ["rainbow", "Rainbow Soul", "Do 8 true rebirths", (c) => c.rb >= 8, 5],
@@ -787,7 +858,9 @@
     logState.page = Math.min(logState.page, pages - 1);
     const slice = rows.slice(logState.page * PAGE, logState.page * PAGE + PAGE);
     const opts = ["All rarities"].concat(
-      P.TIERS.slice(3, 17).map((t) => t + "+"),
+      P.TIERS.slice(P.TIERS.indexOf("COMMON"), P.TIERS.indexOf("???")).map(
+        (t) => t + "+",
+      ),
     );
     const sel = `<select id="pgLogMin" style="padding:9px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:#161c2a;color:#fff">${opts
       .map(

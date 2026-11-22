@@ -372,6 +372,7 @@
      ========================================================== */
 
   const TIERS = [
+    "WORTHLESS",
     "NOVICE",
     "PLAIN",
     "BASIC",
@@ -390,11 +391,17 @@
     "BEYOND",
     "ABSOLUTE",
     "???",
+    "FORBIDDEN",
+    "PARADOX",
+    "OBLIVION",
+    "GENESIS",
+    "OMEGA",
   ];
 
-  const FIRST_CINEMATIC = 10; // TRANSCENDENT
+  const FIRST_CINEMATIC = TIERS.indexOf("TRANSCENDENT");
 
   const FX_COLORS = {
+    WORTHLESS: "#5b6477",
     NOVICE: "#7d879b",
     PLAIN: "#9aa5ba",
     BASIC: "#b0b9c9",
@@ -413,9 +420,17 @@
     BEYOND: "#ff4fe0",
     ABSOLUTE: "#ffffff",
     "???": "#ff2a2a",
+    FORBIDDEN: "#b04dff",
+    PARADOX: "#ffffff",
+    OBLIVION: "#6a5cff",
+    GENESIS: "#ffd9a0",
+    OMEGA: "#ff9ad5",
   };
 
-  const DURATIONS = [3500, 4000, 4500, 5000, 5500, 6000, 6500, 7500];
+  const DURATIONS = [
+    3500, 4000, 4500, 5000, 5500, 6000, 6500, 7500, 8000, 8500, 9000, 9500,
+    11000,
+  ];
 
   const tierOf = (r) => Math.max(0, TIERS.indexOf(r));
   const fxName = (r) => (r === "???" ? "unknown" : r.toLowerCase());
@@ -516,11 +531,11 @@
       num.style.setProperty("--fx-color", color + "88");
       num.style.setProperty(
         "--fx-scale",
-        String(1.03 + Math.min(tier, 9) * 0.012),
+        String(1.03 + Math.max(0, Math.min(tier - 1, 9)) * 0.012),
       );
       num.classList.add("fx-pop");
 
-      const count = tier < 4 ? 0 : Math.min(70, (tier - 3) * 10);
+      const count = tier - 1 < 4 ? 0 : Math.min(70, (tier - 1 - 3) * 10);
       if (count && !reduced() && !opts.noSparks) sparkBurst(num, color, count);
 
       setTimeout(
@@ -528,7 +543,7 @@
           num.classList.remove("fx-pop");
           resolve();
         },
-        tier >= 7 ? 1300 : 650,
+        tier - 1 >= 7 ? 1300 : 650,
       );
     });
   }
@@ -537,7 +552,7 @@
      Each one plays inside the roll card (never full screen) and uses
      shapes, light and motion rather than just particles. */
 
-  const FIRST_MID = 6; // EPIC
+  const FIRST_MID = TIERS.indexOf("EPIC");
 
   const MID_DURATION = {
     epic: 2300,
@@ -682,7 +697,7 @@
         const k = (t * 1.6 + i * 0.2) % 1;
         c.strokeStyle = `rgba(210,235,255,${(1 - k) * 0.7 * env})`;
         c.beginPath();
-        c.arc(cx, cy, k * R, 0, 6.283);
+        c.arc(cx, cy, Math.max(0, k * R), 0, 6.283);
         c.stroke();
       }
 
@@ -1125,6 +1140,332 @@
       c.globalAlpha = 1;
       shakeEls(S, (6 + 10 * pulse) * env);
     },
+
+    /* FORBIDDEN — a sealed rune circle; chains snap one by one, violet light pours out */
+    (c, w, h, t, ms, env, S) => {
+      const cx = w / 2,
+        cy = h / 2,
+        R = Math.min(w, h) * 0.34;
+      c.fillStyle = `rgba(6,0,14,${Math.min(0.94, t * 8)})`;
+      c.fillRect(0, 0, w, h);
+      const open = Math.max(0, (t - 0.5) / 0.4);
+      // rune circle
+      c.save();
+      c.translate(cx, cy);
+      c.rotate(ms / 1800);
+      c.strokeStyle = `rgba(176,77,255,${0.8 * env})`;
+      c.shadowColor = "#b04dff";
+      c.shadowBlur = 24;
+      c.lineWidth = 3;
+      c.beginPath();
+      c.arc(0, 0, R * (1 + open * 0.8), 0, 6.283);
+      c.stroke();
+      c.beginPath();
+      c.arc(0, 0, R * 0.78 * (1 + open * 0.8), 0, 6.283);
+      c.stroke();
+      c.font = `bold ${Math.round(R * 0.16)}px serif`;
+      c.fillStyle = `rgba(220,170,255,${env})`;
+      c.textAlign = "center";
+      const runes = "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ";
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * 6.283;
+        c.fillText(
+          runes[i],
+          Math.cos(a) * R * 0.89 * (1 + open * 0.8),
+          Math.sin(a) * R * 0.89 * (1 + open * 0.8) + R * 0.05,
+        );
+      }
+      // pentagram
+      c.beginPath();
+      for (let i = 0; i <= 5; i++) {
+        const a = ((i * 2) / 5) * 6.283 - 1.5708;
+        const x = Math.cos(a) * R * 0.76,
+          y = Math.sin(a) * R * 0.76;
+        if (i) c.lineTo(x, y);
+        else c.moveTo(x, y);
+      }
+      c.stroke();
+      c.restore();
+      // chains that snap
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * 6.283 + 0.4;
+        const snap = t > 0.3 + i * 0.07;
+        c.strokeStyle = snap
+          ? `rgba(255,255,255,${Math.max(0, 1 - (t - 0.3 - i * 0.07) * 6)})`
+          : "rgba(140,140,160,.9)";
+        c.lineWidth = snap ? 2 : 5;
+        c.setLineDash(snap ? [4, 14] : [14, 6]);
+        c.beginPath();
+        c.moveTo(cx + Math.cos(a) * R * 2.2, cy + Math.sin(a) * R * 2.2);
+        c.lineTo(
+          cx + Math.cos(a) * R * (snap ? 1.5 : 0.95),
+          cy + Math.sin(a) * R * (snap ? 1.5 : 0.95),
+        );
+        c.stroke();
+      }
+      c.setLineDash([]);
+      if (open > 0) {
+        const g = c.createRadialGradient(cx, cy, 0, cx, cy, R * 2.4 * open);
+        g.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - open * 0.5)})`);
+        g.addColorStop(0.4, `rgba(176,77,255,${0.6 * env})`);
+        g.addColorStop(1, "rgba(60,0,110,0)");
+        c.fillStyle = g;
+        c.fillRect(0, 0, w, h);
+      }
+      shakeEls(S, open > 0 ? 8 * env : 0);
+    },
+
+    /* PARADOX — a mirrored, impossible spiral; the screen keeps inverting */
+    (c, w, h, t, ms, env, S, ov) => {
+      const cx = w / 2,
+        cy = h / 2;
+      c.fillStyle = `rgba(0,0,0,${Math.min(0.9, t * 6)})`;
+      c.fillRect(0, 0, w, h);
+      c.globalCompositeOperation = "lighter";
+      const N = 26;
+      for (let i = 0; i < N; i++) {
+        const k = i / N;
+        const size =
+          (Math.min(w, h) * 0.04 + k * Math.min(w, h) * 0.7) *
+          (0.6 + 0.4 * Math.sin(ms / 400 + i));
+        const a = (ms / 900) * (i % 2 ? 1 : -1) * (1 + k) + k * 5;
+        c.save();
+        c.translate(cx, cy);
+        c.rotate(a);
+        c.strokeStyle =
+          i % 2
+            ? `rgba(255,255,255,${0.5 * env})`
+            : `rgba(80,200,255,${0.5 * env})`;
+        c.lineWidth = 2.2;
+        c.strokeRect(-size / 2, -size / 2, size, size);
+        c.restore();
+      }
+      // two clones of one ring orbit in opposite directions and cross
+      for (const s of [1, -1]) {
+        const x = cx + Math.cos((ms / 500) * s) * w * 0.25;
+        const y = cy + Math.sin((ms / 350) * s) * h * 0.22;
+        const g = c.createRadialGradient(x, y, 0, x, y, 90);
+        g.addColorStop(
+          0,
+          s > 0 ? "rgba(255,120,120,.9)" : "rgba(120,160,255,.9)",
+        );
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g;
+        c.fillRect(x - 90, y - 90, 180, 180);
+      }
+      c.globalCompositeOperation = "source-over";
+      // the world flips
+      const flip = Math.floor(ms / 330) % 2 === 0 && t > 0.2 && t < 0.85;
+      ov.style.filter = flip && Math.random() < 0.5 ? "invert(1)" : "";
+      if (t > 0.92) ov.style.filter = "";
+      shakeEls(S, 4 * env);
+    },
+
+    /* OBLIVION — a black hole drinks the screen */
+    (c, w, h, t, ms, env, S) => {
+      const cx = w / 2,
+        cy = h / 2;
+      if (!S.init) {
+        S.init = 1;
+        S.stars = Array.from({ length: 260 }, () => ({
+          a: Math.random() * 6.283,
+          r: 0.15 + Math.random() * 0.95,
+          s: 0.4 + Math.random() * 1.6,
+          c: Math.random(),
+        }));
+      }
+      c.fillStyle = `rgba(0,0,6,${Math.min(0.97, t * 6)})`;
+      c.fillRect(0, 0, w, h);
+      const R = Math.hypot(w, h) / 2;
+      const pull = Math.min(1, t * 1.15);
+      // stars spiral inward
+      S.stars.forEach((st) => {
+        const rr = st.r * R * (1 - (pull * 0.92 * st.s) / 2 - 0.02);
+        const ang = st.a + pull * 7 * (1.2 - st.r) + ms / 4000;
+        const x = cx + Math.cos(ang) * Math.max(8, rr);
+        const y = cy + Math.sin(ang) * Math.max(8, rr) * 0.55;
+        c.fillStyle =
+          st.c < 0.5
+            ? `rgba(160,170,255,${0.8 * env})`
+            : `rgba(255,255,255,${0.8 * env})`;
+        c.fillRect(x, y, 2 + (1 - st.r) * 3, 2);
+      });
+      // accretion disc
+      c.save();
+      c.translate(cx, cy);
+      c.scale(1, 0.38);
+      c.rotate(ms / 3000);
+      for (let i = 0; i < 4; i++) {
+        const rr = (90 + i * 55) * (0.5 + pull) * (Math.min(w, h) / 700 + 0.5);
+        const g = c.createRadialGradient(0, 0, rr * 0.6, 0, 0, rr);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(
+          0.6,
+          `rgba(${100 + i * 40},${80 + i * 10},255,${0.35 * env})`,
+        );
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g;
+        c.beginPath();
+        c.arc(0, 0, rr, 0, 6.283);
+        c.fill();
+      }
+      c.restore();
+      // the hole
+      const hr = (40 + pull * 90) * (Math.min(w, h) / 700 + 0.5);
+      c.fillStyle = "#000";
+      c.shadowColor = "#6a5cff";
+      c.shadowBlur = 40;
+      c.beginPath();
+      c.arc(cx, cy, hr, 0, 6.283);
+      c.fill();
+      c.shadowBlur = 0;
+      // collapse flash
+      if (t > 0.86) {
+        const k = (t - 0.86) / 0.14;
+        c.fillStyle = `rgba(255,255,255,${Math.sin(k * Math.PI) * 0.9})`;
+        c.fillRect(0, 0, w, h);
+      }
+      shakeEls(S, (3 + pull * 7) * env);
+    },
+
+    /* GENESIS — a single point detonates into a spiral galaxy and newborn stars */
+    (c, w, h, t, ms, env, S) => {
+      const cx = w / 2,
+        cy = h / 2,
+        R = Math.hypot(w, h) / 2;
+      if (!S.init) {
+        S.init = 1;
+        S.pts = Array.from({ length: 420 }, (_, i) => ({
+          arm: i % 3,
+          d: Math.random(),
+          j: (Math.random() - 0.5) * 0.5,
+          c: Math.random(),
+        }));
+      }
+      c.fillStyle = `rgba(0,0,0,${t < 0.12 ? 0.97 : 0.88})`;
+      c.fillRect(0, 0, w, h);
+      if (t < 0.18) {
+        // the single point
+        const k = t / 0.18;
+        c.fillStyle = "#fff";
+        c.shadowColor = "#ffd9a0";
+        c.shadowBlur = 30 + k * 40;
+        c.beginPath();
+        c.arc(cx, cy, 2 + k * 4, 0, 6.283);
+        c.fill();
+        c.shadowBlur = 0;
+      } else {
+        const k = Math.min(1, (t - 0.18) / 0.4);
+        const e = 1 - Math.pow(1 - k, 3);
+        const bang = c.createRadialGradient(cx, cy, 0, cx, cy, R * e + 1);
+        bang.addColorStop(0, `rgba(255,255,255,${0.9 * (1 - k * 0.6)})`);
+        bang.addColorStop(0.3, `rgba(255,217,160,${0.6 * (1 - k * 0.5)})`);
+        bang.addColorStop(1, "rgba(90,40,160,0)");
+        c.fillStyle = bang;
+        c.fillRect(0, 0, w, h);
+        c.globalCompositeOperation = "lighter";
+        S.pts.forEach((p) => {
+          const rr = p.d * R * 0.8 * e;
+          const a = (p.arm / 3) * 6.283 + p.d * 5 + p.j + ms / 2500;
+          const x = cx + Math.cos(a) * rr;
+          const y = cy + Math.sin(a) * rr * 0.6;
+          c.fillStyle =
+            p.c < 0.3
+              ? `rgba(255,200,120,${0.85 * env})`
+              : p.c < 0.7
+                ? `rgba(255,255,255,${0.85 * env})`
+                : `rgba(150,170,255,${0.85 * env})`;
+          c.fillRect(x, y, 2.5, 2.5);
+        });
+        // shock rings
+        for (let i = 0; i < 3; i++) {
+          const rr = R * ((t * 1.2 + i * 0.25) % 1);
+          c.strokeStyle = `rgba(255,230,180,${0.5 * (1 - rr / R)})`;
+          c.lineWidth = 3;
+          c.beginPath();
+          c.arc(cx, cy, Math.max(0, rr), 0, 6.283);
+          c.stroke();
+        }
+        c.globalCompositeOperation = "source-over";
+      }
+      shakeEls(S, t > 0.18 && t < 0.5 ? 12 * env : 2);
+    },
+
+    /* OMEGA — the final tier: gold-white sunburst, lightning arcs, a huge Ω and rainbow shock */
+    (c, w, h, t, ms, env, S, ov) => {
+      const cx = w / 2,
+        cy = h / 2,
+        R = Math.hypot(w, h) / 2;
+      c.fillStyle = `rgba(0,0,0,${Math.min(0.96, t * 5)})`;
+      c.fillRect(0, 0, w, h);
+      c.globalCompositeOperation = "lighter";
+      // spinning rays
+      const rays = 28;
+      for (let i = 0; i < rays; i++) {
+        const a = (i / rays) * 6.283 + ms / 1400;
+        const wd = 0.05 + 0.03 * Math.sin(ms / 300 + i);
+        c.fillStyle = `hsla(${(ms / 12 + i * 13) % 360},100%,62%,${0.28 * env})`;
+        c.beginPath();
+        c.moveTo(cx, cy);
+        c.lineTo(
+          cx + Math.cos(a - wd) * R * 1.2,
+          cy + Math.sin(a - wd) * R * 1.2,
+        );
+        c.lineTo(
+          cx + Math.cos(a + wd) * R * 1.2,
+          cy + Math.sin(a + wd) * R * 1.2,
+        );
+        c.fill();
+      }
+      // rainbow shock rings
+      for (let i = 0; i < 6; i++) {
+        const k = Math.abs((t * 2.4 + i / 6) % 1);
+        c.strokeStyle = `hsla(${(i * 60 + ms / 8) % 360},100%,65%,${0.6 * (1 - k)})`;
+        c.lineWidth = 4 + (1 - k) * 10;
+        c.beginPath();
+        c.arc(cx, cy, Math.max(0, k * R), 0, 6.283);
+        c.stroke();
+      }
+      // lightning arcs
+      c.shadowColor = "#fff";
+      c.shadowBlur = 18;
+      for (let b = 0; b < 3; b++) {
+        if (Math.random() < 0.35) continue;
+        let x = cx,
+          y = cy;
+        const a = Math.random() * 6.283;
+        c.strokeStyle = `rgba(255,255,255,${0.85 * env})`;
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(x, y);
+        for (let s = 0; s < 14; s++) {
+          x += Math.cos(a + (Math.random() - 0.5) * 1.2) * R * 0.09;
+          y += Math.sin(a + (Math.random() - 0.5) * 1.2) * R * 0.09;
+          c.lineTo(x, y);
+        }
+        c.stroke();
+      }
+      c.shadowBlur = 0;
+      c.globalCompositeOperation = "source-over";
+      // the Omega
+      const sz =
+        Math.min(w, h) * (0.35 + 0.1 * Math.sin(ms / 500)) * Math.min(1, t * 3);
+      c.font = `900 ${Math.round(sz)}px serif`;
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillStyle = `rgba(255,255,255,${0.16 * env})`;
+      c.strokeStyle = `rgba(255,255,255,${0.7 * env})`;
+      c.lineWidth = 3;
+      c.fillText("Ω", cx, cy);
+      c.strokeText("Ω", cx, cy);
+      if (t > 0.86) {
+        const k = (t - 0.86) / 0.14;
+        c.fillStyle = `rgba(255,255,255,${k})`;
+        c.fillRect(0, 0, w, h);
+      }
+      ov.classList.toggle("dark", t > 0.9);
+      shakeEls(S, 14 * env);
+    },
   ];
 
   const GLYPHS = "█▓▒░#%&?@$0123456789";
@@ -1182,6 +1523,7 @@
         shakeEls(S, 0);
         overlay.classList.add("out");
         overlay.style.opacity = "";
+        overlay.style.filter = "";
         setTimeout(() => overlay.remove(), 380);
         if (activeFx && activeFx.overlay === overlay) activeFx = null;
         resolve();

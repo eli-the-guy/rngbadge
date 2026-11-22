@@ -13,6 +13,7 @@
   const ROMAN = ["", "I", "II", "III", "IV", "V", "VI"];
 
   const TIERS = [
+    "WORTHLESS",
     "NOVICE",
     "PLAIN",
     "BASIC",
@@ -31,6 +32,11 @@
     "BEYOND",
     "ABSOLUTE",
     "???",
+    "FORBIDDEN",
+    "PARADOX",
+    "OBLIVION",
+    "GENESIS",
+    "OMEGA",
   ];
   const tierOf = (r) => Math.max(0, TIERS.indexOf(r));
 
@@ -194,13 +200,14 @@
       11,
       Math.max(5, typeof G.drRollLength === "function" ? G.drRollLength() : 5),
     );
-  const pTier = (len, tier) => CUM[len][tier - 5];
+  const RARE_I = TIERS.indexOf("RARE");
+  const pTier = (len, tier) => CUM[len][tier - RARE_I] || 1e-9;
 
   /* pick the tier whose chance x effort is closest to the wanted goal */
   function pickTier(effort, goal, len) {
-    let best = 8;
+    let best = TIERS.indexOf("MYTHIC");
     let bestErr = Infinity;
-    for (let t = 6; t <= 16; t++) {
+    for (let t = RARE_I + 1; t <= TIERS.indexOf("ABSOLUTE"); t++) {
       const err = Math.abs(Math.log((pTier(len, t) * effort) / goal));
       if (err < bestErr) {
         bestErr = err;
@@ -249,6 +256,7 @@
     if (def.kind === "tier")
       return {
         kind: "tier",
+        v: 2,
         tier: pickTier(def.effort, goal, curLen()),
         goal,
         len: curLen(),
@@ -277,6 +285,10 @@
     picks.forEach((p, i) => {
       /* (re)fit while you haven't made progress, so upgrading before you start is fair */
       const c0 = daily.cfg[i];
+      if (c0 && c0.kind === "tier" && c0.v !== 2) {
+        c0.tier += 1; // a tier was added below NOVICE
+        c0.v = 2;
+      }
       const stale =
         !c0 ||
         (daily.p[i] === 0 &&

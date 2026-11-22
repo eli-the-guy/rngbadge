@@ -1017,6 +1017,7 @@ function better(a, b) {
 
 function rarityClass(rarity) {
   const classes = {
+    WORTHLESS: "rarity-worthless",
     NOVICE: "rarity-novice",
     PLAIN: "rarity-plain",
     BASIC: "rarity-basic",
@@ -1035,6 +1036,11 @@ function rarityClass(rarity) {
     BEYOND: "rarity-beyond",
     ABSOLUTE: "rarity-absolute",
     "???": "rarity-unknown",
+    FORBIDDEN: "rarity-forbidden",
+    PARADOX: "rarity-paradox",
+    OBLIVION: "rarity-oblivion",
+    GENESIS: "rarity-genesis",
+    OMEGA: "rarity-omega",
   };
 
   return classes[rarity] || "rarity-common";
@@ -1044,6 +1050,7 @@ function applyRarityColor(element, rarity) {
   if (!element) return;
 
   element.classList.remove(
+    "rarity-worthless",
     "rarity-novice",
     "rarity-plain",
     "rarity-basic",
@@ -1062,6 +1069,11 @@ function applyRarityColor(element, rarity) {
     "rarity-beyond",
     "rarity-absolute",
     "rarity-unknown",
+    "rarity-forbidden",
+    "rarity-paradox",
+    "rarity-oblivion",
+    "rarity-genesis",
+    "rarity-omega",
   );
 
   element.classList.add(rarityClass(rarity));
@@ -2008,7 +2020,12 @@ function analyze(chars) {
      RARITY
      ========================================================== */
 
-  let rarity = "NOVICE";
+  let rarity = "WORTHLESS";
+
+  // new tier below NOVICE: a roll with no badge and no blanks at all
+  if (totalChance >= 2) {
+    rarity = "NOVICE";
+  }
 
   // More granular tiers below the old COMMON range.
   if (totalChance >= 10) {
@@ -2077,6 +2094,27 @@ function analyze(chars) {
 
   if (totalChance >= 1e40) {
     rarity = "???";
+  }
+
+  // five new tiers above ???
+  if (totalChance >= 1e45) {
+    rarity = "FORBIDDEN";
+  }
+
+  if (totalChance >= 1e50) {
+    rarity = "PARADOX";
+  }
+
+  if (totalChance >= 1e60) {
+    rarity = "OBLIVION";
+  }
+
+  if (totalChance >= 1e75) {
+    rarity = "GENESIS";
+  }
+
+  if (totalChance >= 1e100) {
+    rarity = "OMEGA";
   }
 
   /* ==========================================================
