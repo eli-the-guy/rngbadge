@@ -636,6 +636,22 @@
       ? ACHS.find((a) => a[0] === ach.title)[1]
       : "";
 
+  /* wipes every boss-related achievement (used by the admin "reset boss progress") */
+  G.drClearBossAchievements = function () {
+    let n = 0;
+    Object.keys(ach.done).forEach((id) => {
+      if (id.indexOf("boss") === 0) {
+        delete ach.done[id];
+        n++;
+      }
+    });
+    if (ach.title && !ach.done[ach.title]) ach.title = "";
+    save(ACH_KEY, ach);
+    pushProfile();
+    if (P.isOpen()) P.rerender();
+    return n;
+  };
+
   let checking = false;
   function checkAll() {
     if (checking) return;

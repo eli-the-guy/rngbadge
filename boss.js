@@ -806,6 +806,7 @@
       <input id="bossMin" type="number" min="1" max="240" value="${minutes}" style="width:120px;margin:0 8px 8px 0;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.3);color:#fff">
       <button class="pgBtn" id="bossGo" style="width:auto;margin:0">🚨 Release</button>
       <button class="pgBtn" id="bossPrev" style="width:auto;margin:0 0 0 6px">👁️ Preview cutscene (only me)</button>
+      <div style="margin-top:10px"><button class="pgBtn" id="bossReset" style="width:auto;margin:0;background:rgba(244,63,94,.2)">🧹 Reset ALL boss progress (everyone)</button></div>
       ${adminMsg ? `<div class="pgSub" style="margin-top:8px">${esc(adminMsg)}</div>` : ""}
       ${tableState === "missing" ? '<div class="pgSub" style="color:#fda4af;margin-top:8px">Run boss-setup.sql in Supabase first.</div>' : ""}
     </div>${live}`;
@@ -842,6 +843,47 @@
       };
     const pv = root.querySelector("#bossPrev");
     if (pv) pv.onclick = () => G.drBossPreview(pick);
+    const rs = root.querySelector("#bossReset");
+    if (rs)
+      rs.onclick = async () => {
+        if (!rs.dataset.sure) {
+          rs.dataset.sure = 1;
+          rs.textContent =
+            "⚠️ Click again to wipe everyone's boss wins, damage and boss achievements";
+          setTimeout(() => {
+            if (rs.isConnected) {
+              delete rs.dataset.sure;
+              rs.textContent = "🧹 Reset ALL boss progress (everyone)";
+            }
+          }, 6000);
+          return;
+        }
+        const { error } = await sb().rpc("boss_reset_all");
+        adminMsg = error
+          ? "Could not reset: " + error.message
+          : "Done. Everyone's boss progress is cleared as they load or check in (within a minute).";
+        if (!error) {
+          try {
+            const { data } = await sb()
+              .from("boss_meta")
+              .select("epoch")
+              .eq("id", 1)
+              .limit(1);
+            if (data && data[0])
+              localStorage.setItem(EPOCH_KEY, String(data[0].epoch));
+          } catch (e) {}
+          B.wins = { golem: 0, titan: 0, reality: 0, mimic: 0, wraith: 0 };
+          B.joined = [];
+          B.dmg = {};
+          B.dq = {};
+          save();
+          if (typeof G.drBonusResetBoss === "function") G.drBonusResetBoss();
+          if (typeof G.drClearBossAchievements === "function")
+            G.drClearBossAchievements();
+          await fetchActive();
+        }
+        P.rerender();
+      };
     const cn = root.querySelector("#bossCancel");
     if (cn)
       cn.onclick = async () => {
@@ -946,12 +988,58 @@
   }
 
   /* ==========================================================
+     RESET (admin "reset all boss progress")
+     ========================================================== */
+
+  const EPOCH_KEY = "digitRollBossEpoch";
+  async function checkEpoch() {
+    const c = sb();
+    if (!c) return;
+    try {
+      const { data, error } = await c
+        .from("boss_meta")
+        .select("epoch")
+        .eq("id", 1)
+        .limit(1);
+      if (error || !data || !data[0]) return;
+      const server = String(data[0].epoch);
+      let mine = "0";
+      try {
+        mine = localStorage.getItem(EPOCH_KEY) || "0";
+      } catch (e) {}
+      if (mine === server) return;
+      // the admin reset everyone's boss progress
+      B.wins = { golem: 0, titan: 0, reality: 0, mimic: 0, wraith: 0 };
+      B.joined = [];
+      B.dmg = {};
+      B.dq = {};
+      B.windUsed = {};
+      save();
+      if (typeof G.drBonusResetBoss === "function") G.drBonusResetBoss();
+      const n =
+        typeof G.drClearBossAchievements === "function"
+          ? G.drClearBossAchievements()
+          : 0;
+      try {
+        localStorage.setItem(EPOCH_KEY, server);
+      } catch (e) {}
+      say(
+        "🧹 Boss progress was reset by an admin" +
+          (n ? ` — ${n} boss achievement${n === 1 ? "" : "s"} cleared.` : "."),
+      );
+      refreshAll();
+    } catch (e) {}
+  }
+
+  /* ==========================================================
      BOOT
      ========================================================== */
 
   function boot() {
     if (!sb()) return;
     listen();
+    checkEpoch();
+    setInterval(checkEpoch, 60000);
     fetchActive();
     setInterval(fetchActive, 5000);
     startPresence();

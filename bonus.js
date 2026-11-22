@@ -461,6 +461,11 @@
     }
     return dmg * m;
   };
+  G.drBonusResetBoss = function () {
+    B.bossDmg = 0;
+    B.log = [];
+    save();
+  };
   G.drBonusDmg = function (n) {
     B.bossDmg += Number(n) || 0;
     save();
