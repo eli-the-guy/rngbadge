@@ -516,6 +516,7 @@
      ROLL_LIMIT of the boss's max health, so great rolls can't one-shot it. */
   const ROLL_LIMIT = 0.25; // 25% of max HP per roll, approached but never reached
   function softCap(dmg, maxHp) {
+    if (!(maxHp > 0)) maxHp = ev && cfgOf(ev) ? cfgOf(ev).hp : 1e12;
     const c = Math.max(1, maxHp * ROLL_LIMIT);
     return dmg / (1 + dmg / c);
   }
