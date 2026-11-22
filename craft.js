@@ -51,6 +51,8 @@
     },
     items: { bomb: 0, nuke: 0, scroll: 0, tonic: 0, cell: 0, lucky: 0 },
     patterns: [], // [{ parts: ["123"] }]  placed into the next roll, first in line first
+    pocket: [], // charms stored safely: never used by rolls until you take them out
+    seen: {}, // materials you have ever found (journal)
     patternsUsed: 0,
     fused: 0,
     perks: { edge: 0, crit: 0, combo: 0, will: 0, ult: 0 },
@@ -325,6 +327,7 @@
       v = Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0);
       d[k] = v;
       F.mats[k] = (F.mats[k] || 0) + v;
+      if (v > 0) F.seen[k] = true;
     });
     const show = fmtDrop(d);
     if (windfall) say("🧤 WINDFALL! Drops tripled " + show);
@@ -474,6 +477,30 @@
       void: Math.ceil((n - 1) * m),
     };
   };
+  function pocketPattern(i) {
+    const p = F.patterns[i];
+    if (!p) return;
+    F.patterns.splice(i, 1);
+    F.pocket.push(p);
+    sel = [];
+    save();
+    sfx("click");
+    rerender();
+  }
+  function takeOut(j) {
+    const p = F.pocket[j];
+    if (!p) return;
+    F.pocket.splice(j, 1);
+    F.patterns.push(p);
+    save();
+    sfx("click");
+    rerender();
+  }
+  function discardPocket(j) {
+    F.pocket.splice(j, 1);
+    save();
+    rerender();
+  }
   function discardPattern(i) {
     F.patterns.splice(i, 1);
     sel = [];
@@ -671,7 +698,7 @@
           .map((p, i) => {
             const on = sel.indexOf(i);
             const tooLong = patLen(p) > rl;
-            return `<div class="frgPat ${on >= 0 ? "on" : ""}" data-sel="${i}"><span class="frgPatNo">${i === 0 ? "NEXT" : "#" + (i + 1)}</span><b>${p.fused ? "🔗 " : "🧩 "}${patLabel(p)}</b>${on >= 0 ? `<i>${on + 1}</i>` : ""}${tooLong ? `<small class="pgSub"> needs ${patLen(p)} digits</small>` : ""}<button class="frgX" data-del="${i}" title="Discard">✕</button></div>`;
+            return `<div class="frgPat ${on >= 0 ? "on" : ""}" data-sel="${i}"><span class="frgPatNo">${i === 0 ? "NEXT" : "#" + (i + 1)}</span><b>${p.fused ? "🔗 " : "🧩 "}${patLabel(p)}</b>${on >= 0 ? `<i>${on + 1}</i>` : ""}${tooLong ? `<small class="pgSub"> needs ${patLen(p)} digits</small>` : ""}<button class="frgX" data-pocket="${i}" title="Put in your pocket (keeps it safe, no roll will use it)">👝</button><button class="frgX" data-del="${i}" title="Discard" style="margin-left:6px">✕</button></div>`;
           })
           .join("")
       : '<div class="pgSub">No pattern charms yet — craft one below.</div>';
@@ -685,6 +712,17 @@
     return `<div class="pgBanner" style="font-weight:600">🧩 <b>Pattern charms</b> work like number charms, but the digits go in a <b>specific order</b>, side by side, so you can aim for a badge. One charm is used per roll, first in line first. Craft any 2–5 digit sequence. <b>The rarer the pattern is as a roll, the more it costs</b> (all costs scale up, and the rarest patterns also eat Sparks, Embers, Prisms or Void Shards). <b>Fusing</b> charms makes longer or double patterns for much rarer rolls: <b>Chain</b> joins them into one long sequence, <b>Split</b> places all of them in the same roll.</div>
       <h3 class="frgH">🎒 Your charms <small class="pgSub">(your rolls are ${rl} digits)</small></h3>
       <div class="frgInv">${inv}</div>
+      <h3 class="frgH">👝 Charm pocket <small class="pgSub">(${F.pocket.length} stored — rolls never touch these)</small></h3>
+      <div class="frgInv">${
+        F.pocket.length
+          ? F.pocket
+              .map(
+                (p, j) =>
+                  `<div class="frgPat" style="cursor:default"><span class="frgPatNo">stored</span><b>${p.fused ? "🔗 " : "🧩 "}${patLabel(p)}</b><button class="frgX" data-take="${j}" title="Move to the end of the roll queue">▶ Take out</button><button class="frgX" data-delp="${j}" title="Discard" style="margin-left:6px">✕</button></div>`,
+              )
+              .join("")
+          : '<div class="pgSub">Empty. Press 👝 on a queued charm to save it for later instead of using it on a roll.</div>'
+      }</div>
       <div class="frgRow" style="margin:10px 0 4px"><button class="drBuy" data-fuse="chain" ${canFuse ? "" : "disabled"}>🔗 Fuse: Chain</button><button class="drBuy" data-fuse="split" ${canFuse ? "" : "disabled"}>✂️ Fuse: Split</button></div>
       <p class="pgSub">${fuseHint}</p>
       <h3 class="frgH">🛠️ Craft a pattern charm</h3>
@@ -722,11 +760,110 @@
     }).join("")}</div>`;
   }
 
+  const JOURNAL = {
+    dust: [
+      "Every roll, always.",
+      "1 Dust per roll, plus 1 more for every 4 rarity tiers (a Mythic-tier roll drops about 4).",
+      "Everything: patterns, fusion, gear, skills, gloves.",
+    ],
+    spark: [
+      "Rolls of Rare tier or better.",
+      "Starts at 1 and grows by 1 every 3 tiers above Rare.",
+      "Rift Bomb, Fortune Tonic, Sharpened Edge, Critical Eye, gloves, and the price of rarer patterns.",
+    ],
+    ember: [
+      "Rolls of Legendary tier or better.",
+      "Starts at 1 and grows by 1 every 3 tiers above Legendary.",
+      "Warding Scroll, Overcharge Cell, most boss skills, gloves III+, and the price of rare patterns.",
+    ],
+    prism: [
+      "Rolls of Divine tier or better.",
+      "Starts at 1 and grows by 1 every 2 tiers above Divine.",
+      "Fusing charms, Void Nuke, Overcharge Cell, Combo Engine, Ultimate Mastery, Gloves IV+, and very rare patterns.",
+    ],
+    void: [
+      "Rolls of Omnipotent tier or better (the rarest drop in the game).",
+      "Starts at 1 and grows by 1 every 2 tiers above Omnipotent.",
+      "Fusion (one fewer than the charms fused), Void Nuke, Ultimate Mastery, Gloves V, and the rarest patterns.",
+    ],
+    chain: [
+      "Hit a sequence-type badge: Rising Sequence, Counting Up, Staircase, Pyramid, Wave, Mountain, Valley, arithmetic and quadratic patterns…",
+      "1 per badge, 2 if that badge is rarer than 1 in 1,000.",
+      "Straight and countdown pattern charms (1 per digit), Gloves III+.",
+    ],
+    twin: [
+      "Hit a repeat-type badge: Double, Triple, Quad, Quint, Stack, Repeater, Loop, Monochrome, ‘six ones’ and friends…",
+      "1 per badge, 2 if rarer than 1 in 1,000.",
+      "Pattern charms of one repeated digit (777, 8888…), Gloves III+.",
+    ],
+    mirror: [
+      "Hit a mirror-type badge: Palindromes, Reverse badges, Centered, Echo…",
+      "1 per badge, 2 if rarer than 1 in 1,000.",
+      "Palindrome pattern charms (1221, 12321…), Gloves III+.",
+    ],
+    clover: [
+      "Hit a lucky-type badge: anything with 7s, Lucky 7s, JACKPOT, Lucky Root…",
+      "1 per badge, 2 if rarer than 1 in 1,000.",
+      "Lucky Charms, one for every 7 in a pattern charm, Gloves I+.",
+    ],
+    formula: [
+      "Hit a math-type badge: Prime Chain, Euler’s Number, Golden Ratio, Binary/Hex Vibes, sums and roots…",
+      "1 per badge, 2 if rarer than 1 in 1,000.",
+      "Gatherer’s Gloves only (every level).",
+    ],
+    lore: [
+      "Hit any other badge: the pop-culture and meme numbers (games, movies, internet…).",
+      "1 per badge, 2 if rarer than 1 in 1,000.",
+      "Custom pattern charms that aren’t a straight, a repeat or a palindrome, Gloves I+.",
+    ],
+  };
+  for (let i = 0; i < 10; i++)
+    JOURNAL["d" + i] = [
+      `Any roll that shows a ${i} (at most one per roll, however many ${i}s it has).`,
+      `1 ${i}-Shard per roll containing a ${i}.`,
+      `Pattern charms: 2 shards for every ${i} in the sequence.`,
+    ];
+  const JOURNAL_ORDER = TIER_MATS.concat(PAT_MATS, DIGIT_MATS);
+
+  function renderJournal() {
+    const sample = [
+      "COMMON",
+      "RARE",
+      "EPIC",
+      "LEGENDARY",
+      "MYTHIC",
+      "DIVINE",
+      "TRANSCENDENT",
+      "OMNIPOTENT",
+      "ABSOLUTE",
+      "OMEGA",
+    ];
+    const rows = sample
+      .map((t) => {
+        const d = drops(TI(t));
+        return `<tr><td>${t.charAt(0) + t.slice(1).toLowerCase()}</td>${TIER_MATS.map((k) => `<td>${d[k] ? d[k] : "—"}</td>`).join("")}</tr>`;
+      })
+      .join("");
+    const gl = gloveLvl();
+    const entries = JOURNAL_ORDER.map((k) => {
+      const j = JOURNAL[k];
+      const found = F.seen[k] || F.mats[k] > 0;
+      return `<div class="pgCard frgJ ${found ? "" : "unk"}"><h3>${MATS[k].icon} ${MATS[k].name} <small class="pgSub">${found ? "✓ found • you have " + nf(F.mats[k]) : "not found yet"}</small></h3>
+        <p><b>Where from:</b> ${j[0]}</p><p><b>How much:</b> ${j[1]}</p><p><b>Used for:</b> ${j[2]}</p></div>`;
+    }).join("");
+    return `<div class="pgBanner" style="font-weight:600">📖 <b>Forge Journal</b> — every material and where it comes from.${gl ? ` Your Gatherer's Gloves (Lv ${gl}) add +${20 * gl}% to everything below and a ${5 * gl}% chance of a ×3 windfall per roll.` : " Gatherer's Gloves (Gear tab) add +20% per level to all drops, plus a chance of a ×3 windfall."}</div>
+      <h3 class="frgH">Tier drops per roll <small class="pgSub">(by the rarity of the roll)</small></h3>
+      <div style="overflow-x:auto"><table class="frgTbl"><tr><th>Roll</th>${TIER_MATS.map((k) => `<th>${MATS[k].icon}</th>`).join("")}</tr>${rows}</table></div>
+      <p class="pgSub">Digit shards and pattern mats come on top of these, from the digits and badges in the same roll. Tip: pattern mats come from badges, so aim at badges to craft pattern charms and gloves.</p>
+      <div class="frgGrid" style="margin-top:12px">${entries}</div>`;
+  }
+
   function renderForge() {
     const subs = [
       ["patterns", "🧩 Pattern Charms"],
       ["gear", "🧰 Gear & Gloves"],
       ["skills", "⚔️ Boss Skills"],
+      ["journal", "📖 Journal"],
     ];
     return `<style>
       .frgMats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
@@ -740,17 +877,19 @@
       .frgPat.on{border-color:#8ee6ad;background:rgba(142,230,173,.14)}
       .frgPat i{font-style:normal;background:#8ee6ad;color:#031;border-radius:99px;min-width:22px;text-align:center;font-weight:900;font-size:13px}
       .frgPatNo{font-size:11px;color:#aab5ca;letter-spacing:0;min-width:40px}
-      .frgX{margin-left:auto;border:0;background:rgba(255,255,255,.08);color:#fff;border-radius:8px;cursor:pointer;padding:3px 8px}
+      .frgX:first-of-type{margin-left:auto}.frgX{border:0;background:rgba(255,255,255,.08);color:#fff;border-radius:8px;cursor:pointer;padding:3px 8px}
       .frgIn{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font:700 18px monospace;letter-spacing:3px}
       .frgRow .drBuy{width:auto;flex:1}
       .frgPre{padding:6px 10px!important;font-size:13px;flex:0 0 auto!important}
       .frgIn{min-width:0}
+      .frgJ.unk{opacity:.72}
+      .frgTbl{border-collapse:collapse;width:100%;text-align:center}.frgTbl th,.frgTbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.08)}.frgTbl td:first-child{text-align:left}
     </style>
     <div class="pgBanner">🔨 The Forge<br><span class="pgSub">Rolls drop materials: Dust, Sparks, Embers, Prisms and Void Shards by rarity, <b>digit shards</b> for every different digit you roll, and <b>pattern mats</b> from the badges you hit. Crafted: <b>${F.crafted}</b> • Charms used: <b>${F.patternsUsed}</b> • Fusions: <b>${F.fused}</b> • Ultimates: <b>${F.ults}</b>${F.tonicLeft ? ` • 🧪 ${F.tonicLeft} rolls` : ""}${F.scrollLeft ? ` • 📜 ${F.scrollLeft} curses` : ""}${F.armed ? ` • ${F.armed === "bomb" ? "💣" : "🌌"} ARMED` : ""}</span></div>
     <div class="frgMats">${TIER_MATS.concat(PAT_MATS).map(chip).join("")}</div>
     <div class="frgMats dig">${DIGIT_MATS.map(chip).join("")}</div>
     <div class="pgTabs" style="margin:14px 0">${subs.map(([k, l]) => `<button class="pgTab ${sub === k ? "on" : ""}" data-sub="${k}" type="button">${l}</button>`).join("")}</div>
-    ${sub === "patterns" ? renderPatterns() : sub === "gear" ? renderGear() : renderSkills()}`;
+    ${sub === "patterns" ? renderPatterns() : sub === "gear" ? renderGear() : sub === "journal" ? renderJournal() : renderSkills()}`;
   }
   function bindForge(root) {
     root
@@ -771,6 +910,21 @@
     root
       .querySelectorAll("[data-fuse]")
       .forEach((b) => (b.onclick = () => fuse(b.dataset.fuse)));
+    root
+      .querySelectorAll("[data-pocket]")
+      .forEach(
+        (b) =>
+          (b.onclick = (e) => (
+            e.stopPropagation(),
+            pocketPattern(+b.dataset.pocket)
+          )),
+      );
+    root
+      .querySelectorAll("[data-take]")
+      .forEach((b) => (b.onclick = () => takeOut(+b.dataset.take)));
+    root
+      .querySelectorAll("[data-delp]")
+      .forEach((b) => (b.onclick = () => discardPocket(+b.dataset.delp)));
     root
       .querySelectorAll("[data-del]")
       .forEach(
