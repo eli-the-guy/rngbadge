@@ -19,6 +19,41 @@
     "BASIC",
     "COMMON",
     "UNCOMMON",
+    "NOTABLE",
+    "RARE",
+    "SUPERIOR",
+    "EPIC",
+    "HEROIC",
+    "LEGENDARY",
+    "FABLED",
+    "MYTHIC",
+    "ANCIENT",
+    "DIVINE",
+    "ANGELIC",
+    "TRANSCENDENT",
+    "RADIANT",
+    "CELESTIAL",
+    "ASCENDED",
+    "OMNIPOTENT",
+    "ETERNAL",
+    "INFINITE",
+    "BEYOND",
+    "ABSOLUTE",
+    "PRIMORDIAL",
+    "???",
+    "FORBIDDEN",
+    "PARADOX",
+    "OBLIVION",
+    "GENESIS",
+    "OMEGA",
+  ];
+  const LEG = [
+    "WORTHLESS",
+    "NOVICE",
+    "PLAIN",
+    "BASIC",
+    "COMMON",
+    "UNCOMMON",
     "RARE",
     "EPIC",
     "LEGENDARY",
@@ -200,14 +235,17 @@
       11,
       Math.max(5, typeof G.drRollLength === "function" ? G.drRollLength() : 5),
     );
-  const RARE_I = TIERS.indexOf("RARE");
-  const pTier = (len, tier) => CUM[len][tier - RARE_I] || 1e-9;
+  const RARE_I = LEG.indexOf("RARE");
+  const pTier = (len, tier) =>
+    CUM[len][LEG.indexOf(TIERS[tier]) - RARE_I] || 1e-9;
 
   /* pick the tier whose chance x effort is closest to the wanted goal */
   function pickTier(effort, goal, len) {
     let best = TIERS.indexOf("MYTHIC");
     let bestErr = Infinity;
-    for (let t = RARE_I + 1; t <= TIERS.indexOf("ABSOLUTE"); t++) {
+    /* daily goals only target the original tiers (CUM odds are tabulated for them) */
+    for (let l = RARE_I + 1; l <= LEG.indexOf("ABSOLUTE"); l++) {
+      const t = TIERS.indexOf(LEG[l]);
       const err = Math.abs(Math.log((pTier(len, t) * effort) / goal));
       if (err < bestErr) {
         bestErr = err;
@@ -285,9 +323,10 @@
     picks.forEach((p, i) => {
       /* (re)fit while you haven't made progress, so upgrading before you start is fair */
       const c0 = daily.cfg[i];
-      if (c0 && c0.kind === "tier" && c0.v !== 2) {
-        c0.tier += 1; // a tier was added below NOVICE
-        c0.v = 2;
+      if (c0 && c0.kind === "tier" && c0.v !== 3) {
+        if (c0.v !== 2) c0.tier += 1; // a tier was added below NOVICE
+        c0.tier = Math.max(0, TIERS.indexOf(LEG[c0.tier] || "MYTHIC")); // in-between tiers were added
+        c0.v = 3;
       }
       const stale =
         !c0 ||

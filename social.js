@@ -481,6 +481,42 @@
     "#ffffff",
   ];
 
+  const TIER_BY_NAME = {
+    WORTHLESS: "#64748b",
+    NOVICE: "#94a3b8",
+    PLAIN: "#a3b18a",
+    BASIC: "#cbd5e1",
+    COMMON: "#cbd5e1",
+    UNCOMMON: "#4ade80",
+    NOTABLE: "#4fe0c0",
+    RARE: "#38bdf8",
+    SUPERIOR: "#5ec8ff",
+    EPIC: "#a855f7",
+    HEROIC: "#d48cff",
+    LEGENDARY: "#fbbf24",
+    FABLED: "#ff9a52",
+    MYTHIC: "#f0abfc",
+    ANCIENT: "#ff6fb0",
+    DIVINE: "#67e8f9",
+    ANGELIC: "#9ff3ff",
+    TRANSCENDENT: "#ffffff",
+    RADIANT: "#fff7c2",
+    CELESTIAL: "#a9b2ff",
+    ASCENDED: "#ffd36b",
+    OMNIPOTENT: "#fff2b8",
+    ETERNAL: "#ffe9a6",
+    INFINITE: "#7cf7ff",
+    BEYOND: "#ff4fe0",
+    ABSOLUTE: "#ffffff",
+    PRIMORDIAL: "#e6e6ff",
+    "???": "#ff2a2a",
+    FORBIDDEN: "#b04dff",
+    PARADOX: "#ffffff",
+    OBLIVION: "#6a5cff",
+    GENESIS: "#ffd9a0",
+    OMEGA: "#ff9ad5",
+  };
+
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -499,7 +535,10 @@
     cv.height = H;
     const c = cv.getContext("2d");
     const tiers = G.drProgress ? G.drProgress.TIERS : [];
-    const color = TIER_COLORS[Math.max(0, tiers.indexOf(e.k))] || "#a855f7";
+    const color =
+      TIER_BY_NAME[e.k] ||
+      TIER_COLORS[Math.max(0, tiers.indexOf(e.k))] ||
+      "#a855f7";
 
     const bg = c.createLinearGradient(0, 0, W, H);
     bg.addColorStop(0, "#0b1020");

@@ -1630,3 +1630,41 @@ input:focus {
     max-width: calc(100% - 20px);
   }
 }
+
+/* in-between tiers */
+.rarity-notable {
+  color: #4fe0c0;
+  text-shadow: 0 0 16px rgba(79, 224, 192, 0.45);
+}
+.rarity-superior {
+  color: #5ec8ff;
+  text-shadow: 0 0 16px rgba(94, 200, 255, 0.45);
+}
+.rarity-heroic {
+  color: #d48cff;
+  text-shadow: 0 0 16px rgba(212, 140, 255, 0.45);
+}
+.rarity-fabled {
+  color: #ff9a52;
+  text-shadow: 0 0 16px rgba(255, 154, 82, 0.45);
+}
+.rarity-ancient {
+  color: #ff6fb0;
+  text-shadow: 0 0 16px rgba(255, 111, 176, 0.45);
+}
+.rarity-angelic {
+  color: #9ff3ff;
+  text-shadow: 0 0 16px rgba(159, 243, 255, 0.45);
+}
+.rarity-radiant {
+  color: #fff7c2;
+  text-shadow: 0 0 16px rgba(255, 247, 194, 0.45);
+}
+.rarity-eternal {
+  color: #ffe9a6;
+  text-shadow: 0 0 16px rgba(255, 233, 166, 0.45);
+}
+.rarity-primordial {
+  color: #e6e6ff;
+  text-shadow: 0 0 16px rgba(230, 230, 255, 0.45);
+}

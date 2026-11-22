@@ -36,6 +36,17 @@
     "GENESIS",
     "OMEGA",
   ];
+  const BASE = {
+    NOTABLE: "UNCOMMON",
+    SUPERIOR: "RARE",
+    HEROIC: "EPIC",
+    FABLED: "LEGENDARY",
+    ANCIENT: "MYTHIC",
+    ANGELIC: "DIVINE",
+    RADIANT: "TRANSCENDENT",
+    ETERNAL: "OMNIPOTENT",
+    PRIMORDIAL: "ABSOLUTE",
+  };
 
   /* ---------- settings ---------- */
 
@@ -162,7 +173,8 @@
      ========================================================== */
 
   function rarityIndex(r) {
-    const i = TIERS.indexOf(String(r || "").toUpperCase());
+    const u = String(r || "").toUpperCase();
+    const i = TIERS.indexOf(BASE[u] || u);
     // numbered from NOVICE (the old bottom tier), so the new low tier is -1
     return i < 0 ? 3 : i - 1;
   }

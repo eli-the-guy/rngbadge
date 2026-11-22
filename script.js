@@ -1041,6 +1041,15 @@ function rarityClass(rarity) {
     OBLIVION: "rarity-oblivion",
     GENESIS: "rarity-genesis",
     OMEGA: "rarity-omega",
+    NOTABLE: "rarity-notable",
+    SUPERIOR: "rarity-superior",
+    HEROIC: "rarity-heroic",
+    FABLED: "rarity-fabled",
+    ANCIENT: "rarity-ancient",
+    ANGELIC: "rarity-angelic",
+    RADIANT: "rarity-radiant",
+    ETERNAL: "rarity-eternal",
+    PRIMORDIAL: "rarity-primordial",
   };
 
   return classes[rarity] || "rarity-common";
@@ -1074,6 +1083,15 @@ function applyRarityColor(element, rarity) {
     "rarity-oblivion",
     "rarity-genesis",
     "rarity-omega",
+    "rarity-notable",
+    "rarity-superior",
+    "rarity-heroic",
+    "rarity-fabled",
+    "rarity-ancient",
+    "rarity-angelic",
+    "rarity-radiant",
+    "rarity-eternal",
+    "rarity-primordial",
   );
 
   element.classList.add(rarityClass(rarity));
@@ -2044,28 +2062,56 @@ function analyze(chars) {
     rarity = totalChance >= 10000 ? "UNCOMMON" : rarity;
   }
 
+  if (totalChance >= 30000) {
+    rarity = "NOTABLE";
+  }
+
   if (totalChance >= 100000) {
     rarity = "RARE";
+  }
+
+  if (totalChance >= 1e6) {
+    rarity = "SUPERIOR";
   }
 
   if (totalChance >= 10000000) {
     rarity = "EPIC";
   }
 
+  if (totalChance >= 1e8) {
+    rarity = "HEROIC";
+  }
+
   if (totalChance >= 1000000000) {
     rarity = "LEGENDARY";
+  }
+
+  if (totalChance >= 3e10) {
+    rarity = "FABLED";
   }
 
   if (totalChance >= 1000000000000) {
     rarity = "MYTHIC";
   }
 
+  if (totalChance >= 3e13) {
+    rarity = "ANCIENT";
+  }
+
   if (totalChance >= 1000000000000000) {
     rarity = "DIVINE";
   }
 
+  if (totalChance >= 3e16) {
+    rarity = "ANGELIC";
+  }
+
   if (totalChance >= 1000000000000000000) {
     rarity = "TRANSCENDENT";
+  }
+
+  if (totalChance >= 3e19) {
+    rarity = "RADIANT";
   }
 
   if (totalChance >= 1e21) {
@@ -2080,6 +2126,10 @@ function analyze(chars) {
     rarity = "OMNIPOTENT";
   }
 
+  if (totalChance >= 3e28) {
+    rarity = "ETERNAL";
+  }
+
   if (totalChance >= 1e30) {
     rarity = "INFINITE";
   }
@@ -2090,6 +2140,10 @@ function analyze(chars) {
 
   if (totalChance >= 1e36) {
     rarity = "ABSOLUTE";
+  }
+
+  if (totalChance >= 1e38) {
+    rarity = "PRIMORDIAL";
   }
 
   if (totalChance >= 1e40) {

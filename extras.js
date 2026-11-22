@@ -378,6 +378,42 @@
     "BASIC",
     "COMMON",
     "UNCOMMON",
+    "NOTABLE",
+    "RARE",
+    "SUPERIOR",
+    "EPIC",
+    "HEROIC",
+    "LEGENDARY",
+    "FABLED",
+    "MYTHIC",
+    "ANCIENT",
+    "DIVINE",
+    "ANGELIC",
+    "TRANSCENDENT",
+    "RADIANT",
+    "CELESTIAL",
+    "ASCENDED",
+    "OMNIPOTENT",
+    "ETERNAL",
+    "INFINITE",
+    "BEYOND",
+    "ABSOLUTE",
+    "PRIMORDIAL",
+    "???",
+    "FORBIDDEN",
+    "PARADOX",
+    "OBLIVION",
+    "GENESIS",
+    "OMEGA",
+  ];
+  /* original tier order: effects, sounds and scenes are keyed to it; in-between tiers borrow a neighbour */
+  const LEG = [
+    "WORTHLESS",
+    "NOVICE",
+    "PLAIN",
+    "BASIC",
+    "COMMON",
+    "UNCOMMON",
     "RARE",
     "EPIC",
     "LEGENDARY",
@@ -397,8 +433,20 @@
     "GENESIS",
     "OMEGA",
   ];
+  const BASE = {
+    NOTABLE: "UNCOMMON",
+    SUPERIOR: "RARE",
+    HEROIC: "EPIC",
+    FABLED: "LEGENDARY",
+    ANCIENT: "MYTHIC",
+    ANGELIC: "DIVINE",
+    RADIANT: "TRANSCENDENT",
+    ETERNAL: "OMNIPOTENT",
+    PRIMORDIAL: "ABSOLUTE",
+  };
+  const legIdx = (r) => Math.max(0, LEG.indexOf(BASE[r] || r));
 
-  const FIRST_CINEMATIC = TIERS.indexOf("TRANSCENDENT");
+  const FIRST_CINEMATIC = LEG.indexOf("TRANSCENDENT");
 
   const FX_COLORS = {
     WORTHLESS: "#5b6477",
@@ -425,6 +473,15 @@
     OBLIVION: "#6a5cff",
     GENESIS: "#ffd9a0",
     OMEGA: "#ff9ad5",
+    NOTABLE: "#4fe0c0",
+    SUPERIOR: "#5ec8ff",
+    HEROIC: "#d48cff",
+    FABLED: "#ff9a52",
+    ANCIENT: "#ff6fb0",
+    ANGELIC: "#9ff3ff",
+    RADIANT: "#fff7c2",
+    ETERNAL: "#ffe9a6",
+    PRIMORDIAL: "#e6e6ff",
   };
 
   const DURATIONS = [
@@ -552,7 +609,7 @@
      Each one plays inside the roll card (never full screen) and uses
      shapes, light and motion rather than just particles. */
 
-  const FIRST_MID = TIERS.indexOf("EPIC");
+  const FIRST_MID = LEG.indexOf("EPIC");
 
   const MID_DURATION = {
     epic: 2300,
@@ -1470,7 +1527,8 @@
 
   const GLYPHS = "█▓▒░#%&?@$0123456789";
 
-  function cinematic(rarity, tier, opts) {
+  function cinematic(label, tier, opts) {
+    const rarity = BASE[label] || label;
     return new Promise((resolve) => {
       if (activeFx) activeFx.end(true);
 
@@ -1485,7 +1543,7 @@
 
       const title = document.createElement("div");
       title.className = "drFxTitle";
-      title.textContent = rarity;
+      title.textContent = label;
 
       const rollEl = document.createElement("div");
       rollEl.className = "drFxRoll";
@@ -1561,7 +1619,7 @@
 
       function frame(now) {
         if (done) return;
-        const ms = now - start;
+        const ms = Math.max(0, now - start);
         const t = Math.min(1, ms / dur);
         ctx.clearRect(0, 0, w, h);
         draw(ctx, w, h, t, ms, envelope(t), S, overlay);
@@ -1589,13 +1647,13 @@
 
   G.drPlayRarityEffect = function (rarity, opts) {
     opts = opts || {};
-    const tier = tierOf(rarity);
+    const tier = legIdx(rarity);
     const mode = opts.force ? "full" : fxMode();
 
     if (mode === "off") return Promise.resolve();
     if (mode === "simple" || tier < FIRST_MID)
       return simpleEffect(rarity, tier);
-    if (tier < FIRST_CINEMATIC) return midEffect(rarity, tier);
+    if (tier < FIRST_CINEMATIC) return midEffect(BASE[rarity] || rarity, tier);
     return cinematic(rarity, tier, opts);
   };
 
