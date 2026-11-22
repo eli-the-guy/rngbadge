@@ -19,6 +19,8 @@
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const sfx = (n, a) => typeof G.drSfx === "function" && G.drSfx(n, a);
   const nf = (v) => Math.round(Number(v) || 0).toLocaleString();
+  const big = (v) =>
+    v >= 1e12 ? v.toExponential(1).replace("e+", " × 10^") : nf(v);
   const TI = (n) => P.TIERS.indexOf(n);
 
   /* ---------- state ---------- */
@@ -379,14 +381,35 @@
     if (q.length >= 3 && q === q.split("").reverse().join("")) return "mirror";
     return "lore";
   };
-  /* two of each digit's shard per digit used, a binder mat that matches the shape, dust per digit */
+  /* a pattern is priced by how rare it is as a roll: the game's own analyzer rates the sequence,
+     every cost is multiplied by 1 + log10(1-in-N)/5 and rare patterns also eat rare tier mats */
+  function patRarity(q) {
+    try {
+      const a = analyze(q.split(""));
+      return {
+        name: String(a.rarity),
+        oneIn: Math.max(1, Number(a.oneIn) || 1),
+      };
+    } catch (e) {
+      return { name: "WORTHLESS", oneIn: 1 };
+    }
+  }
+  const patMult = (q) => 1 + Math.log10(patRarity(q).oneIn) / 5;
   function patternCost(q) {
-    const c = { dust: 20 * q.length };
-    q.split("").forEach((ch) => (c["d" + ch] = (c["d" + ch] || 0) + 2));
+    const base = { dust: 20 * q.length };
+    q.split("").forEach((ch) => (base["d" + ch] = (base["d" + ch] || 0) + 2));
     const k = seqKind(q);
-    c[k] = (c[k] || 0) + (k === "mirror" ? Math.ceil(q.length / 2) : q.length);
+    base[k] =
+      (base[k] || 0) + (k === "mirror" ? Math.ceil(q.length / 2) : q.length);
     if (q.indexOf("7") >= 0)
-      c.clover = (c.clover || 0) + q.split("7").length - 1;
+      base.clover = (base.clover || 0) + q.split("7").length - 1;
+    const m = patMult(q);
+    const c = {};
+    Object.keys(base).forEach((x) => (c[x] = Math.ceil(base[x] * m)));
+    const d = drops(P.tierOf(patRarity(q).name));
+    ["spark", "ember", "prism", "void"].forEach((x) => {
+      if (d[x]) c[x] = (c[x] || 0) + d[x] * 3;
+    });
     return c;
   }
   const PRESETS = [
@@ -422,7 +445,7 @@
     const total = ps.reduce((n, p) => n + patLen(p), 0);
     if (total > 11) return say("Fused charms can be at most 11 digits long.");
     const n = idx.length;
-    const c = { dust: 50 * n, prism: n, void: n - 1 };
+    const c = fuseCost(n);
     if (!canPay(c)) return say("Not enough materials to fuse.");
     pay(c);
     const parts =
@@ -438,7 +461,19 @@
     say(`🔗 Fused into ${parts.join(" + ")}!`);
     rerender();
   }
-  const fuseCost = (n) => ({ dust: 50 * n, prism: n, void: n - 1 });
+  const fuseMult = () => {
+    const ps = sel.filter((i) => F.patterns[i]).map((i) => F.patterns[i]);
+    if (!ps.length) return 1;
+    return ps.reduce((m, p) => m + patMult(p.parts.join("")), 0) / ps.length;
+  };
+  const fuseCost = (n) => {
+    const m = fuseMult();
+    return {
+      dust: Math.ceil(50 * n * m),
+      prism: Math.ceil(n * m),
+      void: Math.ceil((n - 1) * m),
+    };
+  };
   function discardPattern(i) {
     F.patterns.splice(i, 1);
     sel = [];
@@ -647,13 +682,13 @@
         ? `Fuse ${n} charms: ${matCost(fc)}`
         : "Click two or more charms above to select them for fusing (the click order matters for chains).";
     const canFuse = n >= 2 && canPay(fc);
-    return `<div class="pgBanner" style="font-weight:600">🧩 <b>Pattern charms</b> work like number charms, but the digits go in a <b>specific order</b>, side by side, so you can aim for a badge. One charm is used per roll, first in line first. Craft any 2–5 digit sequence (costs 2 shards of every digit used, a matching binder mat and dust). <b>Fusing</b> charms makes longer or double patterns for much rarer rolls: <b>Chain</b> joins them into one long sequence, <b>Split</b> places all of them in the same roll.</div>
+    return `<div class="pgBanner" style="font-weight:600">🧩 <b>Pattern charms</b> work like number charms, but the digits go in a <b>specific order</b>, side by side, so you can aim for a badge. One charm is used per roll, first in line first. Craft any 2–5 digit sequence. <b>The rarer the pattern is as a roll, the more it costs</b> (all costs scale up, and the rarest patterns also eat Sparks, Embers, Prisms or Void Shards). <b>Fusing</b> charms makes longer or double patterns for much rarer rolls: <b>Chain</b> joins them into one long sequence, <b>Split</b> places all of them in the same roll.</div>
       <h3 class="frgH">🎒 Your charms <small class="pgSub">(your rolls are ${rl} digits)</small></h3>
       <div class="frgInv">${inv}</div>
       <div class="frgRow" style="margin:10px 0 4px"><button class="drBuy" data-fuse="chain" ${canFuse ? "" : "disabled"}>🔗 Fuse: Chain</button><button class="drBuy" data-fuse="split" ${canFuse ? "" : "disabled"}>✂️ Fuse: Split</button></div>
       <p class="pgSub">${fuseHint}</p>
       <h3 class="frgH">🛠️ Craft a pattern charm</h3>
-      <div class="frgRow" style="flex-wrap:wrap;margin-bottom:8px">${PRESETS.map(([n2, q]) => `<button class="drBuy frgPre" data-pre="${q}">${n2} ${q}</button>`).join("")}</div>
+      <div class="frgRow" style="flex-wrap:wrap;margin-bottom:8px">${PRESETS.map(([n2, q]) => `<button class="drBuy frgPre" data-pre="${q}">${n2} ${q} <small>· ${patRarity(q).name.toLowerCase()}</small></button>`).join("")}</div>
       <div class="frgRow"><input id="frgIn" class="frgIn" inputmode="numeric" maxlength="5" placeholder="type 2–5 digits, e.g. 1337" value="${draft}"><button class="drBuy" id="frgMake" disabled>Craft</button></div>
       <p class="pgSub" id="frgCost">Cost: —</p>`;
   }
@@ -763,7 +798,7 @@
         const ok = draft.length >= 2;
         const c = ok ? patternCost(draft) : null;
         root.querySelector("#frgCost").innerHTML = ok
-          ? `Cost: ${matCost(c)}`
+          ? `Pattern rarity: <b>${patRarity(draft).name}</b> (1 in ${big(patRarity(draft).oneIn)}) • cost ×${patMult(draft).toFixed(1)}<br>Cost: ${matCost(c)}`
           : "Cost: —";
         root.querySelector("#frgMake").disabled = !ok || !canPay(c);
       };
