@@ -124,6 +124,13 @@
   }
   const givePoints = (n) => P && P.addPoints && P.addPoints(n);
 
+  G.drBonusHelpers = {
+    gainXP: (n) => gainXP(n),
+    giveCharm: (d) => giveCharm(d),
+    giveLucky: (n) => giveLucky(n),
+    givePoints: (n) => givePoints(n),
+  };
+
   function refreshUI() {
     if (typeof G.updateShopUI === "function")
       try {
@@ -511,6 +518,8 @@
     golem: { pts: 1, frac: 0.25 },
     titan: { pts: 3, frac: 0.5 },
     reality: { pts: 8, frac: 1 },
+    mimic: { pts: 2, frac: 0.35 },
+    wraith: { pts: 4, frac: 0.6 },
   };
 
   G.drBossWon = function (type) {
@@ -547,6 +556,8 @@
           golem: "🗿 Golem",
           titan: "🤖 Titan",
           reality: "👁️ Reality Breaker",
+          mimic: "🧰 Vault Mimic",
+          wraith: "🕰️ Chrono Wraith",
         };
         const res = x.won
           ? '<b style="color:#8ee6ad">WIN</b>'

@@ -41,7 +41,13 @@
     } catch (e) {}
   };
 
-  const FIG = { golem: "🗿", titan: "🤖", reality: "👁️" };
+  const FIG = {
+    golem: "🗿",
+    titan: "🤖",
+    reality: "👁️",
+    mimic: "🧰",
+    wraith: "🕰️",
+  };
   const TAUNTS = {
     golem: [
       "GRRRMMMM…",
@@ -56,6 +62,20 @@
       "I AM THE STORM.",
       "YOUR DIGITS ARE DUST.",
       "COUNT YOUR LAST XP.",
+    ],
+    mimic: [
+      "CHOMP!",
+      "SHINY, ISN'T IT?",
+      "LOOT ME. I DARE YOU.",
+      "THE TREASURE BITES BACK.",
+      "GOLD... FOR ME.",
+    ],
+    wraith: [
+      "TICK. TOCK.",
+      "YOUR TIME IS UP.",
+      "I'VE SEEN THIS ROLL BEFORE.",
+      "REWIND. AGAIN.",
+      "EVERY SECOND IS MINE.",
     ],
     reality: [
       "1 + 1 = ?",
@@ -678,6 +698,176 @@
       );
     },
 
+    mimic(S) {
+      later(0, () => msfx("warn"));
+      // a treasure chest "appears" and shines, coins spill
+      later(900, () => {
+        fx(2.2, (c, p, w, h) => {
+          const g = c.createRadialGradient(
+            w / 2,
+            h * 0.6,
+            10,
+            w / 2,
+            h * 0.6,
+            h * 0.6,
+          );
+          g.addColorStop(0, "rgba(255,225,120,.75)");
+          g.addColorStop(1, "rgba(255,200,60,0)");
+          c.globalAlpha = Math.sin(Math.min(1, p) * Math.PI);
+          c.fillStyle = g;
+          c.fillRect(0, 0, w, h);
+        });
+        for (let i = 0; i < 40; i++)
+          add({
+            x: rnd(0, W),
+            y: -rnd(20, 300),
+            vy: rnd(250, 600),
+            g: 500,
+            life: rnd(2, 3.5),
+            size: rnd(10, 22),
+            color: pick(["#f5c542", "#ffe08a", "#d19a1c"]),
+            shape: "circle",
+          });
+        loop();
+      });
+      const chomp = (big) => {
+        msfx("thud");
+        shakeAll(500, big ? 22 : 12);
+        flash("#fff1b8", big ? 0.5 : 0.3, 300);
+        fx(0.7, (c, p, w, h) => {
+          const e = Math.sin(Math.min(1, p) * Math.PI);
+          c.fillStyle = "#0b0814";
+          c.strokeStyle = "#f5c542";
+          c.lineWidth = 4;
+          [-1, 1].forEach((s) => {
+            c.beginPath();
+            const y = s < 0 ? 0 : h;
+            c.moveTo(0, y);
+            for (let i = 0; i <= 12; i++) {
+              const x = (w / 12) * i;
+              c.lineTo(x, y - s * -(h * 0.32 * e) * (i % 2 ? 1 : 0.6));
+            }
+            c.lineTo(w, y);
+            c.closePath();
+            c.fill();
+            c.stroke();
+          });
+        });
+      };
+      later(2300, () => chomp(false));
+      later(3200, () => chomp(false));
+      later(4000, () => {
+        chomp(true);
+        burst(W / 2, H * 0.5, 150, {
+          colors: ["#f5c542", "#ffe08a", "#fff", "#d19a1c"],
+          shape: "circle",
+          s0: 5,
+          s1: 14,
+          g: 800,
+          min: 200,
+          max: 900,
+        });
+        boardShards(["#2b2210", "#6b5416", "#f5c542", "#fff1b8"], false, 60);
+        addCracks(cfg.color);
+      });
+      later(4300, () =>
+        hugeText(
+          FIG.mimic,
+          0.5,
+          1.2,
+          0.5,
+          0.46,
+          Math.min(W, H) * 0.65,
+          3.2,
+          "#f5c542",
+          0,
+          5,
+        ),
+      );
+    },
+
+    wraith(S) {
+      later(0, () => msfx("warn"));
+      // a giant clock face ticks backwards
+      later(900, () => {
+        fx(5.2, (c, p, w, h, t) => {
+          const R = Math.min(w, h) * (0.12 + 0.3 * Math.min(1, p * 1.5));
+          c.translate(w / 2, h / 2);
+          c.globalAlpha = p > 0.85 ? (1 - p) * 6 : 0.9;
+          c.strokeStyle = "#c4b5fd";
+          c.shadowColor = "#a78bfa";
+          c.shadowBlur = 24;
+          c.lineWidth = 5;
+          c.beginPath();
+          c.arc(0, 0, R, 0, 7);
+          c.stroke();
+          for (let i = 0; i < 12; i++) {
+            const a = (i / 12) * Math.PI * 2;
+            c.beginPath();
+            c.moveTo(Math.cos(a) * R * 0.88, Math.sin(a) * R * 0.88);
+            c.lineTo(Math.cos(a) * R * 0.98, Math.sin(a) * R * 0.98);
+            c.stroke();
+          }
+          const hand = (ang, len, wd) => {
+            c.lineWidth = wd;
+            c.beginPath();
+            c.moveTo(0, 0);
+            c.lineTo(Math.cos(ang) * R * len, Math.sin(ang) * R * len);
+            c.stroke();
+          };
+          hand(-t * 2.4 - Math.PI / 2, 0.85, 4);
+          hand(-t * 0.2 - 1, 0.55, 8);
+        });
+      });
+      [1800, 2600, 3400].forEach((tm, i) =>
+        later(tm, () => {
+          msfx("glitch");
+          ring(
+            W / 2,
+            H / 2,
+            i === 1 ? "#fff" : "#a78bfa",
+            1.5,
+            Math.max(W, H) * 0.8,
+            0,
+          );
+          shakeAll(400, 8 + i * 4);
+          // digits rewind upward
+          for (let k = 0; k < 40; k++)
+            add({
+              x: rnd(0, W),
+              y: H + 10,
+              vy: -rnd(300, 800),
+              life: rnd(1, 2),
+              size: rnd(14, 30),
+              color: pick(["#c4b5fd", "#7dd3fc", "#fff"]),
+              shape: "text",
+              text: String(Math.floor(rnd(0, 10))),
+            });
+        }),
+      );
+      later(4000, () => {
+        msfx("zap");
+        flash("#fff", 0.8, 500);
+        boardShards(["#171028", "#3b2a6b", "#a78bfa", "#e9e1ff"], true, 60);
+        addCracks(cfg.color);
+        shakeAll(900, 20);
+      });
+      later(4300, () =>
+        hugeText(
+          FIG.wraith,
+          0.5,
+          0.5,
+          0.5,
+          0.46,
+          Math.min(W, H) * 0.65,
+          3.2,
+          "#a78bfa",
+          0,
+          2,
+        ),
+      );
+    },
+
     reality(S) {
       later(0, () => msfx("glitch"));
       // continuous glitch bars that get worse over time
@@ -1113,6 +1303,141 @@
         });
         say(pick(TAUNTS.titan));
         flash("#7fcaff", 0.18, 400);
+      },
+    ],
+    mimic: [
+      () => {
+        // coin shower
+        msfx("thud");
+        for (let i = 0; i < 70; i++)
+          add({
+            x: rnd(0, W),
+            y: -rnd(10, 300),
+            vy: rnd(250, 600),
+            g: 500,
+            life: rnd(1.6, 3),
+            size: rnd(8, 20),
+            color: pick(["#f5c542", "#ffe08a", "#d19a1c"]),
+            shape: "circle",
+          });
+        loop();
+        say(pick(TAUNTS.mimic));
+      },
+      () => {
+        // jaws snap shut across the screen
+        msfx("thud");
+        fx(0.8, (c, p, w, h) => {
+          const e = Math.sin(Math.min(1, p) * Math.PI) * h * 0.28;
+          c.fillStyle = "#0b0814";
+          c.strokeStyle = "#f5c542";
+          c.lineWidth = 3;
+          [0, 1].forEach((s) => {
+            c.beginPath();
+            const y = s ? h : 0;
+            c.moveTo(0, y);
+            for (let i = 0; i <= 14; i++)
+              c.lineTo((w / 14) * i, y + (s ? -1 : 1) * e * (i % 2 ? 1 : 0.7));
+            c.lineTo(w, y);
+            c.closePath();
+            c.fill();
+            c.stroke();
+          });
+        });
+        shakeAll(500, 12);
+        say(pick(TAUNTS.mimic));
+      },
+      () => {
+        // chests spill out
+        for (let i = 0; i < 3; i++) {
+          const r = document.createElement("div");
+          r.className = "drBsRock";
+          r.textContent = "🧰";
+          r.style.left = "0";
+          r.style.top = "0";
+          document.body.appendChild(r);
+          const x = rnd(W * 0.1, W * 0.9);
+          r.animate(
+            [
+              { transform: `translate(${x}px,-80px) rotate(0deg)` },
+              {
+                transform: `translate(${x + rnd(-120, 120)}px,${H + 80}px) rotate(${rnd(-360, 360)}deg)`,
+              },
+            ],
+            {
+              duration: 1800 + i * 300,
+              delay: i * 250,
+              easing: "cubic-bezier(.4,0,1,1)",
+              fill: "both",
+            },
+          ).onfinish = () => {
+            burst(x, H - 20, 24, {
+              colors: ["#f5c542", "#ffe08a"],
+              shape: "circle",
+              s0: 4,
+              s1: 9,
+            });
+            loop();
+            r.remove();
+          };
+        }
+        msfx("roar");
+      },
+      () => {
+        flash("#f5c542", 0.25, 600);
+        say("ALL THAT GLITTERS…");
+        shake(hud, 500, 8);
+      },
+    ],
+    wraith: [
+      () => {
+        // time ripple
+        msfx("glitch");
+        [0, 0.25, 0.5].forEach((d) =>
+          ring(W / 2, H / 2, "#a78bfa", 1.6, Math.max(W, H) * 0.8, d),
+        );
+        say(pick(TAUNTS.wraith));
+      },
+      () => {
+        // digits rewind upward
+        for (let k = 0; k < 70; k++)
+          add({
+            x: rnd(0, W),
+            y: H + rnd(0, 100),
+            vy: -rnd(300, 800),
+            life: rnd(1.4, 2.6),
+            size: rnd(14, 32),
+            color: pick(["#c4b5fd", "#7dd3fc", "#fff"]),
+            shape: "text",
+            text: String(Math.floor(rnd(0, 10))),
+          });
+        loop();
+        invert(60);
+      },
+      () => {
+        // hourglass sand
+        const x = rnd(W * 0.2, W * 0.8);
+        for (let k = 0; k < 90; k++)
+          add({
+            x: x + rnd(-6, 6),
+            y: -rnd(0, 200),
+            vx: rnd(-20, 20),
+            vy: rnd(200, 400),
+            g: 400,
+            life: rnd(1.6, 2.8),
+            size: rnd(2, 5),
+            color: pick(["#e9d5ff", "#c4b5fd"]),
+            shape: "circle",
+          });
+        loop();
+        say("THE SANDS RUN OUT.");
+      },
+      () => {
+        // freeze flash
+        flash("#e9e1ff", 0.45, 900);
+        invert(80);
+        shake(boardEl, 400, 6);
+        say(pick(TAUNTS.wraith));
+        msfx("zap");
       },
     ],
     reality: [

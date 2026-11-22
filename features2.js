@@ -530,6 +530,20 @@
       10,
     ],
     [
+      "bossmimic",
+      "Mimic Cracker",
+      "Beat the Vault Mimic (event boss)",
+      (c) => c.boss.mimic >= 1,
+      3,
+    ],
+    [
+      "bosswraith",
+      "Time Breaker",
+      "Beat the Chrono Wraith (event boss)",
+      (c) => c.boss.wraith >= 1,
+      5,
+    ],
+    [
       "chest1",
       "Treasure Hunter",
       "Open a daily chest",

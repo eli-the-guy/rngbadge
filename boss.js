@@ -50,6 +50,30 @@
       count: 1,
       blurb: "1 cursed roll of 4 digits",
     },
+    mimic: {
+      key: "mimic",
+      name: "THE VAULT MIMIC",
+      short: "Vault Mimic",
+      icon: "🧰",
+      hp: 10000000000000,
+      color: "#f5c542",
+      size: 3,
+      count: 2,
+      blurb: "2 cursed rolls of 3 digits • event boss",
+      event: true,
+    },
+    wraith: {
+      key: "wraith",
+      name: "THE CHRONO WRAITH",
+      short: "Chrono Wraith",
+      icon: "🕰️",
+      hp: 1000000000000000,
+      color: "#a78bfa",
+      size: 3,
+      count: 4,
+      blurb: "4 cursed rolls of 3 digits • event boss",
+      event: true,
+    },
     titan: {
       key: "titan",
       name: "TITAN OF THE ABYSS",
@@ -73,7 +97,7 @@
       blurb: "5 cursed rolls of 3 digits",
     },
   };
-  const ORDER = ["golem", "titan", "reality"];
+  const ORDER = ["golem", "mimic", "wraith", "titan", "reality"];
   const DEFAULT_D = 1000000000000;
 
   const WEAPONS = [
@@ -131,7 +155,7 @@
     ward: false,
     wind: false,
     joined: [],
-    wins: { golem: 0, titan: 0, reality: 0 },
+    wins: { golem: 0, titan: 0, reality: 0, mimic: 0, wraith: 0 },
     seen: 0,
     dq: {},
     windUsed: {},
@@ -219,6 +243,8 @@
     golem: B.wins.golem || 0,
     titan: B.wins.titan || 0,
     reality: B.wins.reality || 0,
+    mimic: B.wins.mimic || 0,
+    wraith: B.wins.wraith || 0,
     total: (B.wins.golem || 0) + (B.wins.titan || 0) + (B.wins.reality || 0),
   });
 
@@ -535,6 +561,8 @@
           const bal = typeof getXPBalance === "function" ? getXPBalance() : 0;
           let loss = Math.max(100, Math.floor(bal / 100));
           if (B.ward) loss = Math.max(50, Math.floor(loss / 2));
+          if (typeof G.drBossCurseMod === "function")
+            loss = Math.max(1, Math.round(G.drBossCurseMod(loss)));
           total += loss;
           last = applyCurse(loss);
         });
@@ -685,7 +713,8 @@
             : `<span class="empty">${esc(error.message)}</span>`;
         return;
       }
-      const by = { golem: [], titan: [], reality: [] };
+      const by = {};
+      ORDER.forEach((k) => (by[k] = []));
       (data || []).forEach((r) => by[r.boss_type] && by[r.boss_type].push(r));
       const live = ev ? ev.boss_type : "";
       const cols = ORDER.map((k) => {
@@ -719,8 +748,7 @@
     const st = document.createElement("style");
     st.id = "drBossCSS";
     st.textContent = `
-      .drBvGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-      @media(max-width:720px){.drBvGrid{grid-template-columns:1fr}}
+      .drBvGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
       .drBvCol{border:1px solid color-mix(in srgb,var(--bc) 45%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--bc) 14%,transparent),rgba(255,255,255,.03));border-radius:16px;padding:12px;min-width:0}
       .drBvCol.live{box-shadow:0 0 22px color-mix(in srgb,var(--bc) 55%,transparent);animation:drBvPulse 1.4s ease-in-out infinite}
       @keyframes drBvPulse{50%{box-shadow:0 0 38px color-mix(in srgb,var(--bc) 85%,transparent)}}
@@ -732,8 +760,7 @@
       .drBvName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .drStatLine{display:flex;gap:16px;flex-wrap:wrap;margin:0 0 10px;font-size:13px;font-weight:800;color:#b9c4da}
       .drStatLine i{font-style:normal;color:#8ee6ad}
-      .drBossAdm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
-      @media(max-width:720px){.drBossAdm{grid-template-columns:1fr}}
+      .drBossAdm{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
       .drBossPick{cursor:pointer;text-align:left;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:12px;font:inherit}
       .drBossPick.on{border-color:var(--bc);box-shadow:0 0 14px color-mix(in srgb,var(--bc) 60%,transparent)}
       .drBossPick b{display:block;font-size:15px}
