@@ -616,6 +616,10 @@
     legendary: 2800,
     mythic: 2600,
     divine: 3000,
+    heroic: 2500,
+    fabled: 3200,
+    ancient: 3000,
+    angelic: 3400,
   };
 
   function runeSVG() {
@@ -662,6 +666,62 @@
       '<div class="drPortal"><i></i><i></i><b></b></div><div class="drRiftLine"></div>',
     divine: () =>
       '<div class="drBeam"></div><div class="drHalo"></div><div class="drRipple"></div><div class="drBloom"></div>',
+
+    /* HEROIC: a heraldic crest strikes in, crossed blades slash through it */
+    heroic: () =>
+      '<svg class="drCrest" viewBox="-100 -120 200 240" aria-hidden="true">' +
+      '<path class="drCrestShield" pathLength="1" d="M0,-100 L80,-76 L80,0 Q80,70 0,110 Q-80,70 -80,0 L-80,-76 Z"/>' +
+      '<path class="drCrestStar" pathLength="1" d="M0,-52 L14,-14 L54,-14 L22,10 L34,50 L0,26 L-34,50 L-22,10 L-54,-14 L-14,-14 Z"/>' +
+      '</svg><div class="drSlash s1"></div><div class="drSlash s2"></div><div class="drFlashHero"></div>',
+
+    /* FABLED: a storybook opens, golden letters drift up from the pages */
+    fabled: () => {
+      let l = "";
+      const ch = "ABCDEFGHIKLMNORSTUW";
+      for (let i = 0; i < 18; i++)
+        l += `<span style="--i:${i};--x:${(i * 37) % 100};--d:${(i % 6) * 0.18}s">${ch[i % ch.length]}</span>`;
+      return (
+        '<div class="drTome"><i class="pg l"></i><i class="pg r"></i><b></b></div><div class="drLetters">' +
+        l +
+        "</div>"
+      );
+    },
+
+    /* ANCIENT: carved glyphs orbit, cracks of amber light split the stone */
+    ancient: () => {
+      const g = "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊ";
+      let s = "";
+      for (let i = 0; i < 16; i++)
+        s += `<span style="--a:${i * 22.5}deg;--i:${i}">${g[i]}</span>`;
+      return (
+        '<div class="drGlyphRing">' +
+        s +
+        '</div><div class="drCrack c1"></div><div class="drCrack c2"></div><div class="drCrack c3"></div><div class="drDust"></div>'
+      );
+    },
+
+    /* ANGELIC: wings unfurl either side of the number under a halo, feathers fall */
+    angelic: () => {
+      const wing = (cls) =>
+        `<svg class="drWing ${cls}" viewBox="0 0 200 120" aria-hidden="true"><g class="fe">` +
+        [0, 1, 2, 3, 4, 5]
+          .map(
+            (i) =>
+              `<path style="--i:${i}" d="M0,60 Q${60 + i * 22},${50 - i * 9} ${190 - i * 6},${58 + i * 9} Q${110 + i * 8},${70 + i * 4} 0,66 Z"/>`,
+          )
+          .join("") +
+        "</g></svg>";
+      let f = "";
+      for (let i = 0; i < 12; i++)
+        f += `<u style="--x:${(i * 53) % 100};--d:${(i % 5) * 0.25}s"></u>`;
+      return (
+        wing("l") +
+        wing("r") +
+        '<div class="drHalo2"></div><div class="drFeathers">' +
+        f +
+        "</div>"
+      );
+    },
   };
 
   function midEffect(rarity, tier) {
@@ -1525,6 +1585,169 @@
     },
   ];
 
+  /* in-between cinematic tiers get their own scene (keyed by name, not by position) */
+  const EXTRA = {
+    /* RADIANT — a prismatic lens flare: anamorphic streak, rainbow rings, drifting bokeh */
+    RADIANT: {
+      dur: 3800,
+      draw: (c, w, h, t, ms, env, S) => {
+        const cx = w / 2,
+          cy = h / 2,
+          R = Math.hypot(w, h) / 2;
+        c.fillStyle = `rgba(6,6,14,${0.82 * env})`;
+        c.fillRect(0, 0, w, h);
+        c.globalCompositeOperation = "lighter";
+        const g = c.createRadialGradient(cx, cy, 0, cx, cy, R * 0.55);
+        g.addColorStop(0, `rgba(255,255,240,${0.9 * env})`);
+        g.addColorStop(0.25, `rgba(255,240,180,${0.45 * env})`);
+        g.addColorStop(1, "rgba(255,200,120,0)");
+        c.fillStyle = g;
+        c.fillRect(0, 0, w, h);
+        // anamorphic streak
+        const sw = w * (0.2 + 0.9 * Math.min(1, t * 2.2)) * env;
+        const sg = c.createLinearGradient(cx - sw, cy, cx + sw, cy);
+        sg.addColorStop(0, "rgba(120,180,255,0)");
+        sg.addColorStop(0.5, `rgba(255,255,255,${0.95 * env})`);
+        sg.addColorStop(1, "rgba(255,150,220,0)");
+        c.fillStyle = sg;
+        c.fillRect(cx - sw, cy - 3, sw * 2, 6);
+        // rainbow rings
+        for (let i = 0; i < 5; i++) {
+          const k = (t * 1.1 + i * 0.2) % 1;
+          c.strokeStyle = `hsla(${(i * 70 + ms / 10) % 360},100%,70%,${(1 - k) * 0.55 * env})`;
+          c.lineWidth = 2 + (1 - k) * 8;
+          c.beginPath();
+          c.arc(cx, cy, Math.max(0, k * R * 0.9), 0, 6.283);
+          c.stroke();
+        }
+        // flare ghosts along the diagonal axis
+        const ax = cx - w / 2 || 1;
+        for (let i = 1; i <= 6; i++) {
+          const f = (i - 3.5) * 0.26 + Math.sin(ms / 900) * 0.04;
+          const x = cx + w * 0.5 * f,
+            y = cy + h * 0.5 * f * 0.55;
+          const r = Math.max(0, (14 + i * 9) * env);
+          c.fillStyle = `hsla(${i * 55},100%,70%,${0.16 * env})`;
+          c.beginPath();
+          c.arc(x, y, r, 0, 6.283);
+          c.fill();
+        }
+        c.globalCompositeOperation = "source-over";
+        shakeEls(S, 4 * env);
+      },
+    },
+
+    /* ETERNAL — a glowing lemniscate traced again and again inside a turning clock ring */
+    ETERNAL: {
+      dur: 5200,
+      draw: (c, w, h, t, ms, env, S) => {
+        const cx = w / 2,
+          cy = h / 2,
+          R = Math.min(w, h) * 0.34;
+        c.fillStyle = `rgba(3,10,16,${0.88 * env})`;
+        c.fillRect(0, 0, w, h);
+        c.globalCompositeOperation = "lighter";
+        // clock ring
+        c.save();
+        c.translate(cx, cy);
+        c.rotate(ms / 4000);
+        for (let i = 0; i < 60; i++) {
+          const a = (i / 60) * 6.283,
+            l = i % 5 === 0 ? 22 : 9;
+          c.strokeStyle = `rgba(255,225,150,${0.55 * env})`;
+          c.lineWidth = i % 5 === 0 ? 3 : 1.5;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * R * 1.45, Math.sin(a) * R * 1.45);
+          c.lineTo(Math.cos(a) * (R * 1.45 - l), Math.sin(a) * (R * 1.45 - l));
+          c.stroke();
+        }
+        c.restore();
+        // lemniscate with a comet head and fading trail
+        const pt = (u) => {
+          const d = 1 + Math.sin(u) * Math.sin(u);
+          return [
+            cx + (R * 1.25 * Math.cos(u)) / d,
+            cy + (R * 0.9 * Math.sin(u) * Math.cos(u)) / d,
+          ];
+        };
+        const head = ms / 520;
+        c.lineCap = "round";
+        for (let i = 0; i < 90; i++) {
+          const u = head - i * 0.045;
+          const [x0, y0] = pt(u),
+            [x1, y1] = pt(u - 0.045);
+          const a = (1 - i / 90) * env;
+          c.strokeStyle = `hsla(${185 + i * 0.6},100%,${70 - i * 0.2}%,${a})`;
+          c.lineWidth = 2 + (1 - i / 90) * 9;
+          c.beginPath();
+          c.moveTo(x0, y0);
+          c.lineTo(x1, y1);
+          c.stroke();
+        }
+        const [hx, hy] = pt(head);
+        const hg = c.createRadialGradient(hx, hy, 0, hx, hy, 40);
+        hg.addColorStop(0, `rgba(255,255,255,${env})`);
+        hg.addColorStop(1, "rgba(120,240,255,0)");
+        c.fillStyle = hg;
+        c.fillRect(hx - 40, hy - 40, 80, 80);
+        // slow ripples
+        for (let i = 0; i < 3; i++) {
+          const k = (t * 0.9 + i / 3) % 1;
+          c.strokeStyle = `rgba(150,240,255,${(1 - k) * 0.35 * env})`;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(cx, cy, Math.max(0, k * R * 2.2), 0, 6.283);
+          c.stroke();
+        }
+        c.globalCompositeOperation = "source-over";
+        shakeEls(S, 3 * env);
+      },
+    },
+
+    /* PRIMORDIAL — a universe being born: spiral arms wind into a core, then a white-hot flash */
+    PRIMORDIAL: {
+      dur: 7000,
+      draw: (c, w, h, t, ms, env, S, ov) => {
+        const cx = w / 2,
+          cy = h / 2,
+          R = Math.hypot(w, h) / 2;
+        c.fillStyle = `rgba(8,2,14,${Math.min(0.94, t * 6) * Math.max(env, 0.4)})`;
+        c.fillRect(0, 0, w, h);
+        c.globalCompositeOperation = "lighter";
+        const wind = 1 + t * 2.4;
+        const arms = 4,
+          per = 70;
+        for (let a = 0; a < arms; a++) {
+          for (let i = 0; i < per; i++) {
+            const r = (i / per) * R * 0.95 * Math.min(1, t * 2.6 + 0.15);
+            const ang = (a / arms) * 6.283 + (i / per) * 5.2 * wind - ms / 900;
+            const x = cx + Math.cos(ang) * r,
+              y = cy + Math.sin(ang) * r * 0.62;
+            c.fillStyle = `hsla(${280 + (i / per) * 80},100%,${60 + 25 * (1 - i / per)}%,${(0.55 - 0.4 * (i / per)) * env})`;
+            c.beginPath();
+            c.arc(x, y, Math.max(0, 2.5 + (1 - i / per) * 4), 0, 6.283);
+            c.fill();
+          }
+        }
+        const cr =
+          (30 + 220 * Math.pow(t, 2.2)) * (0.8 + 0.2 * Math.sin(ms / 90));
+        const cg = c.createRadialGradient(cx, cy, 0, cx, cy, cr);
+        cg.addColorStop(0, `rgba(255,255,255,${env})`);
+        cg.addColorStop(0.35, `rgba(255,170,230,${0.6 * env})`);
+        cg.addColorStop(1, "rgba(120,40,200,0)");
+        c.fillStyle = cg;
+        c.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
+        c.globalCompositeOperation = "source-over";
+        if (t > 0.82) {
+          const k = Math.min(1, (t - 0.82) / 0.1);
+          c.fillStyle = `rgba(255,255,255,${k * (t > 0.94 ? Math.max(0, (1 - t) / 0.06) : 1)})`;
+          c.fillRect(0, 0, w, h);
+        }
+        shakeEls(S, (t > 0.6 ? 10 : 3) * env);
+      },
+    },
+  };
+
   const GLYPHS = "█▓▒░#%&?@$0123456789";
 
   function cinematic(label, tier, opts) {
@@ -1532,8 +1755,9 @@
     return new Promise((resolve) => {
       if (activeFx) activeFx.end(true);
 
-      const dur = DURATIONS[tier - FIRST_CINEMATIC] || 4000;
-      const name = fxName(rarity);
+      const ex = EXTRA[label];
+      const dur = ex ? ex.dur : DURATIONS[tier - FIRST_CINEMATIC] || 4000;
+      const name = fxName(ex ? label : rarity);
 
       const overlay = document.createElement("div");
       overlay.className = "drFx drFx-" + name;
@@ -1612,7 +1836,7 @@
       const ctx = canvas.getContext("2d");
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const draw = DRAWERS[tier - FIRST_CINEMATIC];
+      const draw = ex ? ex.draw : DRAWERS[tier - FIRST_CINEMATIC];
       const start = performance.now();
       showTimer = setTimeout(() => overlay.classList.add("show"), dur * 0.18);
       let lastScramble = 0;
@@ -1653,7 +1877,11 @@
     if (mode === "off") return Promise.resolve();
     if (mode === "simple" || tier < FIRST_MID)
       return simpleEffect(rarity, tier);
-    if (tier < FIRST_CINEMATIC) return midEffect(BASE[rarity] || rarity, tier);
+    if (tier < FIRST_CINEMATIC)
+      return midEffect(
+        MID_HTML[fxName(rarity)] ? rarity : BASE[rarity] || rarity,
+        tier,
+      );
     return cinematic(rarity, tier, opts);
   };
 
