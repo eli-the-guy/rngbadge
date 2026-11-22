@@ -511,6 +511,16 @@
     return { after, revived };
   }
 
+  /* Diminishing returns: the bigger a single hit, the more of it is knocked off.
+     Hits far below the limit are untouched; no hit can ever reach more than
+     ROLL_LIMIT of the boss's max health, so great rolls can't one-shot it. */
+  const ROLL_LIMIT = 0.25; // 25% of max HP per roll, approached but never reached
+  function softCap(dmg, maxHp) {
+    const c = Math.max(1, maxHp * ROLL_LIMIT);
+    return dmg / (1 + dmg / c);
+  }
+  G.drBossSoftCap = softCap;
+
   function onRoll(result) {
     if (!ev || ev.status !== "active" || msLeft() <= 0) return;
     const cfg = cfgOf(ev);
@@ -528,6 +538,7 @@
     if (oneIn > 0 && !B.dq[id]) {
       let dmg = oneIn / divisor();
       if (typeof G.drBossMod === "function") dmg = G.drBossMod(dmg);
+      dmg = softCap(dmg, Number(ev.max_hp));
       const capped = Math.min(dmg, Number(ev.hp));
       if (typeof G.drBonusDmg === "function") G.drBonusDmg(capped);
       pendingDmg += capped;
