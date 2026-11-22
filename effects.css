@@ -1777,6 +1777,7 @@ body #digitRollNav {
 
 .drWing {
   position: absolute;
+  left: var(--cx);
   top: var(--cy);
   width: 190px;
   height: 114px;
@@ -1786,17 +1787,15 @@ body #digitRollNav {
   animation: drWingLife 3.4s ease-out both;
   filter: drop-shadow(0 0 12px #bff4ff);
 }
-.drWing.l {
-  left: var(--cx);
-  margin-left: calc(min(var(--nw), 300px) / -2 - 190px);
-  transform-origin: right center;
-}
+/* the artwork's inner edge is on its left; the left wing is mirrored so both attach to the number */
 .drWing.r {
-  left: var(--cx);
-  margin-left: calc(min(var(--nw), 300px) / 2);
+  margin-left: calc(min(var(--nw), 520px) / 2 + 6px);
   transform-origin: left center;
-  transform: scaleX(-1);
-  animation-name: drWingLifeR;
+}
+.drWing.l {
+  margin-left: calc(min(var(--nw), 520px) / -2 - 196px);
+  scale: -1 1;
+  transform-origin: center;
 }
 .drWing path {
   fill: rgba(235, 252, 255, 0.75);
@@ -1806,38 +1805,18 @@ body #digitRollNav {
 @keyframes drWingLife {
   0% {
     opacity: 0;
-    transform: scaleX(0.1) rotate(-14deg);
+    clip-path: inset(-20% 100% -20% -20%);
   }
-  25% {
+  28% {
     opacity: 1;
-    transform: scaleX(1) rotate(0);
+    clip-path: inset(-20% -20% -20% -20%);
   }
   55% {
-    transform: scaleX(0.92) rotate(3deg);
+    transform: rotate(4deg);
   }
   80% {
     opacity: 1;
-    transform: scaleX(1);
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes drWingLifeR {
-  0% {
-    opacity: 0;
-    transform: scaleX(-0.1) rotate(14deg);
-  }
-  25% {
-    opacity: 1;
-    transform: scaleX(-1) rotate(0);
-  }
-  55% {
-    transform: scaleX(-0.92) rotate(-3deg);
-  }
-  80% {
-    opacity: 1;
-    transform: scaleX(-1);
+    transform: none;
   }
   100% {
     opacity: 0;

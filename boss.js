@@ -522,6 +522,19 @@
   }
   G.drBossSoftCap = softCap;
 
+  /* direct damage (abilities): same bookkeeping as a roll hit, no divisor/soft cap */
+  G.drBossHit = function (amount) {
+    if (!ev || ev.status !== "active" || msLeft() <= 0 || B.dq[ev.id]) return 0;
+    const capped = Math.min(Math.max(0, Number(amount) || 0), Number(ev.hp));
+    if (!(capped > 0)) return 0;
+    if (typeof G.drBonusDmg === "function") G.drBonusDmg(capped);
+    pendingDmg += capped;
+    B.dmg[ev.id] = (B.dmg[ev.id] || 0) + capped;
+    notifyFx("damage", { amount: capped, hp: shownHp(), crit: true });
+    save();
+    return capped;
+  };
+
   function onRoll(result) {
     if (!ev || ev.status !== "active" || msLeft() <= 0) return;
     const cfg = cfgOf(ev);
@@ -538,6 +551,7 @@
     const oneIn = Number(result && result.oneIn) || 0;
     if (oneIn > 0 && !B.dq[id]) {
       let dmg = oneIn / divisor();
+      G.__drBossRoll = result; // lets add-ons (forge.js) see the roll behind this hit
       if (typeof G.drBossMod === "function") dmg = G.drBossMod(dmg);
       dmg = softCap(dmg, Number(ev.max_hp));
       const capped = Math.min(dmg, Number(ev.hp));

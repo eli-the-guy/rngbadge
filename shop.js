@@ -180,10 +180,8 @@
 
   G.drLuckCount = function () {
     const evLuck = typeof G.drEventLuck === "function" ? G.drEventLuck() : 0;
-    const count = S.gloves + (S.lucky > 0 ? 1 : 0) + evLuck;
-    if (S.lucky > 0) S.lucky--;
-    save();
-    return count;
+    /* lucky charms and gloves moved to the Forge (craft.js); S.gloves now stores the Forge glove level */
+    return evLuck;
   };
 
   /* Put armed number charms into the roll */

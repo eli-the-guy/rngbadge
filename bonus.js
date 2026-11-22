@@ -116,6 +116,10 @@
     return true;
   }
   function giveLucky(n) {
+    if (G.drForge && G.drForge.addItem) {
+      G.drForge.addItem("lucky", n);
+      return true;
+    }
     const sh = G.__drShop;
     if (!sh) return false;
     sh.S.lucky = (sh.S.lucky || 0) + n;

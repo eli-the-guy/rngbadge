@@ -44,7 +44,7 @@
 
     let html = `<div class="drBalance">
       💰 XP: ${n(balance)} / ${n(cap)}${balance >= cap ? " (full)" : ""}<br>
-      <span class="drBalanceSub">🔢 ${len} digits per roll • 🧤 Gloves ${s.gloves}/${C.GLOVES.length} • 🍀 Lucky charms ${s.lucky} • ✨ XP ×${drXPMultiplier()} • 🔄 Rebirths ${s.rebirths}</span>
+      <span class="drBalanceSub">🔢 ${len} digits per roll • ✨ XP ×${drXPMultiplier()} • 🔄 Rebirths ${s.rebirths}</span>
     </div>`;
 
     const disc =
@@ -134,33 +134,8 @@
       ),
     );
 
-    /* ---- luck ---- */
-    let luck = card(
-      "🍀 Lucky Charm",
-      `One extra guaranteed badge on your next roll. In stock: <b>${s.lucky}</b>.`,
-      `Cost: <b>${n(cp(C.LUCKY_CHARM_COST))} XP</b>${sale}`,
-      buyBtn(
-        afford(cp(C.LUCKY_CHARM_COST)) ? "Buy" : "Not enough XP",
-        "lucky",
-        undefined,
-        !afford(cp(C.LUCKY_CHARM_COST)),
-      ),
-    );
-    luck += card(
-      `🍀 Lucky Charm Bundle (×${C.LUCKY_BUNDLE_QTY})`,
-      `${C.LUCKY_BUNDLE_QTY} lucky charms for 10% less than buying them one by one.`,
-      `Cost: <b>${n(cp(C.LUCKY_BUNDLE_COST))} XP</b>${sale}`,
-      buyBtn(
-        afford(cp(C.LUCKY_BUNDLE_COST))
-          ? "Buy bundle"
-          : balance < cp(C.LUCKY_BUNDLE_COST) && cap < cp(C.LUCKY_BUNDLE_COST)
-            ? "Raise your XP cap first"
-            : "Not enough XP",
-        "luckyBundle",
-        undefined,
-        !afford(cp(C.LUCKY_BUNDLE_COST)),
-      ),
-    );
+    /* ---- charms (lucky charms & gloves now live in the Forge) ---- */
+    let luck = "";
     luck += card(
       "🔁 Auto Charm",
       "Before each roll, automatically re-buys the number charms you used on your last roll (if you can afford them). Has an on/off switch.",
@@ -180,27 +155,9 @@
             !afford(C.AUTO_CHARM_COST),
           ),
     );
-    C.GLOVES.forEach((g, i) => {
-      const lvl = i + 1;
-      const owned = s.gloves >= lvl;
-      const next = lvl === s.gloves + 1;
-      const label = owned
-        ? "✓ Purchased"
-        : !next
-          ? "Buy the previous gloves first"
-          : afford(g.cost)
-            ? "Buy"
-            : "Not enough XP";
-      luck += card(
-        g.name,
-        "Permanent lucky charm: <b>+1</b> guaranteed badge on <b>every</b> roll.",
-        `Cost: <b>${n(g.cost)} XP</b>`,
-        buyBtn(label, "gloves", lvl, owned || !next || !afford(g.cost)),
-      );
-    });
     html += section(
-      "🧤 Luck",
-      "Charms are single use. Gloves are permanent and stack.",
+      "🔁 Charms",
+      "Lucky charms and gloves moved to the 🔨 Forge (Progress → Forge). Pattern charms live there too.",
       luck,
     );
 

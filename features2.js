@@ -528,7 +528,13 @@
       (c) => c.sh.xpCharm >= 8,
       1,
     ],
-    ["gloves", "Lucky One", "Own Lucky Gloves V", (c) => c.sh.gloves >= 5, 1],
+    [
+      "gloves",
+      "Lucky One",
+      "Craft Gatherer's Gloves V in the Forge",
+      (c) => c.sh.gloves >= 5,
+      1,
+    ],
     ["stylist", "Stylist", "Own 3 cosmetics", () => ownedCount() >= 3, 0],
     [
       "bossjoin",
