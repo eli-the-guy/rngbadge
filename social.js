@@ -453,6 +453,7 @@
         ${tile("Rolls on leaderboard", total == null ? "—" : n(total))}
         <div class="drProfTile" style="grid-column:1/-1"><span>Rarest roll</span><b>${best ? `${esc(best.roll)} <span class="rarity ${rarityClass(best.rarity)}" style="font-size:14px">${esc(best.rarity)}</span>` : "—"}</b>${best ? `<div class="small" style="color:#aab5ca">1 in ${n(best.one_in)}${Array.isArray(best.badges) && best.badges.length ? " • 🏅 " + best.badges.length + " badges" : ""}</div>` : ""}</div>
       </div>`;
+    if (typeof G.drDuelProfile === "function") G.drDuelProfile(body, pid, isMe);
   }
   G.drOpenProfile = openProfile;
 

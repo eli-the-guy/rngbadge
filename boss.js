@@ -522,6 +522,39 @@
   }
   G.drBossSoftCap = softCap;
 
+  /* boss attacks (boss-attacks.js): XP damage that goes through the same ward / mods / DQ rules as a curse */
+  G.drBossStrike = function (loss) {
+    if (!ev || ev.status !== "active" || msLeft() <= 0 || amDq()) return null;
+    const id = ev.id;
+    const cfg = cfgOf(ev);
+    loss = Math.max(1, Math.floor(Number(loss) || 0));
+    if (B.ward) loss = Math.max(50, Math.floor(loss / 2));
+    if (typeof G.drBossCurseMod === "function")
+      loss = Math.max(1, Math.round(G.drBossCurseMod(loss)));
+    const last = applyCurse(loss);
+    if (typeof updateShopUI === "function") updateShopUI();
+    sfx("curse");
+    notifyFx("curse", {
+      loss,
+      hits: [],
+      after: last.after,
+      revived: last.revived,
+    });
+    if (last.revived)
+      say("💫 Second Wind! Your Phoenix Ember pulled you back from 0 XP.");
+    let dq = false;
+    if (last.after <= 0 && !B.dq[id]) {
+      dq = true;
+      B.dq[id] = true;
+      pendingDq = true;
+      save();
+      say("☠️ Your XP hit 0 — you are disqualified from winning this boss.");
+      notifyFx("dq", { cfg });
+      flush(true);
+    }
+    return { loss, after: last.after, dq };
+  };
+
   /* direct damage (abilities): same bookkeeping as a roll hit, no divisor/soft cap */
   G.drBossHit = function (amount) {
     if (!ev || ev.status !== "active" || msLeft() <= 0 || B.dq[ev.id]) return 0;
