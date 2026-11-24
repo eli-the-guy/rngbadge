@@ -1126,6 +1126,23 @@
     say(`⚗️ ${rate} ${MATS[kf].icon} → 1 ${MATS[kt].icon}`);
     rerender();
   }
+  /* Void Shards -> boss material: 2 + 1 per step up the boss ladder, per material */
+  let vBoss = "golem";
+  const voidRate = (k) => 2 + Math.max(0, bossOrder().indexOf(k));
+  function voidTrade(k, times) {
+    const need = voidRate(k) * times;
+    if ((F.mats.void || 0) < need) return say("Not enough Void Shards.");
+    F.mats.void -= need;
+    F.mats[bm(k)] = (F.mats[bm(k)] || 0) + times;
+    F.seen[bm(k)] = true;
+    F.bossTrades += times;
+    save();
+    sfx("click");
+    say(
+      `🌑 ${need} Void Shards → ${times} ${MATS[bm(k)].icon} ${MATS[bm(k)].name}`,
+    );
+    rerender();
+  }
   let bFrom = "golem";
   let bTo = "mimic";
   let swapFrom = "d0";
@@ -1256,11 +1273,16 @@
     const bi = bossOrder().indexOf(bFrom);
     const bj = bossOrder().indexOf(bTo);
     const brate = bj > bi ? 4 + 2 * (bj - bi) : 2;
+    if (open.indexOf(vBoss) < 0) vBoss = open[0];
+    const vr = voidRate(vBoss);
+    const voidCard = `<div class="pgCard"><h3>🌑 Void Shards → Boss Material</h3><p class="pgSub">Pick any boss material you've unlocked. Costs <b>2 Void Shards + 1 per step up the boss ladder</b> for each one. Now: <b>${vr} 🌑 → 1</b>. You have ${nf(F.mats.void)} 🌑.</p>
+      <div class="frgRow"><select id="frgVB" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(vBoss)}</select></div>
+      <div class="frgRow" style="margin-top:8px">${[1, 5, 10].map((t) => `<button class="drBuy" data-vtrade="${t}" ${(F.mats.void || 0) >= vr * t ? "" : "disabled"}>×${t}</button>`).join("")}</div></div>`;
     const bossSwap = `<div class="pgCard"><h3>👑 Boss Material Transmute</h3><p class="pgSub">Step down to a weaker boss's material at <b>2 → 1</b>. Climb to a stronger boss's material for <b>4 + 2 per step</b> up the boss ladder → 1. Shown rate now: <b>${brate} → 1</b>.</p>
       <div class="frgRow"><select id="frgBF" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bFrom)}</select><span>→</span><select id="frgBT" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bTo)}</select></div>
       <div class="frgRow" style="margin-top:8px"><button class="drBuy" data-bswap="1" ${bFrom !== bTo && (F.mats[bm(bFrom)] || 0) >= brate ? "" : "disabled"}>Transmute</button></div></div>`;
     return `<div class="pgBanner" style="font-weight:600">⚗️ <b>Transmute</b> — climb the material ladder, melt Stars or swap shards. Transmutes also raise your Forge level. Done so far: <b>${F.trades}</b></div>
-      <div class="frgGrid">${chain}${star}${swap}${bossSwap}</div>`;
+      <div class="frgGrid">${chain}${star}${swap}${voidCard}${bossSwap}</div>`;
   }
 
   const JOURNAL = {
@@ -1451,6 +1473,11 @@
       const [a, c, t] = b.dataset.trade.split(":");
       b.onclick = () => trade(a, c, +t || 1);
     });
+    const vB = root.querySelector("#frgVB");
+    if (vB) vB.onchange = () => ((vBoss = vB.value), rerender());
+    root
+      .querySelectorAll("[data-vtrade]")
+      .forEach((b) => (b.onclick = () => voidTrade(vBoss, +b.dataset.vtrade)));
     const bF = root.querySelector("#frgBF");
     const bT = root.querySelector("#frgBT");
     if (bF && bT) {
