@@ -901,13 +901,229 @@
           `<div class="pgCard" style="display:flex;gap:10px;margin-bottom:6px"><b>#${i + 1}</b><span style="flex:1">${esc(d.names[t.player_id] || "Player")}${t.player_id === me().id ? " (you)" : ""}</span><span>${t.wins}W – ${t.losses}L</span><span class="pgSub">best streak ${t.best_streak}</span></div>`,
       )
       .join("");
-    return `<div class="pgBanner">⚔️ PvP Duels<br><span class="pgSub">Open a player's profile (click a name on the leaderboard) → Challenge. A duel is a live boss fight against that player: 5,000 HP each, roll to hit, 🛡️ guard, 💚 mend and ⚡ ultimate. Finishing a duel drops Forge materials (up to 10 rewarded duels a day, win streaks add more).</span></div>
+    return `<button class="pgBtn" id="dlFind" type="button" style="width:auto;margin:0 0 10px" onclick="drDuelMenu()">🔎 Find a player to duel</button><div class="pgBanner">⚔️ PvP Duels<br><span class="pgSub">Open a player's profile (click a name on the leaderboard) → Challenge. A duel is a live boss fight against that player: 5,000 HP each, roll to hit, 🛡️ guard, 💚 mend and ⚡ ultimate. Finishing a duel drops Forge materials (up to 10 rewarded duels a day, win streaks add more).</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:10px 0">${tile("Record", `${m.wins}W – ${m.losses}L`)}${tile("Win rate", tot ? Math.round((m.wins / tot) * 100) + "%" : "—")}${tile("Streak", m.streak)}${tile("Best streak", m.best_streak)}</div>
       <h3>🕘 Recent duels</h3>${recent || '<div class="pgSub">No finished duels yet.</div>'}
       <h3>🏆 Top duelists</h3>${top || '<div class="pgSub">Nobody has won a duel yet.</div>'}`;
   }
   if (G.drProgress && G.drProgress.addTab)
     G.drProgress.addTab("duels", "⚔️ Duels", renderDuelTab);
+
+  /* ==========================================================
+     DUEL MENU: search any player by name and challenge them
+     ========================================================== */
+  const mst = document.createElement("style");
+  mst.textContent = `
+  #dlMenu{position:fixed;inset:0;z-index:9700;background:rgba(5,8,18,.82);display:flex;align-items:flex-start;justify-content:center;padding:70px 12px 12px;overflow:auto;font-family:system-ui,sans-serif;color:#fff}
+  #dlMenu .box{width:min(560px,100%);background:linear-gradient(160deg,#1c1230,#0d1a30);border:2px solid #ffb52e;border-radius:20px;padding:16px;box-shadow:0 0 40px rgba(255,181,46,.35)}
+  #dlMenu h2{margin:0 0 10px;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+  #dlMenu h2 button{border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:4px 10px;font-size:16px;cursor:pointer}
+  #dlMenu input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font:600 16px system-ui}
+  #dlMenu h4{margin:14px 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;opacity:.7}
+  #dlMenu .row{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);margin-bottom:6px}
+  #dlMenu .row b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #dlMenu .row small{opacity:.7;font-size:12px}
+  #dlMenu .row button{border:0;border-radius:10px;padding:8px 12px;font:800 13px system-ui;cursor:pointer;background:linear-gradient(90deg,#ff4fd8,#ffb52e);color:#210}
+  #dlMenu .row button:disabled{opacity:.5;cursor:default}
+  #dlMenu .msg{font-size:13px;margin-top:8px;min-height:18px}
+  #dlMenu .empty{opacity:.65;font-size:14px;padding:6px 2px}`;
+  document.head.appendChild(mst);
+
+  let menuTimer = 0;
+  let menuSeq = 0;
+  function openMenu() {
+    if (!me()) return say("Log in to duel other players.");
+    if ($id("dlMenu")) return;
+    const m = document.createElement("div");
+    m.id = "dlMenu";
+    m.innerHTML = `<div class="box"><h2><span>⚔️ Find a duel opponent</span><button type="button" id="dlMx">✕</button></h2>
+      <input id="dlQ" type="search" placeholder="Search any player by name…" autocomplete="off" maxlength="40">
+      <div class="msg" id="dlMsgM"></div>
+      <div id="dlRes"></div><div id="dlRecent"></div></div>`;
+    document.body.appendChild(m);
+    const close = () => m.remove();
+    $id("dlMx").onclick = close;
+    m.onclick = (e) => e.target === m && close();
+    const onKey = (e) => {
+      if (!$id("dlMenu")) return document.removeEventListener("keydown", onKey);
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("keydown", onKey);
+    const q = $id("dlQ");
+    q.oninput = () => {
+      clearTimeout(menuTimer);
+      menuTimer = setTimeout(() => search(q.value), 250);
+    };
+    q.focus();
+    search("");
+    loadRecent();
+  }
+  const rowHTML = (p, st) =>
+    `<div class="row"><b>${esc(p.username || "Player")}${me() && p.id === me().id ? " (you)" : ""}</b><small>${st ? `${st.wins}W – ${st.losses}L` : "no duels yet"}</small>${me() && p.id === me().id ? "" : `<button type="button" data-ch="${esc(p.id)}" data-nm="${esc(p.username || "Player")}">⚔️ Challenge</button>`}</div>`;
+  async function search(text) {
+    const c = sb();
+    const box = $id("dlRes");
+    if (!c || !box) return;
+    const seq = ++menuSeq;
+    const t = String(text || "")
+      .trim()
+      .replace(/[%_\\]/g, "");
+    if (t.length < 2) {
+      box.innerHTML =
+        '<h4>Top duelists</h4><div class="empty">Type at least 2 letters to search every account.</div>';
+      try {
+        const top =
+          (
+            await c
+              .from("duel_stats")
+              .select("*")
+              .order("wins", { ascending: false })
+              .limit(5)
+          ).data || [];
+        if (seq !== menuSeq) return;
+        if (top.length) {
+          const prof =
+            (
+              await c
+                .from("profiles")
+                .select("id,username")
+                .in(
+                  "id",
+                  top.map((x) => x.player_id),
+                )
+            ).data || [];
+          if (seq !== menuSeq) return;
+          const by = {};
+          prof.forEach((p) => (by[p.id] = p));
+          box.innerHTML =
+            "<h4>Top duelists</h4>" +
+            top
+              .filter((x) => by[x.player_id])
+              .map((x) => rowHTML(by[x.player_id], x))
+              .join("");
+          bindMenu(box);
+        }
+      } catch (e) {}
+      return;
+    }
+    box.innerHTML = '<div class="empty">Searching…</div>';
+    try {
+      const r = await c
+        .from("profiles")
+        .select("id,username")
+        .ilike("username", `%${t}%`)
+        .limit(20);
+      if (seq !== menuSeq) return;
+      if (r.error) throw r.error;
+      const list = r.data || [];
+      if (!list.length) {
+        box.innerHTML = `<div class="empty">No player found matching “${esc(t)}”.</div>`;
+        return;
+      }
+      /* exact / prefix matches first */
+      const lt = t.toLowerCase();
+      list.sort((a, b) => {
+        const A2 = String(a.username || "").toLowerCase();
+        const B2 = String(b.username || "").toLowerCase();
+        return (
+          (B2 === lt) - (A2 === lt) ||
+          B2.startsWith(lt) - A2.startsWith(lt) ||
+          A2.localeCompare(B2)
+        );
+      });
+      let stats = {};
+      try {
+        const sr = await c
+          .from("duel_stats")
+          .select("*")
+          .in(
+            "player_id",
+            list.map((p) => p.id),
+          );
+        (sr.data || []).forEach((x) => (stats[x.player_id] = x));
+      } catch (e) {}
+      if (seq !== menuSeq) return;
+      box.innerHTML =
+        `<h4>${list.length} player${list.length > 1 ? "s" : ""} found</h4>` +
+        list.map((p) => rowHTML(p, stats[p.id])).join("");
+      bindMenu(box);
+    } catch (e) {
+      box.innerHTML =
+        '<div class="empty">Search is unavailable right now.</div>';
+    }
+  }
+  async function loadRecent() {
+    const c = sb();
+    const u = me();
+    const box = $id("dlRecent");
+    if (!c || !u || !box) return;
+    try {
+      const r = await c
+        .from("duels")
+        .select("challenger_id,opponent_id,challenger_name,opponent_name")
+        .or(`challenger_id.eq.${u.id},opponent_id.eq.${u.id}`)
+        .order("id", { ascending: false })
+        .limit(30);
+      const seen = new Set();
+      const list = [];
+      (r.data || []).forEach((x) => {
+        const mine = x.challenger_id === u.id;
+        const id = mine ? x.opponent_id : x.challenger_id;
+        if (seen.has(id) || list.length >= 5) return;
+        seen.add(id);
+        list.push({ id, username: mine ? x.opponent_name : x.challenger_name });
+      });
+      if (!list.length || !$id("dlRecent")) return;
+      box.innerHTML =
+        "<h4>Recent opponents</h4>" +
+        list
+          .map((p) => rowHTML(p, null).replace("no duels yet", "played before"))
+          .join("");
+      bindMenu(box);
+    } catch (e) {}
+  }
+  function bindMenu(root) {
+    root.querySelectorAll("[data-ch]").forEach((b) => {
+      b.onclick = async () => {
+        b.disabled = true;
+        const r = await call("duel_challenge", {
+          p_opponent: b.dataset.ch,
+          p_best_of: 3,
+        });
+        const msg = $id("dlMsgM");
+        if (r.error) {
+          if (msg) {
+            msg.style.color = "#ff8aa0";
+            msg.textContent = r.error.message;
+          }
+          b.disabled = false;
+          return;
+        }
+        say(`⚔️ Challenge sent to ${b.dataset.nm}!`);
+        const mm = $id("dlMenu");
+        if (mm) mm.remove();
+        poll();
+      };
+    });
+  }
+  G.drDuelMenu = openMenu;
+
+  /* nav button */
+  let navTries = 0;
+  const navBoot = setInterval(() => {
+    navTries++;
+    const nav = $id("digitRollNav");
+    if (nav && !$id("dlNavBtn")) {
+      const b = document.createElement("button");
+      b.id = "dlNavBtn";
+      b.className = "drNavBtn";
+      b.type = "button";
+      b.textContent = "⚔️ Duel";
+      b.onclick = openMenu;
+      nav.appendChild(b);
+    }
+    if ($id("dlNavBtn") || navTries > 40) clearInterval(navBoot);
+  }, 200);
 
   window.drDuelPoll = poll;
   setTimeout(poll, 1200);
