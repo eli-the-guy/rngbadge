@@ -445,7 +445,7 @@
         try {
           if (typeof G.toast === "function")
             G.toast(
-              `🔒 ${gc.icon} A veteran-only boss has appeared. Rebirth ${gc.minRebirth}+ to face it.`,
+              `🔒 ${gc.icon} ${gc.short} has appeared, but it only fights players with ${gc.minRebirth}+ rebirths (you have ${myRebirths()}).`,
             );
         } catch (e) {}
       }

@@ -1253,7 +1253,7 @@
         if (!cfg) return "";
         const open = bossOpen(k);
         if (!open && !(F.totems[k] > 0)) {
-          return `<div class="pgCard frgJ unk"><h3>🔒 ??? Totem</h3><p>A totem for a boss that only <b>veterans who rebirthed ${cfg.minRebirth}+ time${cfg.minRebirth > 1 ? "s" : ""}</b> can face.</p></div>`;
+          return `<div class="pgCard frgJ unk"><h3>🔒 ??? Totem</h3><p>A totem for a boss that only <b>veterans who rebirthed ${cfg.minRebirth}+ time${cfg.minRebirth > 1 ? "s" : ""}</b> can face. You have ${rebirths()}.</p></div>`;
         }
         const c = totemCost(k);
         const owned = F.totems[k] || 0;
