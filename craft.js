@@ -1126,6 +1126,30 @@
     say(`⚗️ ${rate} ${MATS[kf].icon} → 1 ${MATS[kt].icon}`);
     rerender();
   }
+  /* XP -> Dust: 20 XP per Dust */
+  const XP_PER_DUST = 20;
+  const xpNow = () => (typeof getXPBalance === "function" ? getXPBalance() : 0);
+  function xpToDust(amount) {
+    const dust = amount === "max" ? Math.floor(xpNow() / XP_PER_DUST) : amount;
+    const cost = dust * XP_PER_DUST;
+    if (dust < 1 || xpNow() < cost) return say("Not enough XP.");
+    xpBalance = xpNow() - cost;
+    xpSpent += cost;
+    try {
+      localStorage.setItem("digitRollXPBalance", String(xpBalance));
+      localStorage.setItem("digitRollXPSpent", String(xpSpent));
+    } catch (e) {}
+    F.mats.dust += dust;
+    F.seen.dust = true;
+    F.trades += Math.ceil(dust / 50);
+    save();
+    sfx("click");
+    say(`✨ ${nf(cost)} XP → ${nf(dust)} Dust`);
+    try {
+      if (typeof updateShopUI === "function") updateShopUI();
+    } catch (e) {}
+    rerender();
+  }
   /* Void Shards -> boss material: 2 + 1 per step up the boss ladder, per material */
   let vBoss = "golem";
   const voidRate = (k) => 2 + Math.max(0, bossOrder().indexOf(k));
@@ -1275,6 +1299,8 @@
     const brate = bj > bi ? 4 + 2 * (bj - bi) : 2;
     if (open.indexOf(vBoss) < 0) vBoss = open[0];
     const vr = voidRate(vBoss);
+    const xpCard = `<div class="pgCard"><h3>🪙 XP → Dust</h3><p class="pgSub">Spend XP for Dust: <b>${XP_PER_DUST} XP → 1 ✨</b>. You have ${nf(xpNow())} XP.</p>
+      <div class="frgRow">${[100, 500].map((t) => `<button class="drBuy" data-xpd="${t}" ${xpNow() >= t * XP_PER_DUST ? "" : "disabled"}>${nf(t)} ✨</button>`).join("")}<button class="drBuy" data-xpd="max" ${xpNow() >= XP_PER_DUST ? "" : "disabled"}>Max</button></div></div>`;
     const voidCard = `<div class="pgCard"><h3>🌑 Void Shards → Boss Material</h3><p class="pgSub">Pick any boss material you've unlocked. Costs <b>2 Void Shards + 1 per step up the boss ladder</b> for each one. Now: <b>${vr} 🌑 → 1</b>. You have ${nf(F.mats.void)} 🌑.</p>
       <div class="frgRow"><select id="frgVB" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(vBoss)}</select></div>
       <div class="frgRow" style="margin-top:8px">${[1, 5, 10].map((t) => `<button class="drBuy" data-vtrade="${t}" ${(F.mats.void || 0) >= vr * t ? "" : "disabled"}>×${t}</button>`).join("")}</div></div>`;
@@ -1282,7 +1308,7 @@
       <div class="frgRow"><select id="frgBF" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bFrom)}</select><span>→</span><select id="frgBT" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bTo)}</select></div>
       <div class="frgRow" style="margin-top:8px"><button class="drBuy" data-bswap="1" ${bFrom !== bTo && (F.mats[bm(bFrom)] || 0) >= brate ? "" : "disabled"}>Transmute</button></div></div>`;
     return `<div class="pgBanner" style="font-weight:600">⚗️ <b>Transmute</b> — climb the material ladder, melt Stars or swap shards. Transmutes also raise your Forge level. Done so far: <b>${F.trades}</b></div>
-      <div class="frgGrid">${chain}${star}${swap}${voidCard}${bossSwap}</div>`;
+      <div class="frgGrid">${chain}${star}${xpCard}${swap}${voidCard}${bossSwap}</div>`;
   }
 
   const JOURNAL = {
@@ -1473,6 +1499,13 @@
       const [a, c, t] = b.dataset.trade.split(":");
       b.onclick = () => trade(a, c, +t || 1);
     });
+    root
+      .querySelectorAll("[data-xpd]")
+      .forEach(
+        (b) =>
+          (b.onclick = () =>
+            xpToDust(b.dataset.xpd === "max" ? "max" : +b.dataset.xpd)),
+      );
     const vB = root.querySelector("#frgVB");
     if (vB) vB.onchange = () => ((vBoss = vB.value), rerender());
     root
