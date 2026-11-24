@@ -831,6 +831,14 @@
       prestige.earned += v;
       save(PRESTIGE_KEY, prestige);
     },
+    points: () => points(),
+    spendPoints: (n) => {
+      n = Math.floor(Number(n) || 0);
+      if (n < 1 || points() < n) return false;
+      prestige.spent += n;
+      save(PRESTIGE_KEY, prestige);
+      return true;
+    },
     open: openPage,
     tierOf,
     TIERS,

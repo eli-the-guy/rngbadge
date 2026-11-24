@@ -487,7 +487,12 @@
 
   function start(type) {
     stopNow();
-    song = SONGS[type];
+    let like = type;
+    try {
+      const bb = window.drBoss && window.drBoss.BOSSES[type];
+      if (bb && bb.like) like = bb.like;
+    } catch (e) {}
+    song = SONGS[type] || SONGS[like];
     if (!song) return;
     if (!ensure()) return;
     try {

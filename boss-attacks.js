@@ -72,7 +72,57 @@
       lock: 500,
       verb: "tears reality open",
     },
+    drake: {
+      gap: [19, 29],
+      mult: 1.2,
+      shots: 1,
+      track: 980,
+      lock: 680,
+      verb: "breathes fire",
+    },
+    kraken: {
+      gap: [16, 26],
+      mult: 1.4,
+      shots: 2,
+      track: 920,
+      lock: 620,
+      verb: "lashes its tentacles",
+    },
+    hydra: {
+      gap: [13, 22],
+      mult: 1.8,
+      shots: 2,
+      track: 880,
+      lock: 560,
+      verb: "strikes with nine heads",
+    },
+    voidking: {
+      gap: [11, 18],
+      mult: 2.4,
+      shots: 3,
+      track: 820,
+      lock: 480,
+      verb: "decrees your end",
+    },
+    eternal: {
+      gap: [10, 17],
+      mult: 2.8,
+      shots: 3,
+      track: 800,
+      lock: 460,
+      verb: "chains you down",
+    },
+    omega: {
+      gap: [9, 15],
+      mult: 3.4,
+      shots: 3,
+      track: 780,
+      lock: 440,
+      verb: "runs the final protocol",
+    },
   };
+  /* attacks come ~40% more often than before */
+  const FREQ = 0.6;
 
   /* ---------- damage ---------- */
   function strikeDamage(mult) {
@@ -166,6 +216,11 @@
       name: "THE BOSS",
     };
   const power = () => POWER[cfg().key] || POWER.golem;
+  /* strength step of the current boss (new bosses define their own tier) */
+  const bossTier = () => {
+    const c = cfg();
+    return typeof c.tier === "number" ? c.tier : 0;
+  };
   let busy = false;
 
   function say(text, color) {
@@ -717,17 +772,7 @@
     wall: pcWall,
     chain: pcChain,
   };
-  const strengthIdx = () => {
-    const order = (B() && B().ORDER) || [
-      "golem",
-      "mimic",
-      "wraith",
-      "titan",
-      "reality",
-    ];
-    const i = order.indexOf(cfg().key);
-    return i < 0 ? 0 : i;
-  };
+  const strengthIdx = () => bossTier();
   const poolSize = () => Math.min(6, strengthIdx() + 2); // golem 2, mimic 3, wraith 4, titan 5, reality 6
   let lastKind = "";
   function pickKind(mobile, forced) {
@@ -758,8 +803,8 @@
     clearTimeout(timer);
     const p = power();
     const mob = COARSE();
-    const gap = p.gap[0] + Math.random() * (p.gap[1] - p.gap[0]);
-    const ms = (first ? 7 + Math.random() * 5 : gap * (mob ? 1.3 : 1)) * 1000;
+    const gap = (p.gap[0] + Math.random() * (p.gap[1] - p.gap[0])) * FREQ;
+    const ms = (first ? 4 + Math.random() * 3 : gap * (mob ? 1.15 : 1)) * 1000;
     timer = setTimeout(run, ms);
   }
   async function run() {

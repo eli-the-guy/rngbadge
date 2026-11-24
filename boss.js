@@ -97,7 +97,118 @@
       blurb: "5 cursed rolls of 3 digits",
     },
   };
-  const ORDER = ["golem", "mimic", "wraith", "titan", "reality"];
+  /* six more bosses. `like` = which original boss supplies the cutscene, figure, stunts and music
+     (they are re-tinted with the boss's own colour/emoji); `tier` = strength step for attack pools;
+     `minRebirth` = only players who have true-rebirthed that many times can see and fight it. */
+  Object.assign(BOSSES, {
+    drake: {
+      key: "drake",
+      name: "THE EMBER DRAKE",
+      short: "Ember Drake",
+      icon: "🐉",
+      hp: 1e10,
+      color: "#fb7a2e",
+      size: 3,
+      count: 3,
+      like: "titan",
+      tier: 1,
+      blurb: "3 cursed rolls of 3 digits • totem boss",
+    },
+    kraken: {
+      key: "kraken",
+      name: "THE DEEP KRAKEN",
+      short: "Deep Kraken",
+      icon: "🐙",
+      hp: 1e13,
+      color: "#2dd4bf",
+      size: 3,
+      count: 4,
+      like: "wraith",
+      tier: 2,
+      blurb: "4 cursed rolls of 3 digits • totem boss",
+    },
+    hydra: {
+      key: "hydra",
+      name: "THE NINE-HEADED HYDRA",
+      short: "Hydra",
+      icon: "🐍",
+      hp: 1e16,
+      color: "#84cc16",
+      size: 3,
+      count: 5,
+      like: "reality",
+      tier: 3,
+      blurb: "5 cursed rolls of 3 digits • totem boss",
+    },
+    voidking: {
+      key: "voidking",
+      name: "THE VOID EMPEROR",
+      short: "Void Emperor",
+      icon: "👑",
+      hp: 1e20,
+      color: "#c026d3",
+      size: 3,
+      count: 5,
+      like: "reality",
+      tier: 4,
+      minRebirth: 1,
+      blurb: "5 cursed rolls • REBIRTH 1+ only",
+    },
+    eternal: {
+      key: "eternal",
+      name: "THE ETERNAL WARDEN",
+      short: "Eternal Warden",
+      icon: "⛓️",
+      hp: 1e24,
+      color: "#e5e7eb",
+      size: 3,
+      count: 5,
+      like: "titan",
+      tier: 4,
+      minRebirth: 2,
+      blurb: "5 cursed rolls • REBIRTH 2+ only",
+    },
+    omega: {
+      key: "omega",
+      name: "THE OMEGA ENGINE",
+      short: "Omega Engine",
+      icon: "⚙️",
+      hp: 1e28,
+      color: "#fde047",
+      size: 3,
+      count: 5,
+      like: "golem",
+      tier: 4,
+      minRebirth: 3,
+      blurb: "5 cursed rolls • REBIRTH 3+ only",
+    },
+  });
+  [
+    ["golem", 0],
+    ["mimic", 1],
+    ["wraith", 2],
+    ["titan", 3],
+    ["reality", 4],
+  ].forEach(([k, t]) => (BOSSES[k].tier = t));
+  const ORDER = [
+    "golem",
+    "mimic",
+    "drake",
+    "wraith",
+    "kraken",
+    "titan",
+    "hydra",
+    "reality",
+    "voidking",
+    "eternal",
+    "omega",
+  ];
+  const myRebirths = () =>
+    typeof G.__drShop !== "undefined" && G.__drShop.S
+      ? Number(G.__drShop.S.rebirths) || 0
+      : 0;
+  const unlocked = (cfg) =>
+    !cfg || !cfg.minRebirth || myRebirths() >= cfg.minRebirth;
   const DEFAULT_D = 1000000000000;
 
   const WEAPONS = [
@@ -223,6 +334,9 @@
   G.drBoss = {
     BOSSES,
     ORDER,
+    unlocked,
+    refresh: () => fetchActive(),
+    rebirths: myRebirths,
     get ev() {
       return ev;
     },
@@ -246,6 +360,7 @@
     mimic: B.wins.mimic || 0,
     wraith: B.wins.wraith || 0,
     total: (B.wins.golem || 0) + (B.wins.titan || 0) + (B.wins.reality || 0),
+    all: Object.keys(B.wins).reduce((a, k) => a + (B.wins[k] || 0), 0),
   });
 
   /* ==========================================================
@@ -292,6 +407,20 @@
     }
     if (row.status !== "active") return;
     if (new Date(row.ends_at).getTime() < Date.now()) return;
+    const gc = cfgOf(row);
+    if (gc && !unlocked(gc)) {
+      if (B.sealedSeen !== row.id) {
+        B.sealedSeen = row.id;
+        save();
+        try {
+          if (typeof G.toast === "function")
+            G.toast(
+              `🔒 ${gc.icon} A veteran-only boss has appeared. Rebirth ${gc.minRebirth}+ to face it.`,
+            );
+        } catch (e) {}
+      }
+      return;
+    }
     ev = row;
     pendingDmg = 0;
     lastOutcome = null;
@@ -774,28 +903,33 @@
       }
       const by = {};
       ORDER.forEach((k) => (by[k] = []));
+      const shown = ORDER.filter(
+        (k) => unlocked(BOSSES[k]) || (B.wins[k] || 0) > 0,
+      );
       (data || []).forEach((r) => by[r.boss_type] && by[r.boss_type].push(r));
       const live = ev ? ev.boss_type : "";
-      const cols = ORDER.map((k) => {
-        const cfg = BOSSES[k];
-        const rows = by[k]
-          .slice(0, 25)
-          .map((r, i) => {
-            const nm =
-              typeof G.drNameHTML === "function"
-                ? G.drNameHTML({
-                    player_name: r.username || "Player",
-                    player_id: r.user_id,
-                  })
-                : esc(r.username);
-            return `<div class="drBvRow"><span class="drBvRank">#${i + 1}</span><span class="drBvName">${nm}</span><b>×${nf(r.wins)}</b></div>`;
-          })
-          .join("");
-        return `<div class="drBvCol ${live === k ? "live" : ""}" style="--bc:${cfg.color}">
+      const cols = shown
+        .map((k) => {
+          const cfg = BOSSES[k];
+          const rows = by[k]
+            .slice(0, 25)
+            .map((r, i) => {
+              const nm =
+                typeof G.drNameHTML === "function"
+                  ? G.drNameHTML({
+                      player_name: r.username || "Player",
+                      player_id: r.user_id,
+                    })
+                  : esc(r.username);
+              return `<div class="drBvRow"><span class="drBvRank">#${i + 1}</span><span class="drBvName">${nm}</span><b>×${nf(r.wins)}</b></div>`;
+            })
+            .join("");
+          return `<div class="drBvCol ${live === k ? "live" : ""}" style="--bc:${cfg.color}">
           <div class="drBvHead"><span>${cfg.icon}</span><b>${esc(cfg.short)}</b>${live === k ? "<em>LIVE</em>" : ""}</div>
           <div class="drBvSub">${by[k].length} survivor${by[k].length === 1 ? "" : "s"} • ${nf(cfg.hp)} HP</div>
           ${rows || '<div class="empty" style="padding:10px 4px">Nobody has survived this boss yet.</div>'}</div>`;
-      }).join("");
+        })
+        .join("");
       box.innerHTML = `<div class="drBvGrid">${cols}</div><div class="small" style="padding:8px 4px;color:#8391ab">Numbers show how many times each player survived that boss and landed the win.</div>`;
     } catch (e) {
       box.innerHTML = '<span class="empty">Boss victors unavailable.</span>';
@@ -919,7 +1053,7 @@
             if (data && data[0])
               localStorage.setItem(EPOCH_KEY, String(data[0].epoch));
           } catch (e) {}
-          B.wins = { golem: 0, titan: 0, reality: 0, mimic: 0, wraith: 0 };
+          B.wins = {};
           B.joined = [];
           B.dmg = {};
           B.dq = {};
@@ -1056,7 +1190,7 @@
       } catch (e) {}
       if (mine === server) return;
       // the admin reset everyone's boss progress
-      B.wins = { golem: 0, titan: 0, reality: 0, mimic: 0, wraith: 0 };
+      B.wins = {};
       B.joined = [];
       B.dmg = {};
       B.dq = {};

@@ -12,17 +12,38 @@
 
   const G = window;
   const $id = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
   const nf = (v) => Math.round(Number(v) || 0).toLocaleString();
   const say = (m) => typeof G.toast === "function" && G.toast(m);
   const sfx = (n, a) => typeof G.drSfx === "function" && G.drSfx(n, a);
   const P = G.drProgress;
-  const sb = () => (typeof supabaseClient !== "undefined" ? supabaseClient : null);
+  const sb = () =>
+    typeof supabaseClient !== "undefined" ? supabaseClient : null;
   const isAdmin = () => typeof G.drIsAdmin === "function" && G.drIsAdmin();
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  const RM = () => !!(G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const H = () => G.drBonusHelpers || { gainXP: () => 0, giveCharm: () => false, giveLucky: () => false, givePoints: () => {} };
+  const RM = () =>
+    !!(
+      G.matchMedia && G.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  const H = () =>
+    G.drBonusHelpers || {
+      gainXP: () => 0,
+      giveCharm: () => false,
+      giveLucky: () => false,
+      givePoints: () => {},
+    };
   const cap = () => (typeof G.drGetCap === "function" ? G.drGetCap() : 100000);
 
   /* ==========================================================
@@ -30,21 +51,122 @@
      ========================================================== */
 
   const KINDS = {
-    goldrush: { icon: "💰", name: "Gold Rush", color: "#facc15", desc: "All XP ×3.", xp: 3, amb: { e: ["🪙", "💰", "✨"], dir: "down", every: 0.8 } },
-    clover: { icon: "🍀", name: "Clover Storm", color: "#4ade80", desc: "Every roll gets +2 guaranteed badges.", luck: 2, amb: { e: ["🍀", "☘️"], dir: "up", every: 0.8 } },
-    sale: { icon: "🏷️", name: "Mega Sale", color: "#fb7185", desc: "Number charms and lucky charms are 60% off.", charm: 0.4, amb: { e: ["🏷️", "💸"], dir: "down", every: 0.9 } },
-    rain: { icon: "🌧️", name: "Charm Rain", color: "#7dd3fc", desc: "A free number charm lands in your shop every minute.", amb: { e: ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"], dir: "down", every: 0.35 }, minute: true },
-    prism: { icon: "🌈", name: "Prism Hour", color: "#c084fc", desc: "Each roll has a 12% chance to drop a free number charm.", roll: true, amb: { e: ["🌈", "💎", "✨"], dir: "up", every: 0.9 } },
-    lunar: { icon: "🌙", name: "Lunar Glow", color: "#818cf8", desc: "All XP ×2 under a night sky.", xp: 2, amb: { e: ["⭐", "✨", "🌟"], dir: "twinkle", every: 0.5 } },
-    magnet: { icon: "🧲", name: "XP Magnet", color: "#38bdf8", desc: "Every roll pulls in a bonus 1.5% of your XP cap.", roll: true, amb: { e: ["⚡", "🔹"], dir: "up", every: 0.8 } },
-    meteor: { icon: "☄️", name: "Meteor Shower", color: "#fb923c", desc: "Meteors streak across the sky — click them for charms and XP!", pop: [9, 15], amb: { e: ["✨", "🔥"], dir: "down", every: 1.4 } },
-    ghost: { icon: "👻", name: "Haunted Hour", color: "#a5b4fc", desc: "Ghosts drift by — click to banish them for XP!", pop: [7, 13], amb: { e: ["👻", "🕸️", "🎃"], dir: "up", every: 1.4 } },
-    balloon: { icon: "🎈", name: "Balloon Festival", color: "#f472b6", desc: "Balloons float up — pop them for lucky charms and XP!", pop: [6, 11], amb: { e: ["🎈", "🎉", "🎊"], dir: "up", every: 1.1 } },
-    jackpot: { icon: "🎰", name: "Jackpot Fever", color: "#fbbf24", desc: "Each roll has a 3% chance to hit a ×25 XP jackpot.", roll: true, amb: { e: ["🎰", "7️⃣", "🪙"], dir: "down", every: 1.2 } },
-    wisdom: { icon: "🔮", name: "Wisdom Surge", color: "#e879f9", desc: "1% chance per roll for a prestige point, and daily challenge XP is doubled.", daily: 2, roll: true, amb: { e: ["🔮", "✴️", "💜"], dir: "up", every: 1 } },
+    goldrush: {
+      icon: "💰",
+      name: "Gold Rush",
+      color: "#facc15",
+      desc: "All XP ×3.",
+      xp: 3,
+      amb: { e: ["🪙", "💰", "✨"], dir: "down", every: 0.8 },
+    },
+    clover: {
+      icon: "🍀",
+      name: "Clover Storm",
+      color: "#4ade80",
+      desc: "Every roll gets +2 guaranteed badges.",
+      luck: 2,
+      amb: { e: ["🍀", "☘️"], dir: "up", every: 0.8 },
+    },
+    sale: {
+      icon: "🏷️",
+      name: "Mega Sale",
+      color: "#fb7185",
+      desc: "Number charms and lucky charms are 60% off.",
+      charm: 0.4,
+      amb: { e: ["🏷️", "💸"], dir: "down", every: 0.9 },
+    },
+    rain: {
+      icon: "🌧️",
+      name: "Charm Rain",
+      color: "#7dd3fc",
+      desc: "A free number charm lands in your shop every minute.",
+      amb: {
+        e: ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"],
+        dir: "down",
+        every: 0.35,
+      },
+      minute: true,
+    },
+    prism: {
+      icon: "🌈",
+      name: "Prism Hour",
+      color: "#c084fc",
+      desc: "Each roll has a 12% chance to drop a free number charm.",
+      roll: true,
+      amb: { e: ["🌈", "💎", "✨"], dir: "up", every: 0.9 },
+    },
+    lunar: {
+      icon: "🌙",
+      name: "Lunar Glow",
+      color: "#818cf8",
+      desc: "All XP ×2 under a night sky.",
+      xp: 2,
+      amb: { e: ["⭐", "✨", "🌟"], dir: "twinkle", every: 0.5 },
+    },
+    magnet: {
+      icon: "🧲",
+      name: "XP Magnet",
+      color: "#38bdf8",
+      desc: "Every roll pulls in a bonus 1.5% of your XP cap.",
+      roll: true,
+      amb: { e: ["⚡", "🔹"], dir: "up", every: 0.8 },
+    },
+    meteor: {
+      icon: "☄️",
+      name: "Meteor Shower",
+      color: "#fb923c",
+      desc: "Meteors streak across the sky — click them for charms and XP!",
+      pop: [9, 15],
+      amb: { e: ["✨", "🔥"], dir: "down", every: 1.4 },
+    },
+    ghost: {
+      icon: "👻",
+      name: "Haunted Hour",
+      color: "#a5b4fc",
+      desc: "Ghosts drift by — click to banish them for XP!",
+      pop: [7, 13],
+      amb: { e: ["👻", "🕸️", "🎃"], dir: "up", every: 1.4 },
+    },
+    balloon: {
+      icon: "🎈",
+      name: "Balloon Festival",
+      color: "#f472b6",
+      desc: "Balloons float up — pop them for lucky charms and XP!",
+      pop: [6, 11],
+      amb: { e: ["🎈", "🎉", "🎊"], dir: "up", every: 1.1 },
+    },
+    jackpot: {
+      icon: "🎰",
+      name: "Jackpot Fever",
+      color: "#fbbf24",
+      desc: "Each roll has a 3% chance to hit a ×25 XP jackpot.",
+      roll: true,
+      amb: { e: ["🎰", "7️⃣", "🪙"], dir: "down", every: 1.2 },
+    },
+    wisdom: {
+      icon: "🔮",
+      name: "Wisdom Surge",
+      color: "#e879f9",
+      desc: "1% chance per roll for a prestige point, and daily challenge XP is doubled.",
+      daily: 2,
+      roll: true,
+      amb: { e: ["🔮", "✴️", "💜"], dir: "up", every: 1 },
+    },
   };
   const KIND_IDS = Object.keys(KINDS);
-  const BOSS_KINDS = { golem: "🗿 Golem", mimic: "🧰 Vault Mimic", wraith: "🕰️ Chrono Wraith", titan: "🤖 Titan", reality: "👁️ Reality Breaker" };
+  const BOSS_KINDS = {
+    golem: "🗿 Golem",
+    mimic: "🧰 Vault Mimic",
+    wraith: "🕰️ Chrono Wraith",
+    titan: "🤖 Titan",
+    reality: "👁️ Reality Breaker",
+    drake: "🐉 Ember Drake",
+    kraken: "🐙 Deep Kraken",
+    hydra: "🐍 Hydra",
+    voidking: "👑 Void Emperor",
+    eternal: "⛓️ Eternal Warden",
+    omega: "⚙️ Omega Engine",
+  };
 
   /* ==========================================================
      STATE
@@ -71,13 +193,18 @@
     } catch (e) {}
   };
 
-  const live = () => rows.filter((r) => new Date(r.ends_at).getTime() > Date.now());
-  const clashRow = () => live().find((r) => r.kind === "clash" || r.kind === "bossclash");
+  const live = () =>
+    rows.filter((r) => new Date(r.ends_at).getTime() > Date.now());
+  const clashRow = () =>
+    live().find((r) => r.kind === "clash" || r.kind === "bossclash");
   const isBossClash = () => live().some((r) => r.kind === "bossclash");
   function activeKinds() {
     const out = [];
     live().forEach((r) => {
-      if (r.kind === "clash" || r.kind === "bossclash") (r.clash_of || []).forEach((k) => KINDS[k] && out.indexOf(k) < 0 && out.push(k));
+      if (r.kind === "clash" || r.kind === "bossclash")
+        (r.clash_of || []).forEach(
+          (k) => KINDS[k] && out.indexOf(k) < 0 && out.push(k),
+        );
       else if (KINDS[r.kind] && out.indexOf(r.kind) < 0) out.push(r.kind);
     });
     return out;
@@ -91,7 +218,8 @@
   function wrap(name, combine) {
     const base = G[name];
     G[name] = function () {
-      const b = typeof base === "function" ? base.apply(this, arguments) : undefined;
+      const b =
+        typeof base === "function" ? base.apply(this, arguments) : undefined;
       return combine(b);
     };
   }
@@ -151,7 +279,10 @@
       H().givePoints(1);
       say("🔮 Wisdom Surge! +1 ★ prestige point.");
     }
-    if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+    if (typeof G.updateShopUI === "function")
+      try {
+        G.updateShopUI();
+      } catch (e) {}
   }
   if (P && P.onRoll) P.onRoll(onRoll);
 
@@ -242,24 +373,37 @@
           return `<div class="rvChip" data-id="${r.id}" style="--c:${k.color}"><span class="ic">${k.icon}</span><span><b>${esc(k.name)}</b> <span class="rvT"></span><small>${esc(k.desc)}</small></span></div>`;
         })
         .join("");
-      el.querySelectorAll(".rvChip").forEach((c) => (c.onclick = () => P && P.open("live")));
+      el.querySelectorAll(".rvChip").forEach(
+        (c) => (c.onclick = () => P && P.open("live")),
+      );
     }
     lv.forEach((r) => {
       const c = el.querySelector(`[data-id="${r.id}"] .rvT`);
-      if (c) c.textContent = "• " + fmtLeft(new Date(r.ends_at).getTime() - Date.now());
+      if (c)
+        c.textContent =
+          "• " + fmtLeft(new Date(r.ends_at).getTime() - Date.now());
     });
   }
 
   const TINTS = {
-    lunar: "radial-gradient(ellipse at 80% 0%,rgba(129,140,248,.28),rgba(10,10,40,.38) 70%)",
-    goldrush: "radial-gradient(ellipse at 50% 100%,rgba(250,204,21,.16),transparent 65%)",
-    clover: "radial-gradient(ellipse at 50% 100%,rgba(74,222,128,.14),transparent 65%)",
-    ghost: "radial-gradient(ellipse at 50% 0%,rgba(100,100,170,.28),rgba(5,5,20,.3) 80%)",
-    meteor: "radial-gradient(ellipse at 100% 0%,rgba(251,146,60,.2),transparent 60%)",
-    magnet: "radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(56,189,248,.14))",
-    wisdom: "radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(232,121,249,.16))",
-    jackpot: "radial-gradient(ellipse at 50% 0%,rgba(251,191,36,.18),transparent 60%)",
-    balloon: "radial-gradient(ellipse at 50% 100%,rgba(244,114,182,.15),transparent 65%)",
+    lunar:
+      "radial-gradient(ellipse at 80% 0%,rgba(129,140,248,.28),rgba(10,10,40,.38) 70%)",
+    goldrush:
+      "radial-gradient(ellipse at 50% 100%,rgba(250,204,21,.16),transparent 65%)",
+    clover:
+      "radial-gradient(ellipse at 50% 100%,rgba(74,222,128,.14),transparent 65%)",
+    ghost:
+      "radial-gradient(ellipse at 50% 0%,rgba(100,100,170,.28),rgba(5,5,20,.3) 80%)",
+    meteor:
+      "radial-gradient(ellipse at 100% 0%,rgba(251,146,60,.2),transparent 60%)",
+    magnet:
+      "radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(56,189,248,.14))",
+    wisdom:
+      "radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(232,121,249,.16))",
+    jackpot:
+      "radial-gradient(ellipse at 50% 0%,rgba(251,191,36,.18),transparent 60%)",
+    balloon:
+      "radial-gradient(ellipse at 50% 100%,rgba(244,114,182,.15),transparent 65%)",
     sale: "radial-gradient(ellipse at 50% 100%,rgba(251,113,133,.14),transparent 65%)",
     rain: "linear-gradient(180deg,rgba(56,189,248,.14),transparent 55%)",
   };
@@ -279,7 +423,11 @@
       const a = KINDS[ks[0]].color;
       const b = isBossClash() ? "#ef4444" : KINDS[ks[1] || ks[0]].color;
       bg = `linear-gradient(115deg,color-mix(in srgb,${a} 22%,transparent),transparent 40%,transparent 60%,color-mix(in srgb,${b} 22%,transparent))`;
-    } else bg = ks.map((k) => TINTS[k]).filter(Boolean).join(",");
+    } else
+      bg = ks
+        .map((k) => TINTS[k])
+        .filter(Boolean)
+        .join(",");
     el.style.background = bg || "none";
     el.classList.toggle("prism", ks.indexOf("prism") >= 0 && !cl);
     el.classList.add("on");
@@ -304,11 +452,36 @@
       let keys;
       let dur = rnd(5000, 9000);
       const x = rnd(0, w - 30);
-      if (a.dir === "down") keys = [{ transform: `translate(${x}px,-40px) rotate(0)`, opacity: 0.9 }, { transform: `translate(${x + rnd(-80, 80)}px,${h + 40}px) rotate(${rnd(-200, 200)}deg)`, opacity: 0.9 }];
-      else if (a.dir === "up") keys = [{ transform: `translate(${x}px,${h + 40}px)`, opacity: 0.85 }, { transform: `translate(${x + rnd(-80, 80)}px,-60px)`, opacity: 0 }];
+      if (a.dir === "down")
+        keys = [
+          { transform: `translate(${x}px,-40px) rotate(0)`, opacity: 0.9 },
+          {
+            transform: `translate(${x + rnd(-80, 80)}px,${h + 40}px) rotate(${rnd(-200, 200)}deg)`,
+            opacity: 0.9,
+          },
+        ];
+      else if (a.dir === "up")
+        keys = [
+          { transform: `translate(${x}px,${h + 40}px)`, opacity: 0.85 },
+          { transform: `translate(${x + rnd(-80, 80)}px,-60px)`, opacity: 0 },
+        ];
       else {
         dur = rnd(2500, 4500);
-        keys = [{ transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(.4)`, opacity: 0 }, { opacity: 1, offset: 0.5, transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(1.2)` }, { transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(.4)`, opacity: 0 }];
+        keys = [
+          {
+            transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(.4)`,
+            opacity: 0,
+          },
+          {
+            opacity: 1,
+            offset: 0.5,
+            transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(1.2)`,
+          },
+          {
+            transform: `translate(${x}px,${rnd(0, h * 0.6)}px) scale(.4)`,
+            opacity: 0,
+          },
+        ];
       }
       document.body.appendChild(d);
       d.animate(keys, { duration: dur, easing: "linear" }).onfinish = () => {
@@ -349,18 +522,36 @@
       const fromLeft = Math.random() < 0.5;
       const y0 = rnd(0, h * 0.3);
       dur = rnd(3800, 5200);
-      keys = [{ transform: `translate(${fromLeft ? -80 : w + 80}px,${y0}px) rotate(${fromLeft ? 0 : 90}deg)` }, { transform: `translate(${fromLeft ? w + 80 : -80}px,${y0 + h * 0.6}px) rotate(${fromLeft ? 0 : 90}deg)` }];
+      keys = [
+        {
+          transform: `translate(${fromLeft ? -80 : w + 80}px,${y0}px) rotate(${fromLeft ? 0 : 90}deg)`,
+        },
+        {
+          transform: `translate(${fromLeft ? w + 80 : -80}px,${y0 + h * 0.6}px) rotate(${fromLeft ? 0 : 90}deg)`,
+        },
+      ];
     } else if (kind === "ghost") {
       const x0 = rnd(w * 0.1, w * 0.9);
       dur = rnd(7000, 10000);
       keys = [];
-      for (let i = 0; i <= 6; i++) keys.push({ transform: `translate(${x0 + Math.sin(i * 1.7) * 140}px,${h * (0.9 - i * 0.15)}px) scale(${1 + (i % 2) * 0.15})`, opacity: i === 0 || i === 6 ? 0 : 0.9 });
+      for (let i = 0; i <= 6; i++)
+        keys.push({
+          transform: `translate(${x0 + Math.sin(i * 1.7) * 140}px,${h * (0.9 - i * 0.15)}px) scale(${1 + (i % 2) * 0.15})`,
+          opacity: i === 0 || i === 6 ? 0 : 0.9,
+        });
     } else {
       const x0 = rnd(w * 0.05, w * 0.9);
       dur = rnd(6000, 9000);
       el.textContent = pick(["🎈", "🎈", "🎈"]);
       el.style.filter = `hue-rotate(${Math.floor(rnd(0, 360))}deg) drop-shadow(0 0 12px ${k.color})`;
-      keys = [{ transform: `translate(${x0}px,${h + 60}px)` }, { transform: `translate(${x0 + rnd(-120, 120)}px,${h * 0.5}px)`, offset: 0.5 }, { transform: `translate(${x0 + rnd(-160, 160)}px,-80px)` }];
+      keys = [
+        { transform: `translate(${x0}px,${h + 60}px)` },
+        {
+          transform: `translate(${x0 + rnd(-120, 120)}px,${h * 0.5}px)`,
+          offset: 0.5,
+        },
+        { transform: `translate(${x0 + rnd(-160, 160)}px,-80px)` },
+      ];
     }
     document.body.appendChild(el);
     const anim = el.animate(keys, { duration: dur, easing: "linear" });
@@ -416,9 +607,21 @@
       p.style.top = y + "px";
       document.body.appendChild(p);
       const a = rnd(0, 6.28);
-      p.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: `translate(${Math.cos(a) * 80}px,${Math.sin(a) * 80}px)`, opacity: 0 }], { duration: 700 }).onfinish = () => p.remove();
+      p.animate(
+        [
+          { transform: "translate(0,0)", opacity: 1 },
+          {
+            transform: `translate(${Math.cos(a) * 80}px,${Math.sin(a) * 80}px)`,
+            opacity: 0,
+          },
+        ],
+        { duration: 700 },
+      ).onfinish = () => p.remove();
     }
-    if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+    if (typeof G.updateShopUI === "function")
+      try {
+        G.updateShopUI();
+      } catch (e) {}
   }
 
   function popTimers() {
@@ -458,9 +661,14 @@
           const d = 1 + Math.floor(Math.random() * 9);
           if (H().giveCharm(d)) got.push(d);
         }
-        if (got.length && !first) say(`🌧️ Charm Rain: free number charm ${got.join(" & ")}!`);
-        else if (got.length) say(`🌧️ Charm Rain: free number charm ${got.join(" & ")}!`);
-        if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+        if (got.length && !first)
+          say(`🌧️ Charm Rain: free number charm ${got.join(" & ")}!`);
+        else if (got.length)
+          say(`🌧️ Charm Rain: free number charm ${got.join(" & ")}!`);
+        if (typeof G.updateShopUI === "function")
+          try {
+            G.updateShopUI();
+          } catch (e) {}
       }
     }
     const slot = Math.floor(Date.now() / 45000);
@@ -498,7 +706,10 @@
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 3100);
     sfx("rebirth");
-    if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+    if (typeof G.updateShopUI === "function")
+      try {
+        G.updateShopUI();
+      } catch (e) {}
   }
   setInterval(timers, 1000);
 
@@ -512,19 +723,30 @@
     if (row.kind === "clash" || row.kind === "bossclash") {
       const ks = (row.clash_of || []).filter((k) => KINDS[k]);
       const a = KINDS[ks[0]] || KINDS.goldrush;
-      const b = row.kind === "bossclash" ? { icon: "💀", color: "#ef4444", name: "A BOSS" } : KINDS[ks[1] || ks[0]] || a;
+      const b =
+        row.kind === "bossclash"
+          ? { icon: "💀", color: "#ef4444", name: "A BOSS" }
+          : KINDS[ks[1] || ks[0]] || a;
       el.style.setProperty("--c", a.color);
       el.style.setProperty("--c2", b.color);
       el.innerHTML = `<div class="half l"></div><div class="half r"></div><div class="vs"><span>${a.icon}</span><span>⚔️</span><span>${b.icon}</span></div><div class="flash"></div><h2 style="color:#fff">${row.kind === "bossclash" ? "BOSS CLASH!" : "EVENT CLASH!"}</h2><p>${ks.map((k) => KINDS[k].name).join(" × ")}${row.kind === "bossclash" ? " × the boss" : ""} collided!</p>`;
       sfx("rebirth");
-      if (typeof G.drShowAnnouncement === "function") G.drShowAnnouncement(`⚔️ EVENT CLASH! ${ks.map((k) => KINDS[k].name).join(" + ")} collided${row.kind === "bossclash" ? " with a boss — boss damage and curses ×2!" : " — bonuses stack, plus surges every 45s!"}`, { icon: "⚔️", color: a.color, glow: true });
+      if (typeof G.drShowAnnouncement === "function")
+        G.drShowAnnouncement(
+          `⚔️ EVENT CLASH! ${ks.map((k) => KINDS[k].name).join(" + ")} collided${row.kind === "bossclash" ? " with a boss — boss damage and curses ×2!" : " — bonuses stack, plus surges every 45s!"}`,
+          { icon: "⚔️", color: a.color, glow: true },
+        );
     } else {
       const k = KINDS[row.kind];
       if (!k) return;
       el.style.setProperty("--c", k.color);
       el.innerHTML = `<div class="bgf"></div><div class="big">${k.icon}</div><h2>${esc(k.name)}</h2><p>${esc(k.desc)}</p>`;
       sfx("newbadge");
-      if (typeof G.drShowAnnouncement === "function") G.drShowAnnouncement(`${k.icon} ${k.name} has begun! ${k.desc} (15 minutes)`, { icon: k.icon, color: k.color });
+      if (typeof G.drShowAnnouncement === "function")
+        G.drShowAnnouncement(
+          `${k.icon} ${k.name} has begun! ${k.desc} (15 minutes)`,
+          { icon: k.icon, color: k.color },
+        );
     }
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3800);
@@ -541,9 +763,18 @@
       await c.rpc("events_tick");
     } catch (e) {}
     try {
-      const { data, error } = await c.from("rand_events").select("*").eq("status", "active").order("id", { ascending: true });
+      const { data, error } = await c
+        .from("rand_events")
+        .select("*")
+        .eq("status", "active")
+        .order("id", { ascending: true });
       if (error) {
-        if (/relation|does not exist|schema cache|could not find/i.test(error.message || "")) tableState = "missing";
+        if (
+          /relation|does not exist|schema cache|could not find/i.test(
+            error.message || "",
+          )
+        )
+          tableState = "missing";
         return;
       }
       tableState = "ok";
@@ -560,7 +791,10 @@
         if (prev.indexOf(r.id) < 0) onNew(r);
       });
       prev.forEach((id) => {
-        if (ids.indexOf(id) < 0 && !next.some((r) => (r.clash_of || []).length && r.id > id)) {
+        if (
+          ids.indexOf(id) < 0 &&
+          !next.some((r) => (r.clash_of || []).length && r.id > id)
+        ) {
           /* an event ended without a clash replacing it */
         }
       });
@@ -575,7 +809,10 @@
     paintStack();
     paintTint();
     if (P && P.isOpen()) P.rerender();
-    if (typeof G.updateShopUI === "function") try { G.updateShopUI(); } catch (e) {}
+    if (typeof G.updateShopUI === "function")
+      try {
+        G.updateShopUI();
+      } catch (e) {}
   }
 
   function onNew(r) {
@@ -589,7 +826,11 @@
     if (!c) return;
     try {
       c.channel("rand-events")
-        .on("postgres_changes", { event: "*", schema: "public", table: "rand_events" }, () => fetchEvents())
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "rand_events" },
+          () => fetchEvents(),
+        )
         .subscribe();
     } catch (e) {}
   }
@@ -607,7 +848,12 @@
     const c = sb();
     if (!c) return;
     try {
-      const { data } = await c.from("rand_events").select("id,kind,clash_of,status,started_at").neq("status", "active").order("id", { ascending: false }).limit(8);
+      const { data } = await c
+        .from("rand_events")
+        .select("id,kind,clash_of,status,started_at")
+        .neq("status", "active")
+        .order("id", { ascending: false })
+        .limit(8);
       history = data || [];
       hist = true;
       if (P && P.isOpen()) P.rerender();
@@ -615,8 +861,11 @@
   }
 
   function nameOf(r) {
-    if (r.kind === "clash" || r.kind === "bossclash") return `⚔️ ${r.kind === "bossclash" ? "Boss clash" : "Clash"}: ${(r.clash_of || []).map((k) => (KINDS[k] ? KINDS[k].icon : k)).join("×")}`;
-    return KINDS[r.kind] ? `${KINDS[r.kind].icon} ${KINDS[r.kind].name}` : r.kind;
+    if (r.kind === "clash" || r.kind === "bossclash")
+      return `⚔️ ${r.kind === "bossclash" ? "Boss clash" : "Clash"}: ${(r.clash_of || []).map((k) => (KINDS[k] ? KINDS[k].icon : k)).join("×")}`;
+    return KINDS[r.kind]
+      ? `${KINDS[r.kind].icon} ${KINDS[r.kind].name}`
+      : r.kind;
   }
 
   function renderLive() {
@@ -631,20 +880,37 @@
       })
       .join("");
     const banner = `<div class="pgBanner">🎲 Random Events<br><span class="pgSub">Events start on their own, last <b>15 minutes</b> (bosses 30), and are the same for everyone. If a second event starts while one is running, they <b>clash</b> into a stronger combined event.${bossLive ? `<br>💀 Boss alive: <b>${esc(bossLive.name)}</b>` : ""}</span></div>`;
-    const guide = KIND_IDS.map((k) => `<div class="pgCard"><h3>${KINDS[k].icon} ${esc(KINDS[k].name)}</h3><p>${esc(KINDS[k].desc)}</p></div>`).join("");
+    const guide = KIND_IDS.map(
+      (k) =>
+        `<div class="pgCard"><h3>${KINDS[k].icon} ${esc(KINDS[k].name)}</h3><p>${esc(KINDS[k].desc)}</p></div>`,
+    ).join("");
     const bosses = `<div class="pgCard"><h3>💀 Boss events</h3><p>Sometimes the <b>🧰 Vault Mimic</b> or <b>🕰️ Chrono Wraith</b> appears (30 minutes). Very rarely a real <b>Golem, Titan or Reality Breaker</b> wakes up.</p></div>`;
-    const hs = history.length ? `<h3 style="margin:16px 0 6px">Recent</h3>` + history.map((r) => `<div class="pgSub" style="padding:3px 0">${nameOf(r)} • ${new Date(r.started_at).toLocaleString()} • ${esc(r.status)}</div>`).join("") : "";
-    const miss = tableState === "missing" ? '<div class="pgSub" style="color:#fda4af">Random events need events-setup.sql in Supabase.</div>' : "";
+    const hs = history.length
+      ? `<h3 style="margin:16px 0 6px">Recent</h3>` +
+        history
+          .map(
+            (r) =>
+              `<div class="pgSub" style="padding:3px 0">${nameOf(r)} • ${new Date(r.started_at).toLocaleString()} • ${esc(r.status)}</div>`,
+          )
+          .join("")
+      : "";
+    const miss =
+      tableState === "missing"
+        ? '<div class="pgSub" style="color:#fda4af">Random events need events-setup.sql in Supabase.</div>'
+        : "";
     return `${banner}${miss}${now || '<div class="pgCard"><p>No random event is running right now. The next one could start any minute…</p></div>'}<h3 style="margin:16px 0 6px">All events</h3><div class="rvGuide">${guide}${bosses}</div>${hs}`;
   }
 
   let adminMsg = "";
   function renderAdmin() {
-    const btn = (k, label) => `<button class="pgBtn" data-rv="${k}">${label}</button>`;
+    const btn = (k, label) =>
+      `<button class="pgBtn" data-rv="${k}">${label}</button>`;
     return `<div class="pgCard"><b>🎲 Trigger a random event</b><div class="pgSub">Starts it right now for everyone (15 min). Start a second one while one is running to cause a clash. A boss while an event runs causes a boss clash.</div>
       <div class="rvBtnRow">${KIND_IDS.map((k) => btn(k, `${KINDS[k].icon} ${esc(KINDS[k].name)}`)).join("")}</div>
       <div class="pgSub">Boss events (30 min)</div>
-      <div class="rvBtnRow">${Object.keys(BOSS_KINDS).map((k) => btn(k, BOSS_KINDS[k])).join("")}</div>
+      <div class="rvBtnRow">${Object.keys(BOSS_KINDS)
+        .map((k) => btn(k, BOSS_KINDS[k]))
+        .join("")}</div>
       <div class="rvBtnRow"><button class="pgBtn" id="rvEnd">⛔ End all events</button><button class="pgBtn" id="rvPrev">👁️ Preview clash intro (me only)</button></div>
       ${adminMsg ? `<div class="pgSub">${esc(adminMsg)}</div>` : ""}</div>`;
   }
@@ -656,7 +922,8 @@
         const { error } = await c.rpc("event_spawn", { p_kind: b.dataset.rv });
         adminMsg = error ? "Could not start: " + error.message : "Started!";
         await fetchEvents();
-        if (typeof G.drBoss !== "undefined" && BOSS_KINDS[b.dataset.rv]) setTimeout(() => G.drBossRefresh && G.drBossRefresh(), 500);
+        if (typeof G.drBoss !== "undefined" && BOSS_KINDS[b.dataset.rv])
+          setTimeout(() => G.drBossRefresh && G.drBossRefresh(), 500);
         P.rerender();
       };
     });
@@ -669,7 +936,13 @@
         P.rerender();
       };
     const pv = root.querySelector("#rvPrev");
-    if (pv) pv.onclick = () => playIntro({ id: -1, kind: "clash", clash_of: [pick(KIND_IDS), pick(KIND_IDS)] });
+    if (pv)
+      pv.onclick = () =>
+        playIntro({
+          id: -1,
+          kind: "clash",
+          clash_of: [pick(KIND_IDS), pick(KIND_IDS)],
+        });
   }
 
   if (P && P.addTab) {
@@ -681,7 +954,14 @@
      BOOT
      ========================================================== */
 
-  G.drEventsDebug = { rows: () => rows, kinds: activeKinds, clash: inClash, set: setRows, intro: playIntro, surge };
+  G.drEventsDebug = {
+    rows: () => rows,
+    kinds: activeKinds,
+    clash: inClash,
+    set: setRows,
+    intro: playIntro,
+    surge,
+  };
 
   function boot() {
     if (!sb()) return;

@@ -989,7 +989,21 @@
     step();
   }
 
+  /* the new bosses borrow an original boss's scene: swap in their own emoji while they are on screen */
+  let figBackup = null;
+  function restoreFig() {
+    if (figBackup) FIG[figBackup[0]] = figBackup[1];
+    figBackup = null;
+  }
+  function useFig(c) {
+    restoreFig();
+    if (c && c.like && FIG[c.like]) {
+      figBackup = [c.like, FIG[c.like]];
+      FIG[c.like] = c.icon;
+    }
+  }
   function playIntro(ev0, cfg0, preview) {
+    useFig(cfg0);
     const reduced = RM();
     stage = document.createElement("div");
     stage.className = "drBsStage";
@@ -1021,7 +1035,7 @@
     if (!reduced) {
       running = true;
       try {
-        SCENES[cfg0.key](stage);
+        SCENES[cfg0.like || cfg0.key](stage);
       } catch (e) {
         console.warn("scene failed", e);
       }
@@ -1035,7 +1049,8 @@
       s.textContent = `${nf(cfg0.hp)} HP • ${cfg0.blurb}`;
       stage.appendChild(t);
       stage.appendChild(s);
-      if (cfg0.key === "reality") scrambleTitle(t, cfg0.name, 1100);
+      if ((cfg0.like || cfg0.key) === "reality")
+        scrambleTitle(t, cfg0.name, 1100);
       msfx("roar");
       shakeAll(500, 12);
     });
@@ -1051,7 +1066,8 @@
     if (!ev || !cfg) return;
     if (hud) hud.remove();
     hud = document.createElement("div");
-    hud.className = `drBsHud ${cfg.key}`;
+    hud.className = `drBsHud ${cfg.like || cfg.key} ${cfg.key}`;
+    useFig(cfg);
     hud.style.setProperty("--bc", cfg.color);
     if (!animate) hud.style.animationDuration = ".01s";
     const combos = (ev.combos || [])
@@ -1061,7 +1077,7 @@
       )
       .join("");
     hud.innerHTML = `
-      <div class="drBsFig"><span>${FIG[cfg.key]}</span></div>
+      <div class="drBsFig"><span>${FIG[cfg.like || cfg.key]}</span></div>
       <div class="drBsMain">
         <div class="drBsName"><span>${esc(cfg.name)}</span><span class="drBsTime">--:--</span></div>
         <div class="drBsHp"><div class="drBsHpTrail"></div><div class="drBsHpFill"></div><div class="drBsHpTxt"></div></div>
@@ -1527,7 +1543,7 @@
         if (!ev || !cfg || stage) return scheduleStunt();
         if (!document.hidden && !RM()) {
           try {
-            pick(STUNTS[cfg.key])();
+            pick(STUNTS[cfg.like || cfg.key])();
           } catch (e) {}
         }
         scheduleStunt();
@@ -1542,6 +1558,7 @@
 
   function endAll() {
     running = false;
+    restoreFig();
     clearTimeout(stuntTimer);
     introTimers.forEach(clearTimeout);
     introTimers = [];

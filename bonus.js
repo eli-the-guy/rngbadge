@@ -529,6 +529,12 @@
     reality: { pts: 8, frac: 1 },
     mimic: { pts: 2, frac: 0.35 },
     wraith: { pts: 4, frac: 0.6 },
+    drake: { pts: 2, frac: 0.4 },
+    kraken: { pts: 5, frac: 0.7 },
+    hydra: { pts: 6, frac: 0.85 },
+    voidking: { pts: 10, frac: 1.5 },
+    eternal: { pts: 12, frac: 2 },
+    omega: { pts: 15, frac: 3 },
   };
 
   G.drBossWon = function (type) {
@@ -536,8 +542,12 @@
     if (!r) return;
     const got = gainXP(Math.round(capNow() * r.frac));
     givePoints(r.pts);
+    let drop = "";
+    try {
+      if (G.drForge && G.drForge.bossDrop) drop = G.drForge.bossDrop(type);
+    } catch (e) {}
     say(
-      `🏆 Boss reward: +${nf(got)} XP and +${r.pts} ★ prestige point${r.pts > 1 ? "s" : ""}!`,
+      `🏆 Boss reward: +${nf(got)} XP and +${r.pts} ★ prestige point${r.pts > 1 ? "s" : ""}!${drop ? " 🔨 Drops: " + drop : ""}`,
     );
   };
 
@@ -568,6 +578,11 @@
           mimic: "🧰 Vault Mimic",
           wraith: "🕰️ Chrono Wraith",
         };
+        try {
+          Object.values(G.drBoss.BOSSES).forEach(
+            (c) => (names[c.key] = names[c.key] || `${c.icon} ${c.short}`),
+          );
+        } catch (e) {}
         const res = x.won
           ? '<b style="color:#8ee6ad">WIN</b>'
           : x.dq

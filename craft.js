@@ -23,6 +23,25 @@
     v >= 1e12 ? v.toExponential(1).replace("e+", " × 10^") : nf(v);
   const TI = (n) => P.TIERS.indexOf(n);
 
+  /* ---------- boss materials (exclusive drops) ---------- */
+  const BOSS_MAT_DEF = {
+    golem: ["Golem Core", "🪨"],
+    mimic: ["Vault Key", "🗝️"],
+    drake: ["Drake Scale", "🐲"],
+    wraith: ["Time Sand", "⏳"],
+    kraken: ["Kraken Ink", "🦑"],
+    titan: ["Titan Bolt", "🔩"],
+    hydra: ["Hydra Fang", "🐍"],
+    reality: ["Reality Shard", "🔮"],
+    voidking: ["Crown Gem", "💠"],
+    eternal: ["Eternal Link", "⛓️"],
+    omega: ["Omega Core", "🔋"],
+  };
+  const BOSS_KEYS = Object.keys(BOSS_MAT_DEF);
+  const bm = (k) => "bm_" + k;
+  const bossMats0 = {};
+  BOSS_KEYS.forEach((k) => (bossMats0[bm(k)] = 0));
+
   /* ---------- state ---------- */
   const KEY = "digitRollForge";
   const fresh = () => ({
@@ -48,14 +67,44 @@
       clover: 0,
       formula: 0,
       lore: 0,
+      ...bossMats0,
     },
-    items: { bomb: 0, nuke: 0, scroll: 0, tonic: 0, cell: 0, lucky: 0 },
+    items: {
+      bomb: 0,
+      nuke: 0,
+      scroll: 0,
+      tonic: 0,
+      cell: 0,
+      lucky: 0,
+      seer: 0,
+      elixir: 0,
+      mark: 0,
+      magnet: 0,
+    },
+    totems: {}, // boss totems crafted, by boss key
+    seerLeft: 0,
+    elixirLeft: 0,
+    markLeft: 0,
+    magnetLeft: 0,
+    summons: 0,
+    trades: 0,
+    bossDrops: 0,
     patterns: [], // [{ parts: ["123"] }]  placed into the next roll, first in line first
     pocket: [], // charms stored safely: never used by rolls until you take them out
     seen: {}, // materials you have ever found (journal)
     patternsUsed: 0,
     fused: 0,
-    perks: { edge: 0, crit: 0, combo: 0, will: 0, ult: 0 },
+    perks: {
+      edge: 0,
+      crit: 0,
+      combo: 0,
+      will: 0,
+      ult: 0,
+      exec: 0,
+      might: 0,
+      hunter: 0,
+      scav: 0,
+    },
     armed: "", // "bomb" | "nuke" — applies to the next boss hit
     scrollLeft: 0, // curses still negated
     tonicLeft: 0, // rolls of Fortune Tonic left
@@ -72,6 +121,7 @@
         mats: Object.assign(fresh().mats, raw.mats),
         items: Object.assign(fresh().items, raw.items),
         perks: Object.assign(fresh().perks, raw.perks),
+        totems: Object.assign({}, raw.totems),
       });
   } catch (e) {}
   const save = () => {
@@ -98,6 +148,19 @@
     formula: { name: "Formula Scraps", icon: "🧮", from: "math badges" },
     lore: { name: "Lore Fragments", icon: "📖", from: "pop-culture badges" },
   };
+  MATS.star = {
+    name: "Prestige Stars",
+    icon: "★",
+    from: "true rebirths & daily challenges (shared with the Prestige shop)",
+  };
+  BOSS_KEYS.forEach(
+    (k) =>
+      (MATS[bm(k)] = {
+        name: BOSS_MAT_DEF[k][0],
+        icon: BOSS_MAT_DEF[k][1],
+        from: "defeating the " + k + " boss",
+      }),
+  );
   for (let i = 0; i < 10; i++)
     MATS["d" + i] = {
       name: `${i}-Shard`,
@@ -129,12 +192,39 @@
       return "formula";
     return "lore";
   }
-  const matCost = (c) =>
-    Object.keys(c)
+  /* Forge mastery: every few crafts raises your level; each level shaves 2% off every cost (max 30%, Prestige Stars are never discounted) */
+  const forgeLvl = () =>
+    Math.min(15, Math.floor(Math.sqrt(F.crafted + F.trades / 4)));
+  const forgeDisc = () => Math.min(0.3, 0.02 * forgeLvl());
+  const eff = (c) => {
+    const o = {};
+    Object.keys(c).forEach(
+      (k) =>
+        (o[k] =
+          k === "star"
+            ? c[k]
+            : Math.max(1, Math.ceil(c[k] * (1 - forgeDisc())))),
+    );
+    return o;
+  };
+  const have = (k) => (k === "star" ? P.points() : F.mats[k] || 0);
+  const matCost = (c0) => {
+    const c = eff(c0);
+    return Object.keys(c)
       .map((k) => `${MATS[k].icon} ${c[k]}`)
       .join(" ");
-  const canPay = (c) => Object.keys(c).every((k) => F.mats[k] >= c[k]);
-  const pay = (c) => Object.keys(c).forEach((k) => (F.mats[k] -= c[k]));
+  };
+  const canPay = (c0) => {
+    const c = eff(c0);
+    return Object.keys(c).every((k) => have(k) >= c[k]);
+  };
+  const pay = (c0) => {
+    const c = eff(c0);
+    Object.keys(c).forEach((k) => {
+      if (k === "star") P.spendPoints(c[k]);
+      else F.mats[k] -= c[k];
+    });
+  };
 
   function drops(t) {
     const d = { dust: 1 + Math.floor(t / 4) };
@@ -183,6 +273,34 @@
       name: "Overcharge Cell",
       cost: { ember: 3, prism: 1 },
       desc: "Instantly fills your <b>Ultimate</b> meter.",
+    },
+    {
+      id: "seer",
+      icon: "🧿",
+      name: "Seer's Eye",
+      cost: { clover: 8, lore: 5, prism: 1 },
+      desc: "Use it: your next <b>5 rolls</b> each get <b>+1 guaranteed badge</b>.",
+    },
+    {
+      id: "elixir",
+      icon: "🍯",
+      name: "Golden Elixir",
+      cost: { ember: 4, formula: 6, dust: 100 },
+      desc: "Drink it: <b>×2 XP</b> for your next 10 rolls (stacks with Fortune Tonic).",
+    },
+    {
+      id: "mark",
+      icon: "🎯",
+      name: "Hunter's Mark",
+      cost: { spark: 12, twin: 6, mirror: 6 },
+      desc: "Use it: your next <b>10 boss hits</b> deal <b>×2</b> damage.",
+    },
+    {
+      id: "magnet",
+      icon: "🧲",
+      name: "Material Magnet",
+      cost: { dust: 150, chain: 6, twin: 6, formula: 6 },
+      desc: "Use it: <b>×2 materials</b> from your next 20 rolls.",
     },
     {
       id: "lucky",
@@ -278,6 +396,38 @@
       cost: (n) => ({ ember: 2 * n, dust: 80 * n }),
     },
     {
+      id: "exec",
+      icon: "🪓",
+      name: "Executioner",
+      max: 5,
+      desc: (l) => `+${20 * l}% damage while the boss is under 25% HP`,
+      cost: (n) => ({ bm_golem: 2 * n, ember: 2 * n }),
+    },
+    {
+      id: "hunter",
+      icon: "🏹",
+      name: "Trophy Hunter",
+      max: 5,
+      desc: (l) => `+${10 * l}% boss material drops from every victory`,
+      cost: (n) => ({ bm_mimic: n + 1, spark: 5 * n }),
+    },
+    {
+      id: "might",
+      icon: "★",
+      name: "Prestige Might",
+      max: 5,
+      desc: (l) => `+${10 * l}% boss damage, powered by your Prestige Stars`,
+      cost: (n) => ({ star: 2 * n, prism: n }),
+    },
+    {
+      id: "scav",
+      icon: "🦝",
+      name: "Scavenger",
+      max: 5,
+      desc: (l) => `+${10 * l}% materials from every roll`,
+      cost: (n) => ({ star: n, dust: 150 * n }),
+    },
+    {
       id: "ult",
       icon: "💥",
       name: "Ultimate Mastery",
@@ -323,7 +473,11 @@
     const gl = gloveLvl();
     const windfall = gl > 0 && Math.random() < 0.05 * gl;
     Object.keys(d).forEach((k) => {
-      let v = d[k] * (1 + 0.2 * gl) * (windfall ? 3 : 1);
+      let v =
+        d[k] *
+        (1 + 0.2 * gl + 0.1 * F.perks.scav) *
+        (windfall ? 3 : 1) *
+        (F.magnetLeft > 0 ? 2 : 1);
       v = Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0);
       d[k] = v;
       F.mats[k] = (F.mats[k] || 0) + v;
@@ -333,6 +487,8 @@
     if (windfall) say("🧤 WINDFALL! Drops tripled " + show);
     else if (show) say("🔨 " + show);
     if (F.tonicLeft > 0) F.tonicLeft--;
+    if (F.elixirLeft > 0) F.elixirLeft--;
+    if (F.magnetLeft > 0) F.magnetLeft--;
     if (bossLive()) {
       const gain = (3 + t * 0.5) * (1 + 0.1 * F.perks.ult);
       F.charge = Math.min(100, F.charge + gain);
@@ -363,6 +519,11 @@
     let n = typeof prevLuck === "function" ? prevLuck() : 0;
     if (F.items.lucky > 0) {
       F.items.lucky--;
+      n++;
+      save();
+    }
+    if (F.seerLeft > 0) {
+      F.seerLeft--;
       n++;
       save();
     }
@@ -565,7 +726,21 @@
       F.bestCombo = Math.max(F.bestCombo, combo);
       d *= 1 + 0.03 * combo;
     }
-    d *= 1 + 0.08 * F.perks.edge;
+    d *= 1 + 0.08 * F.perks.edge + 0.1 * F.perks.might;
+    try {
+      const bb = G.drBoss;
+      if (
+        F.perks.exec > 0 &&
+        bb &&
+        bb.ev &&
+        Number(bb.hp()) < Number(bb.ev.max_hp) * 0.25
+      )
+        d *= 1 + 0.2 * F.perks.exec;
+    } catch (e) {}
+    if (F.markLeft > 0) {
+      F.markLeft--;
+      d *= 2;
+    }
     if (F.perks.crit > 0 && Math.random() < 0.06 * F.perks.crit) {
       d *= 4;
       say("🎯 CRITICAL HIT ×4!");
@@ -601,7 +776,11 @@
   const prevXP = G.drEventXP;
   G.drEventXP = function () {
     const b = typeof prevXP === "function" ? prevXP() : 1;
-    return (b == null ? 1 : b) * (F.tonicLeft > 0 ? 1.5 : 1);
+    return (
+      (b == null ? 1 : b) *
+      (F.tonicLeft > 0 ? 1.5 : 1) *
+      (F.elixirLeft > 0 ? 2 : 1)
+    );
   };
 
   /* ---------- actions ---------- */
@@ -628,6 +807,16 @@
       F.tonicLeft += 25;
     } else if (id === "cell") {
       F.charge = 100;
+    } else if (id === "seer") {
+      F.seerLeft += 5;
+    } else if (id === "elixir") {
+      F.elixirLeft += 10;
+    } else if (id === "mark") {
+      if (!bossLive())
+        return say("Hunter's Mark only works while a boss is alive.");
+      F.markLeft += 10;
+    } else if (id === "magnet") {
+      F.magnetLeft += 20;
     }
     F.items[id]--;
     save();
@@ -687,9 +876,153 @@
     setTimeout(() => f.remove(), 700);
   }
 
+  /* ---------- boss drops, totems, transmuting ---------- */
+  const bossApi = () => G.drBoss || null;
+  const bossCfg = (k) => (bossApi() && bossApi().BOSSES[k]) || null;
+  const bossOrder = () => (bossApi() && bossApi().ORDER) || BOSS_KEYS;
+  const bossOpen = (k) => !bossApi() || bossApi().unlocked(bossCfg(k));
+  const bossTier = (k) => {
+    const c = bossCfg(k);
+    return c && typeof c.tier === "number" ? c.tier : 0;
+  };
+
+  /* called when you beat a boss: exclusive material of that boss (+ a bit of Stars from the hardest ones) */
+  function bossDrop(type) {
+    if (BOSS_KEYS.indexOf(type) < 0) return "";
+    const t = bossTier(type);
+    const n = Math.round(
+      (3 + 2 * t + Math.floor(Math.random() * 3)) *
+        (1 + 0.1 * F.perks.hunter) *
+        (1 + BOSS_KEYS.indexOf(type) * 0.12),
+    );
+    const k = bm(type);
+    F.mats[k] = (F.mats[k] || 0) + n;
+    F.seen[k] = true;
+    F.bossDrops++;
+    let txt = `+${n} ${MATS[k].icon} ${MATS[k].name}`;
+    /* an extra ordinary drop: a stack of tier materials */
+    const extra = { spark: 4 + 3 * t, ember: 1 + 2 * t };
+    if (t >= 3) extra.prism = t - 1;
+    Object.keys(extra).forEach((x) => {
+      F.mats[x] += extra[x];
+      txt += ` +${extra[x]} ${MATS[x].icon}`;
+    });
+    const cfg = bossCfg(type);
+    if (cfg && cfg.minRebirth) {
+      P.addPoints(cfg.minRebirth);
+      txt += ` +${cfg.minRebirth} ★`;
+    }
+    save();
+    return txt;
+  }
+
+  /* totem cost: its own boss material, the previous boss's material, Stars and a tier material */
+  function totemCost(type) {
+    const order = bossOrder();
+    const i = Math.max(0, order.indexOf(type));
+    const c = {
+      [bm(type)]: 4 + i,
+      star: 1 + Math.floor(i / 2),
+      dust: 100 * (i + 1),
+    };
+    if (i > 0) c[bm(order[i - 1])] = 3;
+    if (i < 3) c.spark = 5 * (i + 1);
+    else if (i < 6) c.ember = 4 * (i - 2);
+    else if (i < 9) c.prism = 3 * (i - 5);
+    else c.void = 2 * (i - 8);
+    return c;
+  }
+  function craftTotem(type) {
+    if (!bossOpen(type))
+      return say("🔒 You can't forge this totem until you've rebirthed more.");
+    const c = totemCost(type);
+    if (!canPay(c)) return say("Not enough materials.");
+    pay(c);
+    F.totems[type] = (F.totems[type] || 0) + 1;
+    F.crafted++;
+    save();
+    sfx("buy");
+    say(`🗿 ${bossCfg(type) ? bossCfg(type).short : type} Totem crafted!`);
+    rerender();
+  }
+  let summoning = false;
+  async function summon(type) {
+    if (summoning || !(F.totems[type] > 0)) return;
+    if (!bossOpen(type)) return say("🔒 Rebirth more times to use this totem.");
+    if (bossLive()) return say("A boss is already alive.");
+    const c = typeof supabaseClient !== "undefined" ? supabaseClient : null;
+    if (!c || (typeof currentUser !== "undefined" && !currentUser))
+      return say("Sign in to summon bosses.");
+    summoning = true;
+    try {
+      const { data, error } = await c.rpc("boss_summon_totem", {
+        p_type: type,
+      });
+      if (error) {
+        say(
+          /does not exist|schema cache|could not find/i.test(
+            error.message || "",
+          )
+            ? "Run boss-totem-setup.sql in Supabase first."
+            : error.message,
+        );
+      } else if (data && data.error) {
+        say("🗿 " + data.error);
+      } else {
+        F.totems[type]--;
+        F.summons++;
+        save();
+        sfx("curse");
+        say("🗿 The totem shatters... the boss answers the call!");
+        try {
+          if (G.drBoss && G.drBoss.refresh) G.drBoss.refresh();
+        } catch (e) {}
+      }
+    } catch (e) {
+      say("Could not reach the server.");
+    }
+    summoning = false;
+    rerender();
+  }
+
+  /* transmuting: climb the tier ladder, melt Stars, or swap digit / pattern materials */
+  const LADDER = [
+    ["dust", "spark", 40],
+    ["spark", "ember", 6],
+    ["ember", "prism", 6],
+    ["prism", "void", 5],
+  ];
+  const SWAPPABLE = DIGIT_MATS.concat(PAT_MATS);
+  function trade(from, to, times) {
+    const rate = from === "star" ? 1 : 4;
+    const cost = from === "star" ? 1 : rate;
+    const lad = LADDER.find((x) => x[0] === from && x[1] === to);
+    const need = (lad ? lad[2] : cost) * times;
+    if (have(from) < need) return say("Not enough " + MATS[from].name + ".");
+    if (from === "star") {
+      if (!P.spendPoints(need)) return;
+      const d = { dust: 30, spark: 8, ember: 2 };
+      Object.keys(d).forEach((k) => (F.mats[k] += d[k] * times));
+      say(`★ Melted ${need} Star${need > 1 ? "s" : ""} into materials.`);
+    } else {
+      F.mats[from] -= need;
+      F.mats[to] = (F.mats[to] || 0) + times;
+      F.seen[to] = true;
+      say(
+        `⚗️ Transmuted ${need} ${MATS[from].icon} into ${times} ${MATS[to].icon}.`,
+      );
+    }
+    F.trades += times;
+    save();
+    sfx("click");
+    rerender();
+  }
+  let swapFrom = "d0";
+  let swapTo = "d1";
+
   /* ---------- Forge tab ---------- */
   const chip = (k) =>
-    `<div class="frgMat" title="${MATS[k].from}"><span>${MATS[k].icon}</span><b>${nf(F.mats[k])}</b><small>${MATS[k].name}</small></div>`;
+    `<div class="frgMat" title="${MATS[k].from}"><span>${MATS[k].icon}</span><b>${nf(have(k))}</b><small>${MATS[k].name}</small></div>`;
 
   function renderPatterns() {
     const rl = rollLen();
@@ -760,6 +1093,49 @@
     }).join("")}</div>`;
   }
 
+  function renderTotems() {
+    const live = bossLive();
+    const cards = bossOrder()
+      .map((k) => {
+        const cfg = bossCfg(k);
+        if (!cfg) return "";
+        const open = bossOpen(k);
+        if (!open && !(F.totems[k] > 0)) {
+          return `<div class="pgCard frgJ unk"><h3>🔒 ??? Totem</h3><p>A totem for a boss that only <b>veterans who rebirthed ${cfg.minRebirth}+ time${cfg.minRebirth > 1 ? "s" : ""}</b> can face.</p></div>`;
+        }
+        const c = totemCost(k);
+        const owned = F.totems[k] || 0;
+        return `<div class="pgCard" style="border-color:${cfg.color}55"><h3>${cfg.icon} ${cfg.short} Totem <small class="pgSub">owned: ${owned}</small></h3>
+          <p class="pgSub">${nf(cfg.hp).length > 14 ? cfg.hp.toExponential(0).replace("e+", " × 10^") : nf(cfg.hp)} HP • ${cfg.count} cursed roll${cfg.count > 1 ? "s" : ""} of ${cfg.size}${cfg.minRebirth ? ` • <b>Rebirth ${cfg.minRebirth}+</b>` : ""}</p>
+          <p>Cost: ${matCost(c)}</p>
+          <div class="frgRow"><button class="drBuy" data-totem="${k}" ${canPay(c) ? "" : "disabled"}>${canPay(c) ? "Craft" : "Need materials"}</button>
+          <button class="drBuy" data-summon="${k}" ${owned > 0 && !live ? "" : "disabled"}>🗿 Summon</button></div></div>`;
+      })
+      .join("");
+    return `<div class="pgBanner" style="font-weight:600">🗿 <b>Boss Totems</b> — craft a totem from a boss's own drops, then smash it to <b>summon that boss for everyone</b> (20 minutes). Needs no boss alive, and a totem can be used once every 5 minutes. Beat bosses to collect their exclusive materials, and use ★ Prestige Stars to bind them. Summons so far: <b>${F.summons}</b></div>
+      <div class="frgGrid">${cards}</div>`;
+  }
+
+  function renderTrade() {
+    const chain = LADDER.map(([a, b, n]) => {
+      const row = (t) =>
+        `<button class="drBuy" data-trade="${a}:${b}:${t}" ${have(a) >= n * t ? "" : "disabled"}>×${t}</button>`;
+      return `<div class="pgCard"><h3>${MATS[a].icon} ${MATS[a].name} → ${MATS[b].icon} ${MATS[b].name}</h3><p class="pgSub">${n} ${MATS[a].name} → 1 ${MATS[b].name}</p><div class="frgRow">${row(1)}${row(10)}</div></div>`;
+    }).join("");
+    const star = `<div class="pgCard"><h3>★ Star Melt</h3><p class="pgSub">1 Prestige Star → 30 ✨ + 8 ⚡ + 2 🔥. Stars are shared with the Prestige shop, so melt carefully.</p>
+      <div class="frgRow"><button class="drBuy" data-trade="star:dust:1" ${have("star") >= 1 ? "" : "disabled"}>Melt 1</button></div></div>`;
+    const opt = (sel) =>
+      SWAPPABLE.map(
+        (k) =>
+          `<option value="${k}" ${k === sel ? "selected" : ""}>${MATS[k].icon} ${MATS[k].name} (${nf(F.mats[k])})</option>`,
+      ).join("");
+    const swap = `<div class="pgCard"><h3>🔁 Shard Swap</h3><p class="pgSub">4 of any digit shard or pattern material → 1 of another.</p>
+      <div class="frgRow"><select id="frgSwF" class="frgIn" style="font-size:14px;letter-spacing:0">${opt(swapFrom)}</select><span>→</span><select id="frgSwT" class="frgIn" style="font-size:14px;letter-spacing:0">${opt(swapTo)}</select></div>
+      <div class="frgRow" style="margin-top:8px"><button class="drBuy" data-swap="1" ${swapFrom !== swapTo && have(swapFrom) >= 4 ? "" : "disabled"}>Swap</button></div></div>`;
+    return `<div class="pgBanner" style="font-weight:600">⚗️ <b>Transmute</b> — climb the material ladder, melt Stars or swap shards. Transmutes also raise your Forge level. Done so far: <b>${F.trades}</b></div>
+      <div class="frgGrid">${chain}${star}${swap}</div>`;
+  }
+
   const JOURNAL = {
     dust: [
       "Every roll, always.",
@@ -817,13 +1193,32 @@
       "Custom pattern charms that aren’t a straight, a repeat or a palindrome, Gloves I+.",
     ],
   };
+  JOURNAL.star = [
+    "Every true rebirth (rebirth #N gives N stars) and by clearing all three daily challenges; the hardest bosses also drop some.",
+    "Shown as your current Prestige Stars, the same balance as the Prestige shop.",
+    "Boss totems, Prestige Might, Scavenger, Star Melt. Spending one here means it is gone from the Prestige shop too.",
+  ];
+  BOSS_KEYS.forEach(
+    (k) =>
+      (JOURNAL[bm(k)] = [
+        `Defeat the ${k === "golem" ? "Stonebound Golem" : bossCfg(k) ? bossCfg(k).short : k} (as a surviving participant).`,
+        "3–15 per victory, more for stronger bosses (+10% per Trophy Hunter level).",
+        "Its own totem, the next boss's totem, and some boss skills.",
+      ]),
+  );
   for (let i = 0; i < 10; i++)
     JOURNAL["d" + i] = [
       `Any roll that shows a ${i} (at most one per roll, however many ${i}s it has).`,
       `1 ${i}-Shard per roll containing a ${i}.`,
       `Pattern charms: 2 shards for every ${i} in the sequence.`,
     ];
-  const JOURNAL_ORDER = TIER_MATS.concat(PAT_MATS, DIGIT_MATS);
+  const journalOrder = () =>
+    TIER_MATS.concat(
+      ["star"],
+      PAT_MATS,
+      BOSS_KEYS.filter(bossOpen).map(bm),
+      DIGIT_MATS,
+    );
 
   function renderJournal() {
     const sample = [
@@ -845,12 +1240,14 @@
       })
       .join("");
     const gl = gloveLvl();
-    const entries = JOURNAL_ORDER.map((k) => {
-      const j = JOURNAL[k];
-      const found = F.seen[k] || F.mats[k] > 0;
-      return `<div class="pgCard frgJ ${found ? "" : "unk"}"><h3>${MATS[k].icon} ${MATS[k].name} <small class="pgSub">${found ? "✓ found • you have " + nf(F.mats[k]) : "not found yet"}</small></h3>
+    const entries = journalOrder()
+      .map((k) => {
+        const j = JOURNAL[k];
+        const found = k === "star" || F.seen[k] || F.mats[k] > 0;
+        return `<div class="pgCard frgJ ${found ? "" : "unk"}"><h3>${MATS[k].icon} ${MATS[k].name} <small class="pgSub">${found ? "✓ found • you have " + nf(have(k)) : "not found yet"}</small></h3>
         <p><b>Where from:</b> ${j[0]}</p><p><b>How much:</b> ${j[1]}</p><p><b>Used for:</b> ${j[2]}</p></div>`;
-    }).join("");
+      })
+      .join("");
     return `<div class="pgBanner" style="font-weight:600">📖 <b>Forge Journal</b> — every material and where it comes from.${gl ? ` Your Gatherer's Gloves (Lv ${gl}) add +${20 * gl}% to everything below and a ${5 * gl}% chance of a ×3 windfall per roll.` : " Gatherer's Gloves (Gear tab) add +20% per level to all drops, plus a chance of a ×3 windfall."}</div>
       <h3 class="frgH">Tier drops per roll <small class="pgSub">(by the rarity of the roll)</small></h3>
       <div style="overflow-x:auto"><table class="frgTbl"><tr><th>Roll</th>${TIER_MATS.map((k) => `<th>${MATS[k].icon}</th>`).join("")}</tr>${rows}</table></div>
@@ -863,6 +1260,8 @@
       ["patterns", "🧩 Pattern Charms"],
       ["gear", "🧰 Gear & Gloves"],
       ["skills", "⚔️ Boss Skills"],
+      ["totems", "🗿 Boss Totems"],
+      ["trade", "⚗️ Transmute"],
       ["journal", "📖 Journal"],
     ];
     return `<style>
@@ -885,11 +1284,22 @@
       .frgJ.unk{opacity:.72}
       .frgTbl{border-collapse:collapse;width:100%;text-align:center}.frgTbl th,.frgTbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.08)}.frgTbl td:first-child{text-align:left}
     </style>
-    <div class="pgBanner">🔨 The Forge<br><span class="pgSub">Rolls drop materials: Dust, Sparks, Embers, Prisms and Void Shards by rarity, <b>digit shards</b> for every different digit you roll, and <b>pattern mats</b> from the badges you hit. Crafted: <b>${F.crafted}</b> • Charms used: <b>${F.patternsUsed}</b> • Fusions: <b>${F.fused}</b> • Ultimates: <b>${F.ults}</b>${F.tonicLeft ? ` • 🧪 ${F.tonicLeft} rolls` : ""}${F.scrollLeft ? ` • 📜 ${F.scrollLeft} curses` : ""}${F.armed ? ` • ${F.armed === "bomb" ? "💣" : "🌌"} ARMED` : ""}</span></div>
-    <div class="frgMats">${TIER_MATS.concat(PAT_MATS).map(chip).join("")}</div>
+    <div class="pgBanner">🔨 The Forge<br><span class="pgSub">Rolls drop materials: Dust, Sparks, Embers, Prisms and Void Shards by rarity, <b>digit shards</b> for every different digit you roll, and <b>pattern mats</b> from the badges you hit. Forge level <b>${forgeLvl()}</b> (−${Math.round(forgeDisc() * 100)}% costs) • Crafted: <b>${F.crafted}</b> • Charms used: <b>${F.patternsUsed}</b> • Fusions: <b>${F.fused}</b> • Ultimates: <b>${F.ults}</b>${F.tonicLeft ? ` • 🧪 ${F.tonicLeft} rolls` : ""}${F.elixirLeft ? ` • 🍯 ${F.elixirLeft}` : ""}${F.seerLeft ? ` • 🧿 ${F.seerLeft}` : ""}${F.magnetLeft ? ` • 🧲 ${F.magnetLeft}` : ""}${F.markLeft ? ` • 🎯 ${F.markLeft}` : ""}${F.scrollLeft ? ` • 📜 ${F.scrollLeft} curses` : ""}${F.armed ? ` • ${F.armed === "bomb" ? "💣" : "🌌"} ARMED` : ""}</span></div>
+    <div class="frgMats">${TIER_MATS.concat(["star"], PAT_MATS).map(chip).join("")}</div>
+    ${
+      BOSS_KEYS.filter(
+        (k) => bossOpen(k) && (F.seen[bm(k)] || F.mats[bm(k)] > 0),
+      ).length
+        ? `<div class="frgMats">${BOSS_KEYS.filter(
+            (k) => bossOpen(k) && (F.seen[bm(k)] || F.mats[bm(k)] > 0),
+          )
+            .map((k) => chip(bm(k)))
+            .join("")}</div>`
+        : ""
+    }
     <div class="frgMats dig">${DIGIT_MATS.map(chip).join("")}</div>
     <div class="pgTabs" style="margin:14px 0">${subs.map(([k, l]) => `<button class="pgTab ${sub === k ? "on" : ""}" data-sub="${k}" type="button">${l}</button>`).join("")}</div>
-    ${sub === "patterns" ? renderPatterns() : sub === "gear" ? renderGear() : sub === "journal" ? renderJournal() : renderSkills()}`;
+    ${sub === "patterns" ? renderPatterns() : sub === "gear" ? renderGear() : sub === "journal" ? renderJournal() : sub === "totems" ? renderTotems() : sub === "trade" ? renderTrade() : renderSkills()}`;
   }
   function bindForge(root) {
     root
@@ -904,6 +1314,24 @@
     root
       .querySelectorAll("[data-perk]")
       .forEach((b) => (b.onclick = () => levelUp(b.dataset.perk)));
+    root
+      .querySelectorAll("[data-totem]")
+      .forEach((b) => (b.onclick = () => craftTotem(b.dataset.totem)));
+    root
+      .querySelectorAll("[data-summon]")
+      .forEach((b) => (b.onclick = () => summon(b.dataset.summon)));
+    root.querySelectorAll("[data-trade]").forEach((b) => {
+      const [a, c, t] = b.dataset.trade.split(":");
+      b.onclick = () => trade(a, c, +t || 1);
+    });
+    const swF = root.querySelector("#frgSwF");
+    const swT = root.querySelector("#frgSwT");
+    if (swF && swT) {
+      swF.onchange = () => ((swapFrom = swF.value), rerender());
+      swT.onchange = () => ((swapTo = swT.value), rerender());
+      const sb2 = root.querySelector("[data-swap]");
+      if (sb2) sb2.onclick = () => trade(swapFrom, swapTo, 1);
+    }
     root
       .querySelectorAll("[data-gloves]")
       .forEach((b) => (b.onclick = buyGloves));
@@ -1030,6 +1458,9 @@
   G.drForge = {
     state: () => F,
     drops,
+    bossDrop,
+    totems: () => F.totems,
+    forgeLevel: forgeLvl,
     addItem: (id, n) => {
       F.items[id] = (F.items[id] || 0) + (n || 1);
       save();
