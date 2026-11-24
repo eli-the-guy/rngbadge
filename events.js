@@ -166,6 +166,8 @@
     voidking: "👑 Void Emperor",
     eternal: "⛓️ Eternal Warden",
     omega: "⚙️ Omega Engine",
+    devourer: "🌌 Cosmic Devourer",
+    author: "✒️ Final Author",
   };
 
   /* ==========================================================

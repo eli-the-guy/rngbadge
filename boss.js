@@ -168,6 +168,34 @@
       minRebirth: 2,
       blurb: "5 cursed rolls • REBIRTH 2+ only",
     },
+    devourer: {
+      key: "devourer",
+      name: "THE COSMIC DEVOURER",
+      short: "Cosmic Devourer",
+      icon: "🌌",
+      hp: 1e34,
+      color: "#6366f1",
+      size: 3,
+      count: 5,
+      like: "reality",
+      tier: 4,
+      minRebirth: 4,
+      blurb: "5 cursed rolls • REBIRTH 4+ only",
+    },
+    author: {
+      key: "author",
+      name: "THE FINAL AUTHOR",
+      short: "Final Author",
+      icon: "✒️",
+      hp: 1e42,
+      color: "#f8fafc",
+      size: 3,
+      count: 5,
+      like: "wraith",
+      tier: 4,
+      minRebirth: 5,
+      blurb: "5 cursed rolls • REBIRTH 5+ only",
+    },
     omega: {
       key: "omega",
       name: "THE OMEGA ENGINE",
@@ -202,6 +230,8 @@
     "voidking",
     "eternal",
     "omega",
+    "devourer",
+    "author",
   ];
   const myRebirths = () =>
     typeof G.__drShop !== "undefined" && G.__drShop.S

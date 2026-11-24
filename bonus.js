@@ -535,12 +535,18 @@
     voidking: { pts: 10, frac: 1.5 },
     eternal: { pts: 12, frac: 2 },
     omega: { pts: 15, frac: 3 },
+    devourer: { pts: 20, frac: 4 },
+    author: { pts: 30, frac: 6 },
   };
 
   G.drBossWon = function (type) {
     const r = REWARD[type];
     if (!r) return;
-    const got = gainXP(Math.round(capNow() * r.frac));
+    let xm = 1;
+    try {
+      if (G.drForge && G.drForge.bossXPMult) xm = G.drForge.bossXPMult();
+    } catch (e) {}
+    const got = gainXP(Math.round(capNow() * r.frac * xm));
     givePoints(r.pts);
     let drop = "";
     try {

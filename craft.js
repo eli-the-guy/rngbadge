@@ -36,6 +36,8 @@
     voidking: ["Crown Gem", "💠"],
     eternal: ["Eternal Link", "⛓️"],
     omega: ["Omega Core", "🔋"],
+    devourer: ["Void Heart", "🕳️"],
+    author: ["Final Ink", "✒️"],
   };
   const BOSS_KEYS = Object.keys(BOSS_MAT_DEF);
   const bm = (k) => "bm_" + k;
@@ -80,9 +82,14 @@
       elixir: 0,
       mark: 0,
       magnet: 0,
+      sing: 0,
+      phoenix: 0,
+      chrono: 0,
     },
     totems: {}, // boss totems crafted, by boss key
     seerLeft: 0,
+    chronoLeft: 0,
+    bossTrades: 0,
     elixirLeft: 0,
     markLeft: 0,
     magnetLeft: 0,
@@ -104,6 +111,10 @@
       might: 0,
       hunter: 0,
       scav: 0,
+      bane: 0,
+      harvest: 0,
+      echo: 0,
+      ascend: 0,
     },
     armed: "", // "bomb" | "nuke" — applies to the next boss hit
     scrollLeft: 0, // curses still negated
@@ -192,10 +203,13 @@
       return "formula";
     return "lore";
   }
-  /* Forge mastery: every few crafts raises your level; each level shaves 2% off every cost (max 30%, Prestige Stars are never discounted) */
+  /* Forge mastery: every few crafts raises your level; each level shaves 2% off every cost (max 40%, Prestige Stars are never discounted) */
   const forgeLvl = () =>
-    Math.min(15, Math.floor(Math.sqrt(F.crafted + F.trades / 4)));
-  const forgeDisc = () => Math.min(0.3, 0.02 * forgeLvl());
+    Math.min(
+      25,
+      Math.floor(Math.sqrt(F.crafted + (F.trades + F.bossTrades) / 4)),
+    );
+  const forgeDisc = () => Math.min(0.4, 0.02 * forgeLvl());
   const eff = (c) => {
     const o = {};
     Object.keys(c).forEach(
@@ -303,6 +317,30 @@
       desc: "Use it: <b>×2 materials</b> from your next 20 rolls.",
     },
     {
+      id: "sing",
+      icon: "🕳️",
+      name: "Singularity Bomb",
+      late: true,
+      cost: { void: 6, bm_reality: 4, bm_voidking: 2, star: 2 },
+      desc: "Late game. Arm it: your next boss hit deals <b>×500</b> damage (still soft-capped by the boss).",
+    },
+    {
+      id: "phoenix",
+      icon: "🪶",
+      name: "Phoenix Feather",
+      late: true,
+      cost: { prism: 8, bm_titan: 6, bm_hydra: 3, star: 1 },
+      desc: "Late game. Use it: the next <b>10 curses</b> cost you only 1 XP each.",
+    },
+    {
+      id: "chrono",
+      icon: "⏳",
+      name: "Chrono Draught",
+      late: true,
+      cost: { void: 4, ember: 20, bm_wraith: 6, bm_kraken: 4 },
+      desc: "Late game. Drink it: <b>×4 XP</b> for your next 5 rolls (stacks with the other brews).",
+    },
+    {
       id: "lucky",
       icon: "🍀",
       name: "Lucky Charm",
@@ -359,6 +397,8 @@
       },
     },
   ];
+  const rebirths = () =>
+    G.__drShop && G.__drShop.S ? Number(G.__drShop.S.rebirths) || 0 : 0;
   const shopS = () => (G.__drShop && G.__drShop.S) || null;
   const gloveLvl = () => (shopS() ? Math.min(5, shopS().gloves | 0) : 0);
   const PERKS = [
@@ -428,6 +468,43 @@
       cost: (n) => ({ star: n, dust: 150 * n }),
     },
     {
+      id: "bane",
+      icon: "☠️",
+      name: "Boss Bane",
+      late: true,
+      max: 10,
+      desc: (l) => `+${12 * l}% boss damage`,
+      cost: (n) => ({ bm_hydra: 3 * n, bm_voidking: n + 1, star: n }),
+    },
+    {
+      id: "harvest",
+      icon: "🌾",
+      name: "Soul Harvest",
+      late: true,
+      max: 5,
+      desc: (l) => `+${20 * l}% XP from boss victories`,
+      cost: (n) => ({ bm_reality: 2 * n + 2, bm_eternal: n, star: n }),
+    },
+    {
+      id: "echo",
+      icon: "🔊",
+      name: "Rebirth Echo",
+      late: true,
+      max: 5,
+      desc: (l) =>
+        `+${2 * l}% materials per rebirth you have done (now +${2 * l * rebirths()}%)`,
+      cost: (n) => ({ bm_voidking: 2 * n, bm_omega: n, prism: 4 * n }),
+    },
+    {
+      id: "ascend",
+      icon: "🌠",
+      name: "Ascension",
+      late: true,
+      max: 10,
+      desc: (l) => `+${4 * l}% XP on every roll, forever`,
+      cost: (n) => ({ star: 3 * n, bm_omega: 2 * n, void: 3 * n }),
+    },
+    {
       id: "ult",
       icon: "💥",
       name: "Ultimate Mastery",
@@ -475,7 +552,7 @@
     Object.keys(d).forEach((k) => {
       let v =
         d[k] *
-        (1 + 0.2 * gl + 0.1 * F.perks.scav) *
+        (1 + 0.2 * gl + 0.1 * F.perks.scav + 0.02 * F.perks.echo * rebirths()) *
         (windfall ? 3 : 1) *
         (F.magnetLeft > 0 ? 2 : 1);
       v = Math.floor(v) + (Math.random() < v - Math.floor(v) ? 1 : 0);
@@ -488,6 +565,7 @@
     else if (show) say("🔨 " + show);
     if (F.tonicLeft > 0) F.tonicLeft--;
     if (F.elixirLeft > 0) F.elixirLeft--;
+    if (F.chronoLeft > 0) F.chronoLeft--;
     if (F.magnetLeft > 0) F.magnetLeft--;
     if (bossLive()) {
       const gain = (3 + t * 0.5) * (1 + 0.1 * F.perks.ult);
@@ -576,6 +654,7 @@
     });
     return c;
   }
+  const maxPat = () => Math.min(8, Math.max(5, rollLen()));
   const PRESETS = [
     ["Triple", "777"],
     ["Straight", "12345"],
@@ -586,8 +665,8 @@
   ];
   function craftPattern(q) {
     q = String(q || "").replace(/\D/g, "");
-    if (q.length < 2 || q.length > 5)
-      return say("Patterns are 2–5 digits long.");
+    if (q.length < 2 || q.length > maxPat())
+      return say(`Patterns are 2–${maxPat()} digits long.`);
     const c = patternCost(q);
     if (!canPay(c)) return say("Not enough materials.");
     pay(c);
@@ -726,7 +805,7 @@
       F.bestCombo = Math.max(F.bestCombo, combo);
       d *= 1 + 0.03 * combo;
     }
-    d *= 1 + 0.08 * F.perks.edge + 0.1 * F.perks.might;
+    d *= 1 + 0.08 * F.perks.edge + 0.1 * F.perks.might + 0.12 * F.perks.bane;
     try {
       const bb = G.drBoss;
       if (
@@ -746,10 +825,14 @@
       say("🎯 CRITICAL HIT ×4!");
       sfx("buy");
     }
-    if (F.armed === "bomb" || F.armed === "nuke") {
-      d *= F.armed === "bomb" ? 8 : 40;
+    if (F.armed === "bomb" || F.armed === "nuke" || F.armed === "sing") {
+      d *= F.armed === "bomb" ? 8 : F.armed === "nuke" ? 40 : 500;
       say(
-        F.armed === "bomb" ? "💣 RIFT BOMB detonated ×8!" : "🌌 VOID NUKE ×40!",
+        F.armed === "bomb"
+          ? "💣 RIFT BOMB detonated ×8!"
+          : F.armed === "nuke"
+            ? "🌌 VOID NUKE ×40!"
+            : "🕳️ SINGULARITY ×500!",
       );
       sfx("curse");
       F.armed = "";
@@ -779,7 +862,9 @@
     return (
       (b == null ? 1 : b) *
       (F.tonicLeft > 0 ? 1.5 : 1) *
-      (F.elixirLeft > 0 ? 2 : 1)
+      (F.elixirLeft > 0 ? 2 : 1) *
+      (F.chronoLeft > 0 ? 4 : 1) *
+      (1 + 0.04 * F.perks.ascend)
     );
   };
 
@@ -797,7 +882,7 @@
   }
   function use(id) {
     if (F.items[id] <= 0) return;
-    if (id === "bomb" || id === "nuke") {
+    if (id === "bomb" || id === "nuke" || id === "sing") {
       if (!bossLive()) return say("Bombs only work while a boss is alive.");
       if (F.armed) return say("A bomb is already armed.");
       F.armed = id;
@@ -807,6 +892,10 @@
       F.tonicLeft += 25;
     } else if (id === "cell") {
       F.charge = 100;
+    } else if (id === "phoenix") {
+      F.scrollLeft += 10;
+    } else if (id === "chrono") {
+      F.chronoLeft += 5;
     } else if (id === "seer") {
       F.seerLeft += 5;
     } else if (id === "elixir") {
@@ -1017,6 +1106,28 @@
     sfx("click");
     rerender();
   }
+  /* boss materials: climb to a stronger boss's material (costs more) or step down (cheap) */
+  function bossTrade(from, to) {
+    const order = bossOrder();
+    const i = order.indexOf(from);
+    const j = order.indexOf(to);
+    if (i < 0 || j < 0 || i === j) return;
+    const rate = j > i ? 4 + 2 * (j - i) : 2;
+    const kf = bm(from);
+    const kt = bm(to);
+    if ((F.mats[kf] || 0) < rate)
+      return say("Not enough " + MATS[kf].name + ".");
+    F.mats[kf] -= rate;
+    F.mats[kt] = (F.mats[kt] || 0) + 1;
+    F.seen[kt] = true;
+    F.bossTrades++;
+    save();
+    sfx("click");
+    say(`⚗️ ${rate} ${MATS[kf].icon} → 1 ${MATS[kt].icon}`);
+    rerender();
+  }
+  let bFrom = "golem";
+  let bTo = "mimic";
   let swapFrom = "d0";
   let swapTo = "d1";
 
@@ -1042,7 +1153,7 @@
         ? `Fuse ${n} charms: ${matCost(fc)}`
         : "Click two or more charms above to select them for fusing (the click order matters for chains).";
     const canFuse = n >= 2 && canPay(fc);
-    return `<div class="pgBanner" style="font-weight:600">🧩 <b>Pattern charms</b> work like number charms, but the digits go in a <b>specific order</b>, side by side, so you can aim for a badge. One charm is used per roll, first in line first. Craft any 2–5 digit sequence. <b>The rarer the pattern is as a roll, the more it costs</b> (all costs scale up, and the rarest patterns also eat Sparks, Embers, Prisms or Void Shards). <b>Fusing</b> charms makes longer or double patterns for much rarer rolls: <b>Chain</b> joins them into one long sequence, <b>Split</b> places all of them in the same roll.</div>
+    return `<div class="pgBanner" style="font-weight:600">🧩 <b>Pattern charms</b> work like number charms, but the digits go in a <b>specific order</b>, side by side, so you can aim for a badge. One charm is used per roll, first in line first. Craft any 2–${maxPat()} digit sequence (longer ones unlock as your rolls get longer). <b>The rarer the pattern is as a roll, the more it costs</b> (all costs scale up, and the rarest patterns also eat Sparks, Embers, Prisms or Void Shards). <b>Fusing</b> charms makes longer or double patterns for much rarer rolls: <b>Chain</b> joins them into one long sequence, <b>Split</b> places all of them in the same roll.</div>
       <h3 class="frgH">🎒 Your charms <small class="pgSub">(your rolls are ${rl} digits)</small></h3>
       <div class="frgInv">${inv}</div>
       <h3 class="frgH">👝 Charm pocket <small class="pgSub">(${F.pocket.length} stored — rolls never touch these)</small></h3>
@@ -1060,7 +1171,7 @@
       <p class="pgSub">${fuseHint}</p>
       <h3 class="frgH">🛠️ Craft a pattern charm</h3>
       <div class="frgRow" style="flex-wrap:wrap;margin-bottom:8px">${PRESETS.map(([n2, q]) => `<button class="drBuy frgPre" data-pre="${q}">${n2} ${q} <small>· ${patRarity(q).name.toLowerCase()}</small></button>`).join("")}</div>
-      <div class="frgRow"><input id="frgIn" class="frgIn" inputmode="numeric" maxlength="5" placeholder="type 2–5 digits, e.g. 1337" value="${draft}"><button class="drBuy" id="frgMake" disabled>Craft</button></div>
+      <div class="frgRow"><input id="frgIn" class="frgIn" inputmode="numeric" maxlength="${maxPat()}" placeholder="type 2–${maxPat()} digits, e.g. 1337" value="${draft}"><button class="drBuy" id="frgMake" disabled>Craft</button></div>
       <p class="pgSub" id="frgCost">Cost: —</p>`;
   }
 
@@ -1068,9 +1179,9 @@
     const items = ITEMS.map((it) => {
       const can = canPay(it.cost);
       const have = F.items[it.id];
-      return `<div class="pgCard"><h3>${it.icon} ${it.name} <small class="pgSub">owned: ${have}</small></h3><p>${it.desc}</p><p>Cost: ${matCost(it.cost)}</p>
+      return `<div class="pgCard"><h3>${it.icon} ${it.name} ${it.late ? '<small class="pgSub">🌌 LATE GAME</small>' : ""} <small class="pgSub">owned: ${have}</small></h3><p>${it.desc}</p><p>Cost: ${matCost(it.cost)}</p>
         <div class="frgRow"><button class="drBuy" data-craft="${it.id}" ${can ? "" : "disabled"}>${can ? "Craft" : "Need materials"}</button>
-        ${it.auto ? "" : `<button class="drBuy" data-use="${it.id}" ${have > 0 ? "" : "disabled"}>${it.id === "bomb" || it.id === "nuke" ? "Arm" : "Use"}</button>`}</div></div>`;
+        ${it.auto ? "" : `<button class="drBuy" data-use="${it.id}" ${have > 0 ? "" : "disabled"}>${it.id === "bomb" || it.id === "nuke" || it.id === "sing" ? "Arm" : "Use"}</button>`}</div></div>`;
     }).join("");
     const gl = gloveLvl();
     const g = gl < GLOVES.length ? GLOVES[gl] : null;
@@ -1086,7 +1197,7 @@
       const maxed = l >= p.max;
       const c = maxed ? {} : p.cost(l + 1);
       const can = !maxed && canPay(c);
-      return `<div class="pgCard"><h3>${p.icon} ${p.name} <small class="pgSub">Lv ${l}/${p.max}</small></h3>
+      return `<div class="pgCard"><h3>${p.icon} ${p.name} ${p.late ? '<small class="pgSub">🌌 LATE GAME</small>' : ""} <small class="pgSub">Lv ${l}/${p.max}</small></h3>
         <p>${l ? p.desc(l) : "Not learned yet"}${!maxed ? `<br><span class="pgSub">Next: ${p.desc(l + 1)}</span>` : ""}</p>
         ${maxed ? "<p><b>MAX</b></p>" : `<p>Cost: ${matCost(c)}</p>`}
         <button class="drBuy" data-perk="${p.id}" ${can ? "" : "disabled"}>${maxed ? "Maxed" : can ? "Upgrade" : "Need materials"}</button></div>`;
@@ -1132,8 +1243,24 @@
     const swap = `<div class="pgCard"><h3>🔁 Shard Swap</h3><p class="pgSub">4 of any digit shard or pattern material → 1 of another.</p>
       <div class="frgRow"><select id="frgSwF" class="frgIn" style="font-size:14px;letter-spacing:0">${opt(swapFrom)}</select><span>→</span><select id="frgSwT" class="frgIn" style="font-size:14px;letter-spacing:0">${opt(swapTo)}</select></div>
       <div class="frgRow" style="margin-top:8px"><button class="drBuy" data-swap="1" ${swapFrom !== swapTo && have(swapFrom) >= 4 ? "" : "disabled"}>Swap</button></div></div>`;
+    const open = bossOrder().filter(bossOpen);
+    if (open.indexOf(bFrom) < 0) bFrom = open[0];
+    if (open.indexOf(bTo) < 0) bTo = open[1] || open[0];
+    const bo = (sel) =>
+      open
+        .map(
+          (k) =>
+            `<option value="${k}" ${k === sel ? "selected" : ""}>${MATS[bm(k)].icon} ${MATS[bm(k)].name} (${nf(F.mats[bm(k)])})</option>`,
+        )
+        .join("");
+    const bi = bossOrder().indexOf(bFrom);
+    const bj = bossOrder().indexOf(bTo);
+    const brate = bj > bi ? 4 + 2 * (bj - bi) : 2;
+    const bossSwap = `<div class="pgCard"><h3>👑 Boss Material Transmute</h3><p class="pgSub">Step down to a weaker boss's material at <b>2 → 1</b>. Climb to a stronger boss's material for <b>4 + 2 per step</b> up the boss ladder → 1. Shown rate now: <b>${brate} → 1</b>.</p>
+      <div class="frgRow"><select id="frgBF" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bFrom)}</select><span>→</span><select id="frgBT" class="frgIn" style="font-size:14px;letter-spacing:0">${bo(bTo)}</select></div>
+      <div class="frgRow" style="margin-top:8px"><button class="drBuy" data-bswap="1" ${bFrom !== bTo && (F.mats[bm(bFrom)] || 0) >= brate ? "" : "disabled"}>Transmute</button></div></div>`;
     return `<div class="pgBanner" style="font-weight:600">⚗️ <b>Transmute</b> — climb the material ladder, melt Stars or swap shards. Transmutes also raise your Forge level. Done so far: <b>${F.trades}</b></div>
-      <div class="frgGrid">${chain}${star}${swap}</div>`;
+      <div class="frgGrid">${chain}${star}${swap}${bossSwap}</div>`;
   }
 
   const JOURNAL = {
@@ -1284,7 +1411,7 @@
       .frgJ.unk{opacity:.72}
       .frgTbl{border-collapse:collapse;width:100%;text-align:center}.frgTbl th,.frgTbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.08)}.frgTbl td:first-child{text-align:left}
     </style>
-    <div class="pgBanner">🔨 The Forge<br><span class="pgSub">Rolls drop materials: Dust, Sparks, Embers, Prisms and Void Shards by rarity, <b>digit shards</b> for every different digit you roll, and <b>pattern mats</b> from the badges you hit. Forge level <b>${forgeLvl()}</b> (−${Math.round(forgeDisc() * 100)}% costs) • Crafted: <b>${F.crafted}</b> • Charms used: <b>${F.patternsUsed}</b> • Fusions: <b>${F.fused}</b> • Ultimates: <b>${F.ults}</b>${F.tonicLeft ? ` • 🧪 ${F.tonicLeft} rolls` : ""}${F.elixirLeft ? ` • 🍯 ${F.elixirLeft}` : ""}${F.seerLeft ? ` • 🧿 ${F.seerLeft}` : ""}${F.magnetLeft ? ` • 🧲 ${F.magnetLeft}` : ""}${F.markLeft ? ` • 🎯 ${F.markLeft}` : ""}${F.scrollLeft ? ` • 📜 ${F.scrollLeft} curses` : ""}${F.armed ? ` • ${F.armed === "bomb" ? "💣" : "🌌"} ARMED` : ""}</span></div>
+    <div class="pgBanner">🔨 The Forge<br><span class="pgSub">Rolls drop materials: Dust, Sparks, Embers, Prisms and Void Shards by rarity, <b>digit shards</b> for every different digit you roll, and <b>pattern mats</b> from the badges you hit. Forge level <b>${forgeLvl()}</b> (−${Math.round(forgeDisc() * 100)}% costs) • Crafted: <b>${F.crafted}</b> • Charms used: <b>${F.patternsUsed}</b> • Fusions: <b>${F.fused}</b> • Ultimates: <b>${F.ults}</b>${F.tonicLeft ? ` • 🧪 ${F.tonicLeft} rolls` : ""}${F.elixirLeft ? ` • 🍯 ${F.elixirLeft}` : ""}${F.seerLeft ? ` • 🧿 ${F.seerLeft}` : ""}${F.magnetLeft ? ` • 🧲 ${F.magnetLeft}` : ""}${F.markLeft ? ` • 🎯 ${F.markLeft}` : ""}${F.scrollLeft ? ` • 📜 ${F.scrollLeft} curses` : ""}${F.armed ? ` • ${F.armed === "bomb" ? "💣" : F.armed === "sing" ? "🕳️" : "🌌"} ARMED` : ""}</span></div>
     <div class="frgMats">${TIER_MATS.concat(["star"], PAT_MATS).map(chip).join("")}</div>
     ${
       BOSS_KEYS.filter(
@@ -1324,6 +1451,14 @@
       const [a, c, t] = b.dataset.trade.split(":");
       b.onclick = () => trade(a, c, +t || 1);
     });
+    const bF = root.querySelector("#frgBF");
+    const bT = root.querySelector("#frgBT");
+    if (bF && bT) {
+      bF.onchange = () => ((bFrom = bF.value), rerender());
+      bT.onchange = () => ((bTo = bT.value), rerender());
+      const bb = root.querySelector("[data-bswap]");
+      if (bb) bb.onclick = () => bossTrade(bFrom, bTo);
+    }
     const swF = root.querySelector("#frgSwF");
     const swT = root.querySelector("#frgSwT");
     if (swF && swT) {
@@ -1375,7 +1510,7 @@
     const inp = root.querySelector("#frgIn");
     if (inp) {
       const upd = () => {
-        draft = inp.value.replace(/\D/g, "").slice(0, 5);
+        draft = inp.value.replace(/\D/g, "").slice(0, maxPat());
         if (inp.value !== draft) inp.value = draft;
         const ok = draft.length >= 2;
         const c = ok ? patternCost(draft) : null;
@@ -1459,6 +1594,7 @@
     state: () => F,
     drops,
     bossDrop,
+    bossXPMult: () => 1 + 0.2 * F.perks.harvest,
     totems: () => F.totems,
     forgeLevel: forgeLvl,
     addItem: (id, n) => {

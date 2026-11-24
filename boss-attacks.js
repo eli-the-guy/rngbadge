@@ -112,6 +112,22 @@
       lock: 460,
       verb: "chains you down",
     },
+    devourer: {
+      gap: [8, 14],
+      mult: 4.2,
+      shots: 3,
+      track: 760,
+      lock: 420,
+      verb: "swallows the sky",
+    },
+    author: {
+      gap: [8, 13],
+      mult: 5,
+      shots: 3,
+      track: 740,
+      lock: 400,
+      verb: "rewrites your fate",
+    },
     omega: {
       gap: [9, 15],
       mult: 3.4,
