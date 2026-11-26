@@ -310,7 +310,7 @@
       #drRevTint.prism{border:5px solid;animation:rvPrism 5s linear infinite}
       @keyframes rvPrism{0%{border-color:#f87171}17%{border-color:#fbbf24}34%{border-color:#4ade80}51%{border-color:#38bdf8}68%{border-color:#a78bfa}85%{border-color:#f472b6}100%{border-color:#f87171}}
       .rvAmb{position:fixed;z-index:7100;pointer-events:none;will-change:transform,opacity}
-      .rvPop{position:fixed;z-index:9300;cursor:pointer;font-size:54px;line-height:1;user-select:none;filter:drop-shadow(0 0 12px var(--c));will-change:transform}
+      .rvPop{position:fixed;left:0;top:0;z-index:9600;cursor:pointer;font-size:54px;line-height:1;padding:12px;margin:-12px 0 0 -12px;touch-action:manipulation;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 0 12px var(--c));will-change:transform}
       .rvPop:hover{filter:drop-shadow(0 0 22px #fff)}
       .rvTxt{position:fixed;z-index:9400;pointer-events:none;font:900 18px system-ui,sans-serif;color:#fff;text-shadow:0 0 10px var(--c),0 2px 2px #000;animation:rvTxt 1.4s ease-out both;white-space:nowrap}
       @keyframes rvTxt{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-70px) scale(1.2)}}
@@ -557,14 +557,17 @@
     }
     document.body.appendChild(el);
     const anim = el.animate(keys, { duration: dur, easing: "linear" });
+    setTimeout(() => done(), dur + 2000); /* never leak a slot */
     const done = () => {
       if (!el.isConnected) return;
       el.remove();
       popCount--;
     };
     anim.onfinish = done;
-    el.onclick = (e) => {
+    /* react on press, not on click: a moving target slides out from under the cursor before the button comes back up */
+    el.onpointerdown = el.onclick = (e) => {
       if (el.dataset.hit) return;
+      if (e && e.preventDefault) e.preventDefault();
       el.dataset.hit = 1;
       const r = el.getBoundingClientRect();
       const x = r.left + r.width / 2;
@@ -628,6 +631,8 @@
 
   function popTimers() {
     const now = Date.now();
+    popCount =
+      document.querySelectorAll(".rvPop").length; /* self-heal the counter */
     const boost = inClash() ? 0.6 : 1;
     activeKinds().forEach((k) => {
       const c = KINDS[k];
