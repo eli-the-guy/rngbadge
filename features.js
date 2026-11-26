@@ -269,6 +269,7 @@
       { kind: "tier", effort: 120, goals: [18, 24] },
       { kind: "rolls", goals: [60, 90, 120] },
       { kind: "xp", goals: [8000, 12000] },
+      { kind: "craft", goals: [2, 3] },
     ],
     medium: [
       { kind: "tier", effort: 300, goals: [8, 12] },
@@ -276,6 +277,8 @@
       { kind: "rolls", goals: [250, 350] },
       { kind: "xp", goals: [30000, 45000] },
       { kind: "unique", goals: [30, 40] },
+      { kind: "craft", goals: [5, 8] },
+      { kind: "boss", goals: [1] },
     ],
     hard: [
       { kind: "tier", effort: 800, goals: [6, 9] },
@@ -283,6 +286,7 @@
       { kind: "unique", goals: [55, 70] },
       { kind: "xp", goals: [100000, 150000] },
       { kind: "rolls", goals: [600, 900] },
+      { kind: "craft", goals: [12, 16] },
     ],
   };
   const REWARDS = [750, 2500, 7000];
@@ -294,7 +298,7 @@
     if (def.kind === "tier")
       return {
         kind: "tier",
-        v: 2,
+        v: 3,
         tier: pickTier(def.effort, goal, curLen()),
         goal,
         len: curLen(),
@@ -335,6 +339,16 @@
           (c0.len !== curLen() || c0.mult !== xpMult()));
       if (stale) daily.cfg[i] = buildCfg(i, p.def, p.rng);
     });
+    /* one-time repair: an old bug re-mapped fresh tier goals to far rarer tiers (e.g. "Paradox or better") */
+    if (daily.fix !== 4) {
+      daily.fix = 4;
+      daily.cfg.forEach((c, i) => {
+        if (c && c.kind === "tier" && !daily.done[i]) {
+          daily.cfg[i] = buildCfg(i, picks[i].def, picks[i].rng);
+          daily.p[i] = 0;
+        }
+      });
+    }
     save(DAILY_KEY, daily);
     return picks.map((p, i) => {
       const c = daily.cfg[i];
@@ -359,6 +373,18 @@
           text: `Earn ${n(c.goal)} XP`,
           inc: (r) => Number(r.xp || 0),
         });
+      if (c.kind === "craft")
+        return Object.assign(base, {
+          text: `Craft ${c.goal} things in the Forge`,
+          inc: () => 0,
+          ext: "craft",
+        });
+      if (c.kind === "boss")
+        return Object.assign(base, {
+          text: `Defeat ${c.goal} boss${c.goal > 1 ? "es" : ""} (summon one with a totem if none is live)`,
+          inc: () => 0,
+          ext: "boss",
+        });
       return Object.assign(base, {
         text: `Find ${c.goal} different badges today`,
         inc: () => 0,
@@ -374,6 +400,7 @@
       daily.done = [false, false, false];
       daily.names = [];
       daily.cfg = null;
+      daily.base = null;
       daily.cleared = false;
       save(DAILY_KEY, daily);
     }
@@ -394,11 +421,103 @@
     } catch (e) {}
   }
 
+  /* progress that comes from outside rolls: Forge crafts and boss victories (counted from the start of the day) */
+  const extNow = {
+    craft: () =>
+      G.drForge && G.drForge.state ? G.drForge.state().crafted : null,
+    boss: () =>
+      typeof G.drBossStats === "function" ? G.drBossStats().all : null,
+  };
+  const MATS_REWARD = [
+    ["dust", 60, "✨"],
+    ["spark", 6, "⚡"],
+    ["ember", 3, "🔥"],
+  ];
+
+  function completeOne(c, i) {
+    daily.p[i] = c.goal;
+    daily.done[i] = true;
+    const reward =
+      c.reward * (typeof G.drEventDaily === "function" ? G.drEventDaily() : 1);
+    giveXP(reward);
+    let extra = "";
+    try {
+      const m = MATS_REWARD[i];
+      if (G.drForge && G.drForge.addMat) {
+        G.drForge.addMat(m[0], m[1]);
+        extra = ` +${m[1]} ${m[2]}`;
+      }
+    } catch (e) {}
+    say(`🎯 Daily challenge complete: ${c.text} (+${n(reward)} XP${extra})`);
+    sfx("newbadge");
+  }
+
+  function checkAllClear() {
+    if (!daily.cleared && daily.done.every(Boolean)) {
+      daily.cleared = true;
+      daily.streak = daily.lastClear === yesterdayKey() ? daily.streak + 1 : 1;
+      daily.lastClear = utcKey();
+      let bonus = 1;
+      let extra = "";
+      /* every 7th day in a row pays extra */
+      if (daily.streak % 7 === 0) {
+        bonus += 2;
+        try {
+          if (G.drForge && G.drForge.addMat) {
+            G.drForge.addMat("prism", 3);
+            extra = " + 3 💎 prisms";
+          }
+        } catch (e) {}
+      }
+      prestige.earned += bonus;
+      save(PRESTIGE_KEY, prestige);
+      say(
+        `🔥 All daily challenges cleared! +${bonus} ★ prestige point${bonus > 1 ? "s" : ""}${extra} • ${daily.streak}-day streak`,
+      );
+      sfx("rebirth");
+    }
+  }
+
+  function syncExternal(ch) {
+    if (!daily.base) daily.base = {};
+    let changed = false;
+    ch.forEach((c, i) => {
+      if (!c.ext || daily.done[i]) return;
+      const now = extNow[c.ext]();
+      if (now == null) return;
+      if (daily.base[c.ext] == null) {
+        daily.base[c.ext] = now;
+        changed = true;
+      }
+      const p = Math.max(0, now - daily.base[c.ext]);
+      if (p !== daily.p[i]) {
+        daily.p[i] = Math.min(c.goal, p);
+        changed = true;
+      }
+      if (daily.p[i] >= c.goal) completeOne(c, i);
+    });
+    if (changed || daily.done.some(Boolean)) {
+      checkAllClear();
+      save(DAILY_KEY, daily);
+    }
+  }
+  setTimeout(() => {
+    try {
+      syncExternal(todaysChallenges());
+    } catch (e) {}
+  }, 1500);
+  setInterval(() => {
+    try {
+      syncExternal(todaysChallenges());
+      if (open && tab === "daily") render();
+    } catch (e) {}
+  }, 4000);
+
   function updateDaily(r) {
     ensureDay();
     const ch = todaysChallenges();
     ch.forEach((c, i) => {
-      if (daily.done[i]) return;
+      if (daily.done[i] || c.ext) return;
       if (c.unique) {
         (r.badges || []).forEach((b) => {
           const nm = typeof b === "string" ? b : b.name;
@@ -408,29 +527,10 @@
       } else {
         daily.p[i] += c.inc(r) || 0;
       }
-      if (daily.p[i] >= c.goal) {
-        daily.p[i] = c.goal;
-        daily.done[i] = true;
-        const reward =
-          c.reward *
-          (typeof G.drEventDaily === "function" ? G.drEventDaily() : 1);
-        giveXP(reward);
-        say(`🎯 Daily challenge complete: ${c.text} (+${n(reward)} XP)`);
-        sfx("newbadge");
-      }
+      if (daily.p[i] >= c.goal) completeOne(c, i);
     });
-
-    if (!daily.cleared && daily.done.every(Boolean)) {
-      daily.cleared = true;
-      daily.streak = daily.lastClear === yesterdayKey() ? daily.streak + 1 : 1;
-      daily.lastClear = utcKey();
-      prestige.earned += 1;
-      save(PRESTIGE_KEY, prestige);
-      say(
-        `🔥 All daily challenges cleared! +1 ★ prestige point • ${daily.streak}-day streak`,
-      );
-      sfx("rebirth");
-    }
+    syncExternal(ch);
+    checkAllClear();
     save(DAILY_KEY, daily);
   }
 
@@ -701,12 +801,12 @@
           <h3>${c.text}</h3>
           <div class="pgBar"><i style="width:${pct}%"></i></div>
           <p>${n(daily.p[i])} / ${n(c.goal)} ${daily.done[i] ? "✓ Complete" : ""}</p>
-          <p>Reward: <b>${n(c.reward)} XP</b> (limited by your XP cap)</p>
+          <p>Reward: <b>${n(c.reward)} XP</b> (limited by your XP cap) + <b>${["60 ✨ dust", "6 ⚡ sparks", "3 🔥 embers"][i]}</b> for the Forge</p>
         </div>`;
       })
       .join("");
     return `<div class="pgBanner">New challenges every day at <b>${resetTimeText()}</b> your time (00:00 UTC, same moment for everyone).<br>
-        <span class="pgSub">Clear all three for +1 ★ prestige point. 🔥 Streak: <b>${streak}</b> day${streak === 1 ? "" : "s"}${daily.cleared ? " • Today cleared ✓" : ""}</span></div>
+        <span class="pgSub">Clear all three for +1 ★ prestige point (+2 ★ and 3 💎 on every 7th day of your streak). 🔥 Streak: <b>${streak}</b> day${streak === 1 ? "" : "s"}${daily.cleared ? " • Today cleared ✓" : ""}</span></div>
       <div class="pgGrid">${cards}</div>`;
   }
 
